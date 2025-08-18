@@ -80,7 +80,7 @@ export default function AdminEventsPage() {
       if (response.ok) {
         const data = await response.json()
         setEvents(data.events || [])
-        setPagination(data.pagination || pagination)
+        setPagination(prev => data.pagination || prev)
       }
     } catch (error) {
       console.error('Failed to fetch events:', error)
@@ -178,16 +178,6 @@ export default function AdminEventsPage() {
 
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, page }))
-  }
-
-  const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }))
-    fetchEvents()
-  }
-
-  const handleFilterChange = (status: string) => {
-    setStatusFilter(status)
-    setPagination(prev => ({ ...prev, page: 1 }))
   }
 
   const formatDate = (dateString: string) => {

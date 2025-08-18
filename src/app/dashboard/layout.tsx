@@ -147,16 +147,12 @@ export default function DashboardLayout({
           {/* Navigation */}
           <nav className="grid gap-1 p-3">
             {organizerNavItems.map((item) => {
-              const isActive = item.href === '/dashboard'
-                ? pathname === '/dashboard' || pathname === '/dashboard/'
-                : pathname === item.href || pathname.startsWith(`${item.href}/`)
+              const isActive = pathname === item.href ||
+                (pathname.startsWith(item.href + '/') &&
+                !pathname.startsWith('/dashboard/events/[id]'))
 
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                >
+                <Link key={item.href} href={item.href}>
                   <div
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
