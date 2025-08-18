@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+
 
 // In-memory user store for demo
 const adminEmail = process.env.ADMIN_EMAIL
@@ -15,23 +17,36 @@ const users = [
         }
       ]
     : []),
+// In-memory user store for demo with hashed passwords
+const users = [
+  {
+    id: 'admin-id',
+    email: 'admin@panelevent.com',
+    name: 'Administrateur',
+    role: 'ADMIN',
+    passwordHash: bcrypt.hashSync('admin123', 10)
+  },
   {
     id: 'organizer-id',
     email: 'organizer@example.com',
     name: 'Organisateur Demo',
     role: 'ORGANIZER',
-    password: 'demo123'
+    passwordHash: bcrypt.hashSync('demo123', 10)
   },
   {
     id: 'attendee-id',
     email: 'attendee@example.com',
     name: 'Participant Demo',
     role: 'ATTENDEE',
-    password: 'demo123'
+    passwordHash: bcrypt.hashSync('demo123', 10)
   }
 ]
 
 export async function POST(request: NextRequest) {
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
   try {
     const { email, password } = await request.json()
 
@@ -39,9 +54,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
     }
 
-    const user = users.find(u => u.email === email && u.password === password)
+    const user = users.find(u => u.email === email)
 
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
@@ -49,8 +64,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Admin only.' }, { status: 403 })
     }
 
-    // Return user info without password
-    const { password: _, ...userWithoutPassword } = user
+    // Return user info without password hash
+    const { passwordHash, ...userWithoutPassword } = user
 
     return NextResponse.json({
       message: 'Admin login successful',

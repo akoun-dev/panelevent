@@ -55,13 +55,8 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Erreur lors de l\'inscription')
       }
 
-      // Stocker les informations d'inscription dans localStorage
-      localStorage.setItem('eventRegistration', JSON.stringify({
-        ...formData,
-        registeredAt: new Date().toISOString(),
-        eventId: eventId,
-        registrationId: data.registrationId
-      }))
+      // Stocker uniquement l'identifiant d'inscription dans le localStorage
+      localStorage.setItem('registrationId', data.registrationId)
       
       setIsSubmitting(false)
       setIsSubmitted(true)

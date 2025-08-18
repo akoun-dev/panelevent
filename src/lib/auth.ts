@@ -1,5 +1,31 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
+
+// Demo users with hashed passwords
+const demoUsers = [
+  {
+    id: 'admin-id',
+    email: 'admin@panelevent.com',
+    name: 'Administrateur',
+    role: 'ADMIN',
+    passwordHash: bcrypt.hashSync('admin123', 10)
+  },
+  {
+    id: 'organizer-id',
+    email: 'organizer@example.com',
+    name: 'Organisateur Demo',
+    role: 'ORGANIZER',
+    passwordHash: bcrypt.hashSync('demo123', 10)
+  },
+  {
+    id: 'attendee-id',
+    email: 'attendee@example.com',
+    name: 'Participant Demo',
+    role: 'ATTENDEE',
+    passwordHash: bcrypt.hashSync('demo123', 10)
+  }
+]
 
 const authOptions = {
   providers: [
@@ -12,7 +38,7 @@ const authOptions = {
       },
       async authorize(credentials) {
         console.log('Authorize function called with:', credentials?.email)
-        
+
         if (!credentials?.email || !credentials?.password) {
           console.log('Missing credentials')
           return null
@@ -34,28 +60,14 @@ const authOptions = {
             name: 'Administrateur',
             role: 'ADMIN'
           }
+
+        const user = demoUsers.find(u => u.email === credentials.email)
+        if (user && await bcrypt.compare(credentials.password, user.passwordHash)) {
+          console.log(`${user.role} authentication successful`)
+          const { passwordHash, ...userWithoutPassword } = user
+          return userWithoutPassword
         }
-        
-        if (credentials?.email === 'organizer@example.com' && credentials?.password === 'demo123') {
-          console.log('Organizer authentication successful')
-          return {
-            id: 'organizer-id',
-            email: 'organizer@example.com',
-            name: 'Organisateur Demo',
-            role: 'ORGANIZER'
-          }
-        }
-        
-        if (credentials?.email === 'attendee@example.com' && credentials?.password === 'demo123') {
-          console.log('Attendee authentication successful')
-          return {
-            id: 'attendee-id',
-            email: 'attendee@example.com',
-            name: 'Participant Demo',
-            role: 'ATTENDEE'
-          }
-        }
-        
+
         console.log('Authentication failed')
         return null
       }
