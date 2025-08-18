@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(ATTENDEE)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  eventRegistrations EventRegistration[]
+  organizedEvents    Event[]          @relation("OrganizedEvents")
+  questions          Question[]
+  pollResponses      PollResponse[]
+  feedbacks          Feedback[]
+  certificates       Certificate[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  slug        String      @unique
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  isPublic    Boolean     @default(true)
+  isActive    Boolean     @default(false)
+  branding    Json?
+  program     String?     // Programme de l'événement (texte formaté ou JSON)
+  qrCode      String?     // QR code pour l'inscription publique
+  maxAttendees Int?       // Nombre maximum de participants
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  organizerId     String
+  organizer       User           @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  panels          Panel[]
+  registrations   EventRegistration[]
+  questions       Question[]
+  polls           Poll[]
+  certificates    Certificate[]
+  feedbacks       Feedback[]
+
+  @@map("events")
+}
+
+model Panel {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  speaker     String?
+  location    String?
+  order       Int       @default(0)
+  isActive    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  eventId String
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@map("panels")
+}
+
+model EventRegistration {
+  id         String            @id @default(cuid())
+  email      String
+  firstName  String?
+  lastName   String?
+  phone      String?
+  company    String?
+  position   String?
+  experience String?
+  expectations String?
+  dietaryRestrictions String?
+  consent    Boolean           @default(false)
+  isPublic   Boolean           @default(true)  // Pour les inscriptions publiques sans compte utilisateur
+  createdAt  DateTime          @default(now())
+
+  // Relations
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("event_registrations")
+}
+
+model Question {
+  id        String        @id @default(cuid())
+  content   String
+  status    QuestionStatus @default(PENDING)
+  votes     Int           @default(0)
+  isAnswered Boolean      @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  panelId  String?
+  panel    Panel? @relation(fields: [panelId], references: [id], onDelete: SetNull)
+
+  @@map("questions")
+}
+
+model Poll {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(false)
+  showResults Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  options PollOption[]
+  responses PollResponse[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id     String @id @default(cuid())
+  text   String
+  votes  Int    @default(0)
+  order  Int    @default(0)
+
+  // Relations
+  pollId     String
+  poll       Poll           @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  responses  PollResponse[]
+
+  @@map("poll_options")
+}
+
+model PollResponse {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pollId     String
+  poll       Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId   String
+  option     PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pollId])
+  @@map("poll_responses")
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  qrCode      String   @unique
+  issuedAt    DateTime @default(now())
+  verifiedAt  DateTime?
+  metadata    Json?
+
+  // Relations
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("certificates")
+}
+
+model Feedback {
+  id         String   @id @default(cuid())
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@map("feedbacks")
+}
+
+enum UserRole {
+  ADMIN
+  ORGANIZER
+  ATTENDEE
+}
+
+enum QuestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

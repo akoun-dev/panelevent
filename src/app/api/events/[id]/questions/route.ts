@@ -1,0 +1,131 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+
+// GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const panelId = searchParams.get('panelId')
+    const status = searchParams.get('status')
+    const search = searchParams.get('search')
+
+    let whereClause: any = {
+      panel: {
+        eventId: params.id
+      }
+    }
+
+    if (panelId) {
+      whereClause.panelId = panelId
+    }
+
+    if (status && status !== 'all') {
+      whereClause.status = status.toUpperCase()
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { content: { contains: search, mode: 'insensitive' } },
+        { authorName: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    const questions = await db.question.findMany({
+      where: whereClause,
+      include: {
+        panel: {
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            endTime: true
+          }
+        },
+        votes: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    // Calculer les votes
+    const questionsWithVotes = questions.map(question => ({
+      ...question,
+      upvotes: question.votes.filter(vote => vote.type === 'UP').length,
+      downvotes: question.votes.filter(vote => vote.type === 'DOWN').length
+    }))
+
+    return NextResponse.json(questionsWithVotes)
+  } catch (error) {
+    console.error('Error fetching questions:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch questions' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/events/[id]/questions - Créer une nouvelle question
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json()
+    const { content, panelId, authorName, authorEmail } = body
+
+    if (!content || !panelId || !authorName || !authorEmail) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Vérifier que le panel appartient à l'événement
+    const panel = await db.panel.findFirst({
+      where: {
+        id: panelId,
+        eventId: params.id
+      }
+    })
+
+    if (!panel) {
+      return NextResponse.json(
+        { error: 'Panel not found or does not belong to this event' },
+        { status: 404 }
+      )
+    }
+
+    const question = await db.question.create({
+      data: {
+        content,
+        panelId,
+        authorName,
+        authorEmail,
+        status: 'PENDING'
+      },
+      include: {
+        panel: {
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            endTime: true
+          }
+        },
+        votes: true
+      }
+    })
+
+    return NextResponse.json(question)
+  } catch (error) {
+    console.error('Error creating question:', error)
+    return NextResponse.json(
+      { error: 'Failed to create question' },
+      { status: 500 }
+    )
+  }
+}

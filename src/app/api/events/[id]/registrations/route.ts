@@ -1,0 +1,135 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { db } from '@/lib/db'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user has access to this event
+    const event = await db.event.findUnique({
+      where: { id: params.id },
+      select: { organizerId: true }
+    })
+
+    if (!event) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+
+    if (session.user?.role !== 'ADMIN' && event.organizerId !== session.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const registrations = await db.eventRegistration.findMany({
+      where: { eventId: params.id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json({ registrations })
+  } catch (error) {
+    console.error('Failed to fetch registrations:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { email, consent } = body
+
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    }
+
+    // Check if event exists and is active
+    const event = await db.event.findUnique({
+      where: { id: params.id }
+    })
+
+    if (!event) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+
+    if (!event.isActive) {
+      return NextResponse.json({ error: 'Event is not active' }, { status: 400 })
+    }
+
+    // Find or create user
+    let user = await db.user.findUnique({
+      where: { email }
+    })
+
+    if (!user) {
+      user = await db.user.create({
+        data: {
+          email,
+          name: email.split('@')[0], // Default name from email
+          role: 'ATTENDEE'
+        }
+      })
+    }
+
+    // Check if already registered
+    const existingRegistration = await db.eventRegistration.findUnique({
+      where: {
+        userId_eventId: {
+          userId: user.id,
+          eventId: params.id
+        }
+      }
+    })
+
+    if (existingRegistration) {
+      return NextResponse.json({ error: 'Already registered' }, { status: 400 })
+    }
+
+    // Create registration
+    const registration = await db.eventRegistration.create({
+      data: {
+        userId: user.id,
+        eventId: params.id,
+        consent: consent ?? false
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json({ registration }, { status: 201 })
+  } catch (error) {
+    console.error('Failed to create registration:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
