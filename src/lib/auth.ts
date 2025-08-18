@@ -1,5 +1,11 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+
+import { db } from '@/lib/db'
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is not set')
+}
 import { logger } from './logger'
 
 import bcrypt from 'bcryptjs'
@@ -29,6 +35,7 @@ const demoUsers = [
   }
 ]
 
+
 const authOptions = {
   providers: [
     CredentialsProvider({
@@ -39,6 +46,38 @@ const authOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        const user = await db.user.findUnique({
+          where: { email: credentials.email }
+        })
+
+        if (!user) {
+          return null
+        }
+
+        const rolePasswords: Record<string, string | undefined> = {
+          ADMIN: process.env.ADMIN_PASSWORD,
+          ORGANIZER: process.env.ORGANIZER_PASSWORD,
+          ATTENDEE: process.env.ATTENDEE_PASSWORD
+        }
+
+        const expectedPassword =
+          rolePasswords[user.role] ?? process.env.DEMO_PASSWORD
+
+        if (!expectedPassword || credentials.password !== expectedPassword) {
+          return null
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? undefined,
+          role: user.role
+        }
+
         logger.info('Authorize function called', { email: credentials?.email })
         console.log('Authorize function called with:', credentials?.email)
         if (!credentials?.email || !credentials?.password) {
@@ -93,7 +132,6 @@ const authOptions = {
             role: 'ATTENDEE'
           }
         }
-        
         logger.error('Authentication failed')
         console.log('Authentication failed')
         return null
@@ -127,8 +165,13 @@ const authOptions = {
     maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+
+  useSecureCookies: true,
+  debug: process.env.NODE_ENV !== 'production'
+
   useSecureCookies: process.env.NODE_ENV === 'production',
   debug: false
+
 }
 
 const handler = NextAuth(authOptions)

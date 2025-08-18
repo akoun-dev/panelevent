@@ -8,6 +8,11 @@ async function main() {
 
   // Création des utilisateurs de démonstration
   console.log('Création des utilisateurs...');
+
+  const demoUsers = {
+    admin: {
+      email: process.env.ADMIN_EMAIL ?? 'admin@panelevent.com',
+
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
@@ -15,48 +20,58 @@ async function main() {
     create: {
       email: adminEmail,
       name: 'Administrateur',
-      role: 'ADMIN',
+      role: 'ADMIN' as const,
     },
+    organizer1: {
+      email: process.env.ORGANIZER_EMAIL ?? 'organizer@example.com',
+      name: 'Organisateur Demo',
+      role: 'ORGANIZER' as const,
+    },
+    organizer2: {
+      email: process.env.ORGANIZER2_EMAIL ?? 'organizer2@example.com',
+      name: 'Jean Martin',
+      role: 'ORGANIZER' as const,
+    },
+    attendee1: {
+      email: process.env.ATTENDEE_EMAIL ?? 'attendee@example.com',
+      name: 'Participant Demo',
+      role: 'ATTENDEE' as const,
+    },
+    attendee2: {
+      email: process.env.ATTENDEE2_EMAIL ?? 'attendee2@example.com',
+      name: 'Sophie Bernard',
+      role: 'ATTENDEE' as const,
+    },
+  };
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: demoUsers.admin.email },
+    update: {},
+    create: demoUsers.admin,
   });
 
   const organizer1 = await prisma.user.upsert({
-    where: { email: 'organizer@example.com' },
+    where: { email: demoUsers.organizer1.email },
     update: {},
-    create: {
-      email: 'organizer@example.com',
-      name: 'Organisateur Demo',
-      role: 'ORGANIZER',
-    },
+    create: demoUsers.organizer1,
   });
 
   const organizer2 = await prisma.user.upsert({
-    where: { email: 'organizer2@example.com' },
+    where: { email: demoUsers.organizer2.email },
     update: {},
-    create: {
-      email: 'organizer2@example.com',
-      name: 'Jean Martin',
-      role: 'ORGANIZER',
-    },
+    create: demoUsers.organizer2,
   });
 
   const attendee1 = await prisma.user.upsert({
-    where: { email: 'attendee@example.com' },
+    where: { email: demoUsers.attendee1.email },
     update: {},
-    create: {
-      email: 'attendee@example.com',
-      name: 'Participant Demo',
-      role: 'ATTENDEE',
-    },
+    create: demoUsers.attendee1,
   });
 
   const attendee2 = await prisma.user.upsert({
-    where: { email: 'attendee2@example.com' },
+    where: { email: demoUsers.attendee2.email },
     update: {},
-    create: {
-      email: 'attendee2@example.com',
-      name: 'Sophie Bernard',
-      role: 'ATTENDEE',
-    },
+    create: demoUsers.attendee2,
   });
 
   console.log('✅ Utilisateurs créés');
