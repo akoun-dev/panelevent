@@ -20,8 +20,6 @@ interface RegistrationData {
   firstName: string
   lastName: string
   email: string
-  company?: string
-  position?: string
   registeredAt: string
   eventId: string
 }
@@ -32,75 +30,66 @@ export default function ProgramPage() {
   const [programItems, setProgramItems] = useState<ProgramItem[]>([])
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est inscrit
-    const registrationData = localStorage.getItem('eventRegistration')
-    if (!registrationData) {
+    const registrationId = localStorage.getItem('registrationId')
+    if (!registrationId) {
       // Rediriger vers la page d'accueil si non inscrit
       window.location.href = '/'
       return
     }
-    
-    try {
-      const parsed = JSON.parse(registrationData)
-      
-      // Vérifier l'inscription via l'API
-      const verifyRegistration = async () => {
-        try {
-          const response = await fetch(`/api/events/${parsed.eventId}/check-registration?email=${parsed.email}`)
-          const data = await response.json()
-          
-          if (!data.isRegistered) {
-            // Rediriger vers la page d'inscription si non inscrit
-            window.location.href = '/register'
-            return
-          }
-          
-          setRegistration({
-            ...parsed,
-            registeredAt: data.registration.registeredAt
-          })
-          
-          // Récupérer le programme de l'événement si disponible
-          if (data.event?.program) {
-            try {
-              const programData = JSON.parse(data.event.program)
-              if (Array.isArray(programData)) {
-                setProgramItems(programData)
-              }
-            } catch (e) {
-              console.error('Erreur lors du parsing du programme:', e)
-            }
-          }
-        } catch (error) {
-          console.error('Erreur lors de la vérification d\'inscription:', error)
-          // En cas d'erreur API, utiliser les données du localStorage
-          setRegistration(parsed)
+
+    const fetchRegistration = async () => {
+      try {
+        const response = await fetch(`/api/registrations/${registrationId}`)
+        if (!response.ok) {
+          throw new Error('Inscription non trouvée')
         }
+        const data = await response.json()
+
+        setRegistration({
+          firstName: data.registration.firstName,
+          lastName: data.registration.lastName,
+          email: data.registration.email,
+          registeredAt: data.registration.registeredAt,
+          eventId: data.registration.event.id
+        })
+
+        // Récupérer le programme de l'événement si disponible
+        if (data.registration.event?.program) {
+          try {
+            const programData = JSON.parse(data.registration.event.program)
+            if (Array.isArray(programData)) {
+              setProgramItems(programData)
+            }
+          } catch (e) {
+            console.error('Erreur lors du parsing du programme:', e)
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération de l\'inscription:', error)
+        // Rediriger vers la page d'inscription en cas de problème
+        window.location.href = '/register'
       }
-      
-      verifyRegistration()
-    } catch (error) {
-      console.error('Error parsing registration data:', error)
-      window.location.href = '/'
     }
+
+    fetchRegistration()
 
     // Mettre à jour l'heure actuelle
     const updateTime = () => {
       const now = new Date()
-      setCurrentTime(now.toLocaleTimeString('fr-FR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      setCurrentTime(now.toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit'
       }))
     }
-    
+
     updateTime()
     const interval = setInterval(updateTime, 60000)
-    
+
     return () => clearInterval(interval)
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('eventRegistration')
+    localStorage.removeItem('registrationId')
     window.location.href = '/'
   }
 
