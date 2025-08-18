@@ -56,6 +56,8 @@ This scaffold provides a robust foundation built with:
 
 ## 🚀 Quick Start
 
+Ensure you are using **Node.js 20** or newer.
+
 ```bash
 # Install dependencies
 npm install
