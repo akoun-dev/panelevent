@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Certificate, 
-  Download, 
-  Mail, 
+import {
+  Award,
+  Download,
+  Mail,
   QrCode,
   CheckCircle,
   Clock,
@@ -168,7 +168,7 @@ export default function EventCertificatesPage({ params }: { params: { id: string
             </div>
             <div className="text-center">
               <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center mb-2">
-                <Certificate className="w-12 h-12 text-gray-400" />
+                <Award className="w-12 h-12 text-gray-400" />
               </div>
               <p className="text-xs text-gray-500">Signature</p>
             </div>
@@ -199,7 +199,7 @@ export default function EventCertificatesPage({ params }: { params: { id: string
       <div className="container mx-auto py-8">
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Certificate className="h-12 w-12 text-muted-foreground mb-4" />
+            <Award className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Événement non trouvé</h3>
             <p className="text-muted-foreground">L'événement demandé n'existe pas.</p>
           </CardContent>
@@ -270,7 +270,7 @@ export default function EventCertificatesPage({ params }: { params: { id: string
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Certificate className="w-5 h-5" />
+              <Award className="w-5 h-5" />
               Certificats disponibles ({certificates.length})
             </CardTitle>
           </CardHeader>
