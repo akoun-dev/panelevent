@@ -48,6 +48,12 @@ else
     echo "❌ NEXTAUTH_SECRET non configurée"
 fi
 
+if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
+    echo "✅ Identifiants admin configurés"
+else
+    echo "❌ Identifiants admin non configurés"
+fi
+
 # Vérifier si le serveur est en cours d'exécution
 echo ""
 echo "🌐 Serveur de développement:"
@@ -86,9 +92,13 @@ fi
 
 echo ""
 echo "🎯 Comptes de démonstration:"
+
 [ -n "$ADMIN_EMAIL" ] && echo "   Admin: $ADMIN_EMAIL"
 [ -n "$ORGANIZER_EMAIL" ] && echo "   Organisateur: $ORGANIZER_EMAIL"
 [ -n "$ATTENDEE_EMAIL" ] && echo "   Participant: $ATTENDEE_EMAIL"
+
+echo "   Organisateur: organizer@example.com / demo123"
+echo "   Participant: attendee@example.com / demo123"
 
 echo ""
 echo "✨ Environnement vérifié!"

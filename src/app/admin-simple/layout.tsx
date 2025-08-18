@@ -161,7 +161,7 @@ export default function AdminSimpleLayout({
                     Admin
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    admin@panelevent.com
+                    {process.env.NEXT_PUBLIC_ADMIN_EMAIL || ''}
                   </p>
                 </div>
               )}

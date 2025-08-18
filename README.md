@@ -74,6 +74,10 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000) to see your application running.
 
+## 🔧 WebSocket Configuration
+
+Set allowed origins for Socket.IO connections using the `WS_ALLOWED_ORIGINS` environment variable (comma-separated list). To require a token for clients, set `WEBSOCKET_AUTH_TOKEN` and provide the same token when connecting.
+
 ## 🤖 Powered by Z.ai
 
 This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:

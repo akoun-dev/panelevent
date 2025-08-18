@@ -8,9 +8,17 @@ async function main() {
 
   // Création des utilisateurs de démonstration
   console.log('Création des utilisateurs...');
+
   const demoUsers = {
     admin: {
       email: process.env.ADMIN_EMAIL ?? 'admin@panelevent.com',
+
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+  const adminUser = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {},
+    create: {
+      email: adminEmail,
       name: 'Administrateur',
       role: 'ADMIN' as const,
     },

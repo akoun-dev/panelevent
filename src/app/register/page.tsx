@@ -1,12 +1,25 @@
 "use client"
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { User, Mail, Phone, Building, Briefcase, Calendar, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,13 +33,14 @@ export default function RegisterPage() {
     position: '',
     experience: '',
     expectations: '',
-    dietaryRestrictions: ''
+    dietaryRestrictions: '',
+    consent: false
   })
   
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -55,13 +69,8 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Erreur lors de l\'inscription')
       }
 
-      // Stocker les informations d'inscription dans localStorage
-      localStorage.setItem('eventRegistration', JSON.stringify({
-        ...formData,
-        registeredAt: new Date().toISOString(),
-        eventId: eventId,
-        registrationId: data.registrationId
-      }))
+      // Stocker uniquement l'identifiant d'inscription dans le localStorage
+      localStorage.setItem('registrationId', data.registrationId)
       
       setIsSubmitting(false)
       setIsSubmitted(true)
@@ -278,12 +287,36 @@ export default function RegisterPage() {
                   />
                 </div>
 
+                {/* Consentement */}
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="consent"
+                    checked={formData.consent}
+                    onCheckedChange={(checked) =>
+                      handleInputChange('consent', checked as boolean)
+                    }
+                    required
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label
+                      htmlFor="consent"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      J'accepte de recevoir des communications concernant cet
+                      événement *
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Vous pouvez vous désinscrire à tout moment
+                    </p>
+                  </div>
+                </div>
+
                 {/* Submit Button */}
-                <Button 
-                  type="submit" 
-                  className="w-full" 
+                <Button
+                  type="submit"
+                  className="w-full"
                   size="lg"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !formData.consent}
                 >
                   {isSubmitting ? 'Inscription en cours...' : "S'inscrire à l'événement"}
                 </Button>

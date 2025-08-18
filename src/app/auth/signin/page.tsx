@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { signIn, getCsrfToken } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { signIn, getSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,18 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [csrfToken, setCsrfToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
-
-  useEffect(() => {
-    const fetchCsrfToken = async () => {
-      const token = await getCsrfToken()
-      setCsrfToken(token ?? '')
-    }
-    fetchCsrfToken()
-  }, [])
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,41 +36,37 @@ export default function SignIn() {
         setError('Identifiants invalides')
       } else {
         console.log('Sign in successful, checking session...')
-        
-        // Récupérer la session pour déterminer le rôle
-        setTimeout(async () => {
-          try {
-            const sessionResponse = await fetch('/api/auth/session')
-            const sessionData = await sessionResponse.json()
-            
-            console.log('Session data after login:', sessionData)
-            
-            if (sessionData.user) {
-              // Redirection basée sur le rôle
-              switch (sessionData.user.role) {
-                case 'ADMIN':
-                  console.log('Redirecting admin to /admin')
-                  window.location.href = '/admin'
-                  break
-                case 'ORGANIZER':
-                  console.log('Redirecting organizer to /dashboard')
-                  window.location.href = '/dashboard'
-                  break
-                case 'ATTENDEE':
-                default:
-                  console.log('Redirecting attendee to /')
-                  window.location.href = '/'
-                  break
-              }
-            } else {
-              console.error('No user in session after login')
-              setError('Erreur lors de la connexion')
+
+        try {
+          const sessionData = await getSession()
+
+          console.log('Session data after login:', sessionData)
+
+          if (sessionData?.user) {
+            // Redirection basée sur le rôle
+            switch (sessionData.user.role) {
+              case 'ADMIN':
+                console.log('Redirecting admin to /admin')
+                window.location.href = '/admin'
+                break
+              case 'ORGANIZER':
+                console.log('Redirecting organizer to /dashboard')
+                window.location.href = '/dashboard'
+                break
+              case 'ATTENDEE':
+              default:
+                console.log('Redirecting attendee to /')
+                window.location.href = '/'
+                break
             }
-          } catch (error) {
-            console.error('Error fetching session:', error)
+          } else {
+            console.error('No user in session after login')
             setError('Erreur lors de la connexion')
           }
-        }, 500) // Petit délai pour s'assurer que la session est bien établie
+        } catch (error) {
+          console.error('Error fetching session:', error)
+          setError('Erreur lors de la connexion')
+        }
       }
     } catch (error) {
       console.error('Sign in exception:', error)
@@ -90,9 +76,8 @@ export default function SignIn() {
     }
   }
 
-  const handleDemoLogin = (role: 'ADMIN' | 'ORGANIZER' | 'ATTENDEE') => {
+  const handleDemoLogin = (role: 'ORGANIZER' | 'ATTENDEE') => {
     const demoUsers = {
-      ADMIN: { email: 'admin@panelevent.com', password: 'admin123' },
       ORGANIZER: { email: 'organizer@example.com', password: 'demo123' },
       ATTENDEE: { email: 'attendee@example.com', password: 'demo123' }
     }
@@ -153,14 +138,6 @@ export default function SignIn() {
           <div className="mt-6">
             <p className="text-sm text-muted-foreground mb-3">Comptes de démonstration :</p>
             <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleDemoLogin('ADMIN')}
-              >
-                Admin - admin@panelevent.com
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
