@@ -43,5 +43,5 @@ npx prisma migrate status
 
 echo -e "\033[1;32m
 ✅ Base de données prête à l'emploi!
-   Accès admin: admin@panelevent.com / admin123
+   Configurez les identifiants admin via ADMIN_EMAIL et ADMIN_PASSWORD
 \033[0m"

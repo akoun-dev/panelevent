@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { z } from 'zod'
 import { db } from '@/lib/db'
+import { authOptions } from '@/lib/auth'
 import QRCode from 'qrcode'
 
 export async function GET(request: NextRequest) {
@@ -66,34 +69,64 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { 
-      title, 
-      description, 
-      startDate, 
-      endDate, 
-      location, 
-      organizerId, 
-      slug,
-      isPublic,
-      isActive,
-      maxAttendees
-    } = body
+    const session = await getServerSession(authOptions)
 
-    if (!title || !startDate || !organizerId) {
+    if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+
+    const eventSchema = z.object({
+      title: z.string().min(1, 'Title is required'),
+      description: z.string().optional(),
+      startDate: z
+        .string()
+        .refine(v => !isNaN(Date.parse(v)), { message: 'Invalid start date' }),
+      endDate: z
+        .string()
+        .optional()
+        .refine(v => !v || !isNaN(Date.parse(v)), { message: 'Invalid end date' }),
+      location: z.string().optional(),
+      slug: z.string().optional(),
+      isPublic: z.boolean().optional(),
+      isActive: z.boolean().optional(),
+      maxAttendees: z
+        .string()
+        .optional()
+        .transform(v => (v === undefined || v === '' ? undefined : v))
+        .refine(v => v === undefined || !isNaN(Number(v)), {
+          message: 'Invalid maxAttendees'
+        })
+        .transform(v => (v === undefined ? undefined : Number(v)))
+    })
+
+    const parsed = eventSchema.safeParse(body)
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map(issue => issue.message)
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid input', details: errors },
         { status: 400 }
       )
     }
 
-    // Generate slug from title if not provided
-    const eventSlug = slug || title
+    const {
+      title,
+      description,
+      startDate,
+      endDate,
+      location,
+      slug,
+      isPublic,
+      isActive,
+      maxAttendees
+    } = parsed.data
+
+    const eventSlug = (slug || title)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
 
-    // Check if slug already exists
     const existingEvent = await db.event.findUnique({
       where: { slug: eventSlug }
     })
@@ -105,7 +138,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate QR Code
     const qrCodeData = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/e/${eventSlug}`
     const qrCode = await QRCode.toDataURL(qrCodeData, {
       width: 200,
@@ -124,10 +156,10 @@ export async function POST(request: NextRequest) {
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
         location,
-        organizerId,
+        organizerId: session.user.id,
         isPublic: isPublic ?? true,
         isActive: isActive ?? false,
-        maxAttendees: maxAttendees ? parseInt(maxAttendees) : null,
+        maxAttendees: typeof maxAttendees === 'number' ? maxAttendees : null,
         qrCode,
         branding: {
           qrCode
