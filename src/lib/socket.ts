@@ -1,6 +1,16 @@
 import { Server } from 'socket.io';
 
 export const setupSocket = (io: Server) => {
+  const authToken = process.env.WEBSOCKET_AUTH_TOKEN;
+  if (authToken) {
+    io.use((socket, next) => {
+      const token = (socket.handshake.auth as any)?.token || (socket.handshake.query as any)?.token;
+      if (token !== authToken) {
+        return next(new Error('Unauthorized'));
+      }
+      next();
+    });
+  }
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
     
