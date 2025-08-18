@@ -218,7 +218,7 @@ export default function TestLogout() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>1. Connectez-vous d'abord avec un compte (admin@panelevent.com / admin123)</p>
+              <p>1. Connectez-vous d'abord avec un compte administrateur</p>
               <p>2. Revenez sur cette page pour voir les informations de session</p>
               <p>3. Testez les différentes méthodes de déconnexion</p>
               <p>4. Vérifiez que vous êtes bien déconnecté et redirigé vers l'accueil</p>

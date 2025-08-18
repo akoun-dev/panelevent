@@ -90,9 +90,8 @@ export default function SignIn() {
     }
   }
 
-  const handleDemoLogin = (role: 'ADMIN' | 'ORGANIZER' | 'ATTENDEE') => {
+  const handleDemoLogin = (role: 'ORGANIZER' | 'ATTENDEE') => {
     const demoUsers = {
-      ADMIN: { email: 'admin@panelevent.com', password: 'admin123' },
       ORGANIZER: { email: 'organizer@example.com', password: 'demo123' },
       ATTENDEE: { email: 'attendee@example.com', password: 'demo123' }
     }
@@ -153,14 +152,6 @@ export default function SignIn() {
           <div className="mt-6">
             <p className="text-sm text-muted-foreground mb-3">Comptes de démonstration :</p>
             <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleDemoLogin('ADMIN')}
-              >
-                Admin - admin@panelevent.com
-              </Button>
               <Button
                 variant="outline"
                 size="sm"

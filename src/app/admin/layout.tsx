@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { 
   Home, 
@@ -78,6 +78,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const { data: session } = useSession()
   const pathname = usePathname()
 
   const handleSignOut = async () => {
@@ -197,7 +198,7 @@ export default function AdminLayout({
                     Admin
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    admin@panelevent.com
+                    {session?.user?.email}
                   </p>
                 </div>
               )}

@@ -44,6 +44,23 @@ const authOptions = {
           return null
         }
 
+        // Simple validation for demo
+        const adminEmail = process.env.ADMIN_EMAIL
+        const adminPassword = process.env.ADMIN_PASSWORD
+        if (
+          adminEmail &&
+          adminPassword &&
+          credentials?.email === adminEmail &&
+          credentials?.password === adminPassword
+        ) {
+          console.log('Admin authentication successful')
+          return {
+            id: 'admin-id',
+            email: adminEmail,
+            name: 'Administrateur',
+            role: 'ADMIN'
+          }
+
         const user = demoUsers.find(u => u.email === credentials.email)
         if (user && await bcrypt.compare(credentials.password, user.passwordHash)) {
           console.log(`${user.role} authentication successful`)

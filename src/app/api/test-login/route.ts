@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 
+
+// In-memory user store for demo
+const adminEmail = process.env.ADMIN_EMAIL
+const adminPassword = process.env.ADMIN_PASSWORD
+const users = [
+  ...(adminEmail && adminPassword
+    ? [
+        {
+          id: 'admin-id',
+          email: adminEmail,
+          name: 'Administrateur',
+          role: 'ADMIN',
+          password: adminPassword
+        }
+      ]
+    : []),
 // In-memory user store for demo with hashed passwords
 const users = [
   {
