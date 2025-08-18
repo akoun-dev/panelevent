@@ -15,24 +15,22 @@ export async function GET(request: NextRequest) {
       where: {
         organizerId: session.user.id
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        program: true,
+        panels: {
+          orderBy: {
+            order: 'asc'
+          }
+        },
         _count: {
           select: {
             registrations: true,
             questions: true,
             polls: true
           }
-        },
-        panels: {
-          orderBy: {
-            order: 'asc'
-          }
-        },
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          program: true
         }
       },
       orderBy: {

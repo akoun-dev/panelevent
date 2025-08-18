@@ -20,7 +20,7 @@ export default function SignIn() {
   useEffect(() => {
     const fetchCsrfToken = async () => {
       const token = await getCsrfToken()
-      setCsrfToken(token)
+      setCsrfToken(token ?? '')
     }
     fetchCsrfToken()
   }, [])

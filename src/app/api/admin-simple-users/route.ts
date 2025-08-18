@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
             select: {
               eventRegistrations: true,
               organizedEvents: true,
-              questions: true,
               pollResponses: true,
               feedbacks: true,
               certificates: true

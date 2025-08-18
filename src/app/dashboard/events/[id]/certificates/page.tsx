@@ -49,11 +49,11 @@ interface EventRegistration {
   userEmail: string
   registeredAt: string
   attended: boolean
-  certificate?: {
+  certificate: {
     id: string
     issuedAt: string
     certificateUrl?: string
-  }
+  } | null
 }
 
 export default function EventCertificatesPage({ params }: { params: { id: string } }) {
