@@ -21,6 +21,7 @@ async function main() {
       email: process.env.ORGANIZER_EMAIL ?? 'organizer@example.com',
       name: 'Organisateur Demo',
       role: 'ORGANIZER' as const,
+      passwordHash: await bcrypt.hash('password', 10),
     },
     organizer2: {
       email: process.env.ORGANIZER2_EMAIL ?? 'organizer2@example.com',
