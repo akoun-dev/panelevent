@@ -63,8 +63,19 @@ export async function POST(
     const body = await request.json()
     const { email, consent } = body
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    if (!email || consent !== true) {
+      return NextResponse.json(
+        { error: 'Email and consent are required' },
+        { status: 400 }
+      )
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      )
     }
 
     // Check if event exists and is active
@@ -114,7 +125,7 @@ export async function POST(
       data: {
         userId: user.id,
         eventId: params.id,
-        consent: consent ?? false
+        consent
       },
       include: {
         user: {
