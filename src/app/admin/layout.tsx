@@ -1,225 +1,208 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
-import { toast } from '@/hooks/use-toast'
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-import { signOut, useSession } from 'next-auth/react'
-
-import { cn } from '@/lib/utils'
-import { 
-  Home, 
-  Users, 
-  Calendar, 
-  MessageSquare, 
-  BarChart, 
-  Star, 
-  Mic, 
-  FileText, 
-  Download, 
+import {
+  Home,
+  Users,
+  Calendar,
+  MessageSquare,
+  BarChart,
+  Star,
+  Mic,
+  FileText,
+  Download,
   Settings,
-  LogOut 
-} from 'lucide-react'
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
-const adminNavItems = [
-  {
-    title: 'Tableau de bord',
-    href: '/admin',
-    description: 'Vue d\'ensemble et statistiques'
-  },
-  {
-    title: 'Gestion des utilisateurs',
-    href: '/admin/users',
-    description: 'Gérer les comptes utilisateurs'
-  },
-  {
-    title: 'Gestion des événements',
-    href: '/admin/events',
-    description: 'Administrer tous les événements'
-  },
-  {
-    title: 'Questions & Réponses',
-    href: '/admin/qa',
-    description: 'Modérer les Q&A'
-  },
-  {
-    title: 'Sondages',
-    href: '/admin/polls',
-    description: 'Gérer les sondages'
-  },
-  {
-    title: 'Certificats',
-    href: '/admin/certificates',
-    description: 'Gérer les certificats'
-  },
-  {
-    title: 'Enregistrements',
-    href: '/admin/recordings',
-    description: 'Gérer les enregistrements audio'
-  },
-  {
-    title: 'Feedbacks',
-    href: '/admin/feedbacks',
-    description: 'Analyser les feedbacks'
-  },
-  {
-    title: 'Exports',
-    href: '/admin/export',
-    description: 'Exporter des données et rapports'
-  },
-  {
-    title: 'Paramètres',
-    href: '/admin/settings',
-    description: 'Configuration du système'
-  }
-]
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const { data: session } = useSession()
-  const pathname = usePathname()
+type NavItem = {
+  title: string;
+  href: string;
+  description: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+};
+
+const adminNavItems: NavItem[] = [
+  { title: "Tableau de bord", href: "/admin", description: "Vue d'ensemble et statistiques", icon: Home },
+  { title: "Gestion des utilisateurs", href: "/admin/users", description: "Gérer les comptes utilisateurs", icon: Users },
+  { title: "Gestion des événements", href: "/admin/events", description: "Administrer tous les événements", icon: Calendar },
+  { title: "Questions & Réponses", href: "/admin/qa", description: "Modérer les Q&A", icon: MessageSquare },
+  { title: "Sondages", href: "/admin/polls", description: "Gérer les sondages", icon: BarChart },
+  { title: "Certificats", href: "/admin/certificates", description: "Gérer les certificats", icon: Star },
+  { title: "Enregistrements", href: "/admin/recordings", description: "Gérer les enregistrements audio", icon: Mic },
+  { title: "Feedbacks", href: "/admin/feedbacks", description: "Analyser les feedbacks", icon: FileText },
+  { title: "Exports", href: "/admin/export", description: "Exporter des données et rapports", icon: Download },
+  { title: "Paramètres", href: "/admin/settings", description: "Configuration du système", icon: Settings },
+];
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const { data: session } = useSession();
+  const pathname = usePathname();
+
+  const initials = useMemo(() => {
+    const n = session?.user?.name || "Admin";
+    return n
+      .split(" ")
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  }, [session?.user?.name]);
+
+  const isActive = (href: string) =>
+    href === "/admin" ? pathname === "/admin" || pathname === "/admin/" : pathname.startsWith(href);
 
   const handleSignOut = async () => {
     try {
-      await signOut({ callbackUrl: '/' })
+      await signOut({ callbackUrl: "/" });
     } catch (error) {
-      console.error('Error during sign out:', error)
+      console.error("Error during sign out:", error);
       toast({
-        title: 'Erreur lors de la déconnexion',
-        description: 'Veuillez réessayer.',
-        variant: 'destructive'
-      })
+        title: "Erreur lors de la déconnexion",
+        description: "Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <div className={cn(
-        "border-r bg-gray-50/40 transition-all duration-300",
-        isSidebarCollapsed ? "w-16" : "w-64"
-      )}>
-        <div className="flex h-full flex-col">
-          {/* Header */}
-          <div className="flex h-16 items-center border-b px-4">
-            {!isSidebarCollapsed && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-bold text-sm">P</span>
-                </div>
-                <div>
-                  <h1 className="font-semibold text-lg">PanelEvent</h1>
-                  <p className="text-xs text-muted-foreground">Admin</p>
-                </div>
-              </div>
-            )}
-            <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className={cn(
-                "ml-auto p-2 hover:bg-muted rounded-md",
-                isSidebarCollapsed && "mx-auto"
-              )}
-            >
-              {isSidebarCollapsed ? (
-                <span>›</span>
-              ) : (
-                <span>‹</span>
-              )}
-            </button>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1 p-4">
-            {adminNavItems.map((item) => {
-              const isActive = pathname === item.href
-
-              return (
-                <Link key={item.href} href={item.href}>
-                  <div
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                      "hover:bg-muted hover:text-foreground",
-                      isActive && "bg-primary text-primary-foreground hover:bg-primary/90",
-                      isSidebarCollapsed && "justify-center px-2"
-                    )}
-                    title={isSidebarCollapsed ? item.title : undefined}
-                  >
-                    <span className="h-4 w-4">
-                      {item.title === 'Tableau de bord' && <Home className="h-4 w-4" />}
-                      {item.title === 'Gestion des utilisateurs' && <Users className="h-4 w-4" />}
-                      {item.title === 'Gestion des événements' && <Calendar className="h-4 w-4" />}
-                      {item.title === 'Questions & Réponses' && <MessageSquare className="h-4 w-4" />}
-                      {item.title === 'Sondages' && <BarChart className="h-4 w-4" />}
-                      {item.title === 'Certificats' && <Star className="h-4 w-4" />}
-                      {item.title === 'Enregistrements' && <Mic className="h-4 w-4" />}
-                      {item.title === 'Feedbacks' && <FileText className="h-4 w-4" />}
-                      {item.title === 'Exports' && <Download className="h-4 w-4" />}
-                      {item.title === 'Paramètres' && <Settings className="h-4 w-4" />}
-                    </span>
-                    {!isSidebarCollapsed && (
-                      <div className="flex flex-col items-start">
-                        <span>{item.title}</span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                          {item.description}
-                        </span>
-                      </div>
-                    )}
+    <TooltipProvider delayDuration={200}>
+      <div className="flex h-screen bg-background">
+        {/* Sidebar */}
+        <aside
+          className={cn(
+            "border-r bg-muted/20 transition-[width] duration-300 ease-in-out",
+            collapsed ? "w-[72px]" : "w-64"
+          )}
+          aria-label="Navigation latérale d'administration"
+        >
+          <div className="flex h-full flex-col">
+            {/* Header */}
+            <div className="flex h-16 items-center gap-3 border-b px-3">
+              {!collapsed && (
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+                    <span className="text-sm font-bold text-primary-foreground">P</span>
                   </div>
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* User Section */}
-          <div className="border-t p-4">
-            <div className={cn(
-              "flex items-center gap-3",
-              isSidebarCollapsed && "flex-col gap-2"
-            )}>
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground text-sm font-medium">
-                  A
-                </span>
-              </div>
-              {!isSidebarCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">
-                    Admin
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {session?.user?.email}
-                  </p>
+                  <div className="leading-tight">
+                    <h1 className="text-lg font-semibold">PanelEvent</h1>
+                    <p className="text-xs text-muted-foreground">Admin</p>
+                  </div>
                 </div>
               )}
-              <button
-                onClick={handleSignOut}
-                title="Déconnexion"
-                className={cn(
-                  "p-2 hover:bg-muted rounded-md",
-                  isSidebarCollapsed && "w-full"
-                )}
+
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCollapsed((v) => !v)}
+                className={cn("ml-auto", collapsed && "mx-auto")}
+                aria-label={collapsed ? "Déplier la barre latérale" : "Replier la barre latérale"}
               >
-                <LogOut className="h-4 w-4" />
-              </button>
+                {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            {/* Navigation */}
+            <ScrollArea className="flex-1">
+              <nav className="grid gap-1 p-3">
+                {adminNavItems.map((item) => {
+                  const active = isActive(item.href);
+                  const Icon = item.icon;
+
+                  const linkInner = (
+                    <div
+                      className={cn(
+                        "group flex items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium transition-colors",
+                        "hover:bg-muted hover:text-foreground",
+                        active && "bg-primary text-primary-foreground hover:bg-primary/90",
+                        collapsed && "justify-center"
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <div className="min-w-0">
+                          <div className="truncate">{item.title}</div>
+                          <div
+                            className={cn(
+                              "text-xs text-muted-foreground",
+                              active && "text-primary-foreground/80"
+                            )}
+                          >
+                            {item.description}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+
+                  return (
+                    <Tooltip key={item.href}>
+                      <TooltipTrigger asChild>
+                        <Link href={item.href} aria-current={active ? "page" : undefined} aria-label={item.title}>
+                          {linkInner}
+                        </Link>
+                      </TooltipTrigger>
+                      {collapsed && <TooltipContent side="right">{item.title}</TooltipContent>}
+                    </Tooltip>
+                  );
+                })}
+              </nav>
+            </ScrollArea>
+
+            {/* User Section */}
+            <div className="border-t p-3">
+              <div className={cn("flex items-center gap-3", collapsed && "flex-col gap-2")}>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+                  <span className="text-xs font-medium text-primary-foreground">{initials}</span>
+                </div>
+                {!collapsed && (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{session?.user?.name || "Admin"}</p>
+                    <p className="truncate text-xs text-muted-foreground">{session?.user?.email}</p>
+                  </div>
+                )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleSignOut}
+                      className={cn(collapsed && "w-full")}
+                      aria-label="Déconnexion"
+                      title="Déconnexion"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  {collapsed && <TooltipContent side="right">Déconnexion</TooltipContent>}
+                </Tooltip>
+              </div>
             </div>
           </div>
-        </div>
+        </aside>
+
+        {/* Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="mx-auto max-w-[1400px] p-6 md:p-10">
+            <div className="rounded-xl border bg-background p-6 md:p-10 shadow-sm">
+              {children}
+            </div>
+          </div>
+        </main>
       </div>
-      
-      <main className={cn(
-        "flex-1 overflow-auto",
-        isSidebarCollapsed ? "ml-16" : "ml-64"
-      )}>
-        <div className="container mx-auto p-6">
-          {children}
-        </div>
-      </main>
-    </div>
-  )
+    </TooltipProvider>
+  );
 }

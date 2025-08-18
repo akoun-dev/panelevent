@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import QRCode from 'qrcode';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -11,16 +12,10 @@ async function main() {
 
   const demoUsers = {
     admin: {
-      email: process.env.ADMIN_EMAIL ?? 'admin@panelevent.com',
-
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-  const adminUser = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: {
-      email: adminEmail,
+      email: 'admin@panelevent.com',
       name: 'Administrateur',
       role: 'ADMIN' as const,
+      passwordHash: await bcrypt.hash('password', 10),
     },
     organizer1: {
       email: process.env.ORGANIZER_EMAIL ?? 'organizer@example.com',
@@ -498,40 +493,71 @@ async function main() {
 
   // Création de questions de démonstration
   console.log('Création des questions...');
-  await prisma.question.createMany({
-    data: [
-      {
-        content: 'Quelles sont les limites éthiques de l\'IA générative ?',
-        status: 'APPROVED',
-        votes: 15,
-        userId: attendee1.id,
-        eventId: event1.id,
-        panelId: (await prisma.panel.findFirst({ where: { eventId: event1.id, order: 1 } }))?.id,
-      },
-      {
-        content: 'Comment choisir entre React, Vue et Angular pour un nouveau projet ?',
-        status: 'APPROVED',
-        votes: 8,
-        userId: attendee1.id,
-        eventId: event1.id,
-        panelId: (await prisma.panel.findFirst({ where: { eventId: event1.id, order: 2 } }))?.id,
-      },
-      {
-        content: 'Quels sont les financements disponibles pour les startups tech en France ?',
-        status: 'PENDING',
-        votes: 12,
-        userId: attendee1.id,
-        eventId: event1.id,
-        panelId: (await prisma.panel.findFirst({ where: { eventId: event1.id, order: 3 } }))?.id,
-      },
-      {
-        content: 'Comment mesurer le ROI d\'une campagne marketing digital ?',
-        status: 'APPROVED',
-        votes: 6,
-        userId: attendee1.id,
-        eventId: event2.id,
-      },
-    ],
+  
+  // Récupérer les panels pour l'événement 1
+  const panels = await prisma.panel.findMany({
+    where: { eventId: event1.id },
+    orderBy: { order: 'asc' }
+  });
+  
+  // Création des questions une par une pour inclure userId
+  await prisma.question.create({
+    data: {
+      content: 'Quelles sont les limites éthiques de l\'IA générative ?',
+      status: 'APPROVED',
+      authorName: 'Participant Demo',
+      authorEmail: demoUsers.attendee1.email,
+      eventId: event1.id,
+      panelId: panels[0]?.id || '',
+    },
+  });
+  
+  await prisma.question.create({
+    data: {
+      content: 'Comment choisir entre React, Vue et Angular pour un nouveau projet ?',
+      status: 'APPROVED',
+      authorName: 'Participant Demo',
+      authorEmail: demoUsers.attendee1.email,
+      eventId: event1.id,
+      panelId: panels[1]?.id || '',
+    },
+  });
+  
+  await prisma.question.create({
+    data: {
+      content: 'Quels sont les financements disponibles pour les startups tech en France ?',
+      status: 'PENDING',
+      authorName: 'Participant Demo',
+      authorEmail: demoUsers.attendee1.email,
+      eventId: event1.id,
+      panelId: panels[2]?.id || '',
+    },
+  });
+  
+  // Créer un panel par défaut pour l'événement 2
+  const marketingPanel = await prisma.panel.create({
+    data: {
+      title: 'Session Principale',
+      description: 'Session principale du sommet marketing',
+      startTime: new Date('2024-07-20T10:00:00'),
+      endTime: new Date('2024-07-20T17:00:00'),
+      speaker: 'Modérateur',
+      location: 'Salle Principale',
+      order: 1,
+      isActive: true,
+      eventId: event2.id,
+    },
+  });
+
+  await prisma.question.create({
+    data: {
+      content: 'Comment mesurer le ROI d\'une campagne marketing digital ?',
+      status: 'APPROVED',
+      authorName: 'Participant Demo',
+      authorEmail: demoUsers.attendee1.email,
+      eventId: event2.id,
+      panelId: marketingPanel.id,
+    },
   });
 
   console.log('✅ Questions créées');
@@ -540,11 +566,13 @@ async function main() {
   console.log('Création des sondages...');
   const poll1 = await prisma.poll.create({
     data: {
-      title: 'Quel framework préférez-vous ?',
+      question: 'Quel framework préférez-vous ?',
       description: 'Votez pour votre framework de développement web préféré',
       isActive: true,
-      showResults: true,
+      isAnonymous: false,
+      allowMultipleVotes: false,
       eventId: event1.id,
+      panelId: panels[0]?.id || '',
       options: {
         create: [
           { text: 'React', order: 1 },
@@ -558,11 +586,13 @@ async function main() {
 
   const poll2 = await prisma.poll.create({
     data: {
-      title: 'Quel est votre plus grand défi en développement ?',
+      question: 'Quel est votre plus grand défi en développement ?',
       description: 'Partagez vos principaux défis au quotidien',
       isActive: false,
-      showResults: false,
+      isAnonymous: false,
+      allowMultipleVotes: false,
       eventId: event1.id,
+      panelId: panels[1]?.id || '',
       options: {
         create: [
           { text: 'Gestion du temps', order: 1 },
@@ -597,27 +627,34 @@ async function main() {
 
   // Création de certificats pour les participants
   console.log('Création des certificats...');
+  const certTemplate = await prisma.certificateTemplate.create({
+    data: {
+      title: 'Certificat de Participation',
+      description: 'Certificat standard pour les participants',
+      content: '<h1>Certificat de Participation</h1><p>Félicitations pour votre participation !</p>',
+      autoGenerate: true,
+      eventId: event1.id,
+      userId: organizer1.id,
+    },
+  });
+
   await prisma.certificate.createMany({
     data: [
       {
-        qrCode: 'CERT-001-CONF-TECH-2024',
+        content: '<h1>Certificat de Participation</h1><p>Félicitations pour votre participation !</p>',
+        certificateUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/certificates/CERT-001-CONF-TECH-2024`,
+        qrCodeUrl: await QRCode.toDataURL('CERT-001-CONF-TECH-2024'),
         userId: attendee1.id,
         eventId: event1.id,
-        metadata: JSON.stringify({
-          issuedDate: '2024-06-15',
-          certificateType: 'Participation',
-          hours: 8,
-        }),
+        templateId: certTemplate.id,
       },
       {
-        qrCode: 'CERT-002-CONF-TECH-2024',
+        content: '<h1>Certificat de Participation</h1><p>Félicitations pour votre participation !</p>',
+        certificateUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/certificates/CERT-002-CONF-TECH-2024`,
+        qrCodeUrl: await QRCode.toDataURL('CERT-002-CONF-TECH-2024'),
         userId: attendee2.id,
         eventId: event1.id,
-        metadata: JSON.stringify({
-          issuedDate: '2024-06-15',
-          certificateType: 'Participation',
-          hours: 8,
-        }),
+        templateId: certTemplate.id,
       },
     ],
   });
@@ -631,18 +668,21 @@ async function main() {
       {
         rating: 5,
         comment: 'Excellente conférence ! Très bien organisée et contenu pertinent.',
+        category: 'GENERAL',
         userId: attendee1.id,
         eventId: event1.id,
       },
       {
         rating: 4,
         comment: 'Très bon événement, quelques problèmes de son dans certaines salles.',
+        category: 'LOGISTICS',
         userId: attendee2.id,
         eventId: event1.id,
       },
       {
         rating: 5,
         comment: 'Parfait ! J\'ai appris beaucoup de choses.',
+        category: 'CONTENT',
         userId: attendee1.id,
         eventId: event2.id,
       },

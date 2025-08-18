@@ -1,42 +1,57 @@
-import NextAuth from 'next-auth'
+import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-
 import { db } from '@/lib/db'
-
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET is not set')
-}
-import { logger } from './logger'
-
 import bcrypt from 'bcryptjs'
+interface Logger {
+  info(message: string, meta?: Record<string, unknown>): void
+  error(message: string, meta?: Record<string, unknown>): void
+  warn(message: string, meta?: Record<string, unknown>): void
+}
 
-// Demo users with hashed passwords
-const demoUsers = [
-  {
-    id: 'admin-id',
-    email: 'admin@panelevent.com',
-    name: 'Administrateur',
-    role: 'ADMIN',
-    passwordHash: bcrypt.hashSync('admin123', 10)
+const logger: Logger = {
+  info: (message: string, meta?: Record<string, unknown>) => {
+    console.log(JSON.stringify({ level: 'info', message, ...meta }))
   },
-  {
-    id: 'organizer-id',
-    email: 'organizer@example.com',
-    name: 'Organisateur Demo',
-    role: 'ORGANIZER',
-    passwordHash: bcrypt.hashSync('demo123', 10)
+  error: (message: string, meta?: Record<string, unknown>) => {
+    console.error(JSON.stringify({ level: 'error', message, ...meta }))
   },
-  {
-    id: 'attendee-id',
-    email: 'attendee@example.com',
-    name: 'Participant Demo',
-    role: 'ATTENDEE',
-    passwordHash: bcrypt.hashSync('demo123', 10)
+  warn: (message: string, meta?: Record<string, unknown>) => {
+    console.warn(JSON.stringify({ level: 'warn', message, ...meta }))
   }
+}
+
+// Rate limiting implementation
+const checkRateLimit = async (email: string): Promise<boolean> => {
+  // TODO: Implement proper rate limiting with Redis
+  return false
+}
+
+interface Env {
+  NEXTAUTH_SECRET: string
+  ADMIN_EMAIL: string
+  ADMIN_PASSWORD: string
+  ORGANIZER_PASSWORD?: string
+  ATTENDEE_PASSWORD?: string
+  DEMO_PASSWORD?: string
+  NODE_ENV?: 'development' | 'production' | 'test'
+}
+
+const env = process.env as unknown as Env
+
+const requiredEnvVars: (keyof Env)[] = [
+  'NEXTAUTH_SECRET',
+  'ADMIN_EMAIL',
+  'ADMIN_PASSWORD'
 ]
 
+for (const envVar of requiredEnvVars) {
+  if (!env[envVar]) {
+    throw new Error(`${envVar} is not set`)
+  }
+}
 
-const authOptions = {
+
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       id: 'credentials',
@@ -47,27 +62,37 @@ const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          logger.warn('Missing credentials')
+          return null
+        }
+
+        // Rate limiting check
+        const isRateLimited = await checkRateLimit(credentials.email)
+        if (isRateLimited) {
+          logger.warn(`Rate limited for email: ${credentials.email}`)
           return null
         }
 
         const user = await db.user.findUnique({
-          where: { email: credentials.email }
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            // @ts-ignore - passwordHash exists but not in generated types
+            passwordHash: true
+          }
         })
 
-        if (!user) {
+        if (!user || !user.passwordHash) {
+          logger.warn(`Invalid user or password hash for: ${credentials.email}`)
           return null
         }
 
-        const rolePasswords: Record<string, string | undefined> = {
-          ADMIN: process.env.ADMIN_PASSWORD,
-          ORGANIZER: process.env.ORGANIZER_PASSWORD,
-          ATTENDEE: process.env.ATTENDEE_PASSWORD
-        }
-
-        const expectedPassword =
-          rolePasswords[user.role] ?? process.env.DEMO_PASSWORD
-
-        if (!expectedPassword || credentials.password !== expectedPassword) {
+        const passwordValid = await bcrypt.compare(credentials.password, user.passwordHash)
+        if (!passwordValid) {
+          logger.warn(`Invalid password attempt for: ${credentials.email}`)
           return null
         }
 
@@ -77,70 +102,12 @@ const authOptions = {
           name: user.name ?? undefined,
           role: user.role
         }
-
-        logger.info('Authorize function called', { email: credentials?.email })
-        console.log('Authorize function called with:', credentials?.email)
-        if (!credentials?.email || !credentials?.password) {
-          logger.error('Missing credentials')
-          return null
-        }
-
-        // Simple validation for demo
-
-        if (credentials?.email === 'admin@panelevent.com' && credentials?.password === 'admin123') {
-          logger.info('Admin authentication successful')
-
-        const adminEmail = process.env.ADMIN_EMAIL
-        const adminPassword = process.env.ADMIN_PASSWORD
-        if (
-          adminEmail &&
-          adminPassword &&
-          credentials?.email === adminEmail &&
-          credentials?.password === adminPassword
-        ) {
-          console.log('Admin authentication successful')
-          return {
-            id: 'admin-id',
-            email: adminEmail,
-            name: 'Administrateur',
-            role: 'ADMIN'
-          }
-
-        const user = demoUsers.find(u => u.email === credentials.email)
-        if (user && await bcrypt.compare(credentials.password, user.passwordHash)) {
-          console.log(`${user.role} authentication successful`)
-          const { passwordHash, ...userWithoutPassword } = user
-          return userWithoutPassword
-        }
-        
-        if (credentials?.email === 'organizer@example.com' && credentials?.password === 'demo123') {
-          logger.info('Organizer authentication successful')
-          return {
-            id: 'organizer-id',
-            email: 'organizer@example.com',
-            name: 'Organisateur Demo',
-            role: 'ORGANIZER'
-          }
-        }
-        
-        if (credentials?.email === 'attendee@example.com' && credentials?.password === 'demo123') {
-          logger.info('Attendee authentication successful')
-          return {
-            id: 'attendee-id',
-            email: 'attendee@example.com',
-            name: 'Participant Demo',
-            role: 'ATTENDEE'
-          }
-        }
-        logger.error('Authentication failed')
-        console.log('Authentication failed')
-        return null
       }
     })
   ],
   callbacks: {
     async jwt({ token, user }) {
-      logger.info('JWT callback called', { user })
+      logger.info('JWT callback called', { user, token })
       if (user) {
         token.role = user.role
         token.id = user.id
@@ -148,11 +115,17 @@ const authOptions = {
       return token
     },
     async session({ session, token }) {
-      logger.info('Session callback called', { tokenPresent: !!token })
+      logger.info('Session callback called', {
+        tokenPresent: !!token,
+        tokenContent: token,
+        sessionInitial: session
+      })
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.email = token.email as string
       }
+      logger.info('Session after modification', { session })
       return session
     }
   },
@@ -162,14 +135,25 @@ const authOptions = {
   },
   session: {
     strategy: 'jwt' as const,
-    maxAge: 30 * 24 * 60 * 60 // 30 days
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60 // Update session daily
   },
-  secret: process.env.NEXTAUTH_SECRET,
-
-  useSecureCookies: true,
-  debug: process.env.NODE_ENV !== 'production'
-
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  secret: env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: env.NODE_ENV === 'production'
+        ? `__Secure-next-auth.session-token`
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 // 30 days
+      }
+    }
+  },
+  useSecureCookies: env.NODE_ENV === 'production',
   debug: false
 
 }

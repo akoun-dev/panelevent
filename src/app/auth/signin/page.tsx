@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
+import { loginSchema } from '@/lib/validations'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,31 +12,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function SignIn() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting }
+  } = useForm({
+    resolver: zodResolver(loginSchema)
+  })
+
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  const onSubmit = async (data: { email: string; password: string }) => {
     setError('')
 
     try {
-      console.log('Attempting sign in with:', { email, password })
-      
       const result = await signIn('credentials', {
-        email,
-        password,
+        email: data.email,
+        password: data.password,
         redirect: false
       })
 
       console.log('Sign in result:', result)
 
-      if (result?.error) {
+      if (result && typeof result.error === 'string') {
         console.error('Sign in error:', result.error)
-        setError('Identifiants invalides')
+        setError(result.error.includes('CredentialsSignin') ? 'Identifiants invalides' : result.error)
       } else {
         console.log('Sign in successful, checking session...')
 
@@ -43,22 +47,8 @@ export default function SignIn() {
           console.log('Session data after login:', sessionData)
 
           if (sessionData?.user) {
-            // Redirection basée sur le rôle
-            switch (sessionData.user.role) {
-              case 'ADMIN':
-                console.log('Redirecting admin to /admin')
-                window.location.href = '/admin'
-                break
-              case 'ORGANIZER':
-                console.log('Redirecting organizer to /dashboard')
-                window.location.href = '/dashboard'
-                break
-              case 'ATTENDEE':
-              default:
-                console.log('Redirecting attendee to /')
-                window.location.href = '/'
-                break
-            }
+            // La redirection sera gérée par le middleware
+            window.location.href = '/auth/signin'
           } else {
             console.error('No user in session after login')
             setError('Erreur lors de la connexion')
@@ -71,20 +61,7 @@ export default function SignIn() {
     } catch (error) {
       console.error('Sign in exception:', error)
       setError('Une erreur est survenue')
-    } finally {
-      setLoading(false)
     }
-  }
-
-  const handleDemoLogin = (role: 'ORGANIZER' | 'ATTENDEE') => {
-    const demoUsers = {
-      ORGANIZER: { email: 'organizer@example.com', password: 'demo123' },
-      ATTENDEE: { email: 'attendee@example.com', password: 'demo123' }
-    }
-
-    const user = demoUsers[role]
-    setEmail(user.email)
-    setPassword(user.password)
   }
 
   return (
@@ -97,66 +74,47 @@ export default function SignIn() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="votre@email.com"
-                required
+                {...register('email')}
               />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Mot de passe</Label>
               <Input
                 id="password"
-                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                required
+                {...register('password')}
               />
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+              )}
             </div>
-            
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Connexion...' : 'Se connecter'}
+
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
 
           <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-3">Comptes de démonstration :</p>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleDemoLogin('ORGANIZER')}
-              >
-                Organisateur - organizer@example.com
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => handleDemoLogin('ATTENDEE')}
-              >
-                Participant - attendee@example.com
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              Note: Seul l'administrateur peut créer de nouveaux comptes organisateurs.
+            <p className="text-xs text-muted-foreground">
+              Contactez l'administrateur pour obtenir un compte
             </p>
           </div>
         </CardContent>
