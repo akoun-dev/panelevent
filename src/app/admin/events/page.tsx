@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -66,22 +66,7 @@ export default function AdminEventsPage() {
     totalPages: 0
   })
 
-  useEffect(() => {
-    fetchEvents()
-  }, [pagination.page, pagination.limit])
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      handleSearch()
-    }, 300)
-    return () => clearTimeout(timeoutId)
-  }, [searchTerm])
-
-  useEffect(() => {
-    handleFilterChange(statusFilter)
-  }, [statusFilter])
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: pagination.page.toString(),
@@ -95,14 +80,42 @@ export default function AdminEventsPage() {
       if (response.ok) {
         const data = await response.json()
         setEvents(data.events || [])
-        setPagination(data.pagination || pagination)
+        setPagination(prev => ({
+          ...prev,
+          ...(data.pagination || {})
+        }))
       }
     } catch (error) {
       console.error('Failed to fetch events:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination, searchTerm, statusFilter])
+
+  const handleSearch = useCallback(() => {
+    setPagination(prev => ({ ...prev, page: 1 }))
+    fetchEvents()
+  }, [fetchEvents])
+
+  useEffect(() => {
+    fetchEvents()
+  }, [fetchEvents])
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearch()
+    }, 300)
+    return () => clearTimeout(timeoutId)
+  }, [handleSearch, searchTerm])
+
+  const handleFilterChange = useCallback((status: string) => {
+    setStatusFilter(status)
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }, [])
+
+  useEffect(() => {
+    handleFilterChange(statusFilter)
+  }, [handleFilterChange, statusFilter])
 
   const handleCreateEvent = async () => {
     try {
@@ -170,18 +183,15 @@ export default function AdminEventsPage() {
     setPagination(prev => ({ ...prev, page }))
   }
 
-  const handleSearch = () => {
-    setPagination(prev => ({ ...prev, page: 1 }))
-    fetchEvents()
-  }
-
-  const handleFilterChange = (status: string) => {
-    setStatusFilter(status)
-    setPagination(prev => ({ ...prev, page: 1 }))
-  }
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'dd MMM yyyy à HH:mm', { locale: fr })
+    if (!dateString) return 'Date non définie'
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy à HH:mm', { locale: fr })
+    } catch (error) {
+      console.error('Erreur de formatage de date:', error)
+      return 'Date invalide'
+    }
   }
 
   // Responsive event card component for mobile
