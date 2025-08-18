@@ -3,6 +3,7 @@
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from '@/hooks/use-toast'
 
 export default function TestAuthDebug() {
   const { data: session, status } = useSession()
@@ -23,24 +24,14 @@ export default function TestAuthDebug() {
   const handleSignOut = async () => {
     try {
       console.log('Attempting to sign out...')
-      
-      // Supprimer les cookies NextAuth manuellement
-      document.cookie.split(';').forEach(cookie => {
-        const [name] = cookie.trim().split('=')
-        if (name.includes('next-auth')) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-        }
-      })
-      
-      // Appeler la fonction signOut de NextAuth
       await signOut({ callbackUrl: '/' })
-      
-      // Forcer le rechargement de la page
-      window.location.href = '/'
     } catch (error) {
       console.error('Sign out error:', error)
-      // En cas d'erreur, forcer le rechargement quand même
-      window.location.href = '/'
+      toast({
+        title: 'Erreur lors de la déconnexion',
+        description: 'Veuillez réessayer.',
+        variant: 'destructive'
+      })
     }
   }
 

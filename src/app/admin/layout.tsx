@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
+import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 import { 
   Home, 
@@ -82,23 +83,14 @@ export default function AdminLayout({
 
   const handleSignOut = async () => {
     try {
-      // Manually delete NextAuth cookies
-      document.cookie.split(';').forEach(cookie => {
-        const [name] = cookie.trim().split('=')
-        if (name.includes('next-auth')) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-        }
-      })
-      
-      // Call NextAuth sign out
       await signOut({ callbackUrl: '/' })
-      
-      // Force page reload
-      window.location.href = '/'
     } catch (error) {
       console.error('Error during sign out:', error)
-      // Fallback: force redirect to home page
-      window.location.href = '/'
+      toast({
+        title: 'Erreur lors de la déconnexion',
+        description: 'Veuillez réessayer.',
+        variant: 'destructive'
+      })
     }
   }
 
