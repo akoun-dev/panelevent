@@ -80,17 +80,14 @@ export default function AdminEventsPage() {
       if (response.ok) {
         const data = await response.json()
         setEvents(data.events || [])
-        setPagination(prev => ({
-          ...prev,
-          ...(data.pagination || {})
-        }))
+        setPagination(data.pagination || pagination)
       }
     } catch (error) {
       console.error('Failed to fetch events:', error)
     } finally {
       setLoading(false)
     }
-  }, [pagination, searchTerm, statusFilter])
+  }, [pagination.page, pagination.limit, searchTerm, statusFilter])
 
   const handleSearch = useCallback(() => {
     setPagination(prev => ({ ...prev, page: 1 }))
@@ -183,6 +180,15 @@ export default function AdminEventsPage() {
     setPagination(prev => ({ ...prev, page }))
   }
 
+  const handleSearch = () => {
+    setPagination(prev => ({ ...prev, page: 1 }))
+    fetchEvents()
+  }
+
+  const handleFilterChange = (status: string) => {
+    setStatusFilter(status)
+    setPagination(prev => ({ ...prev, page: 1 }))
+  }
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Date non définie'
