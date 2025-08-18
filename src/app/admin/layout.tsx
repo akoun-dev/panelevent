@@ -41,7 +41,6 @@ const adminNavItems: NavItem[] = [
   { title: "Questions & Réponses", href: "/admin/qa", description: "Modérer les Q&A", icon: MessageSquare },
   { title: "Sondages", href: "/admin/polls", description: "Gérer les sondages", icon: BarChart },
   { title: "Certificats", href: "/admin/certificates", description: "Gérer les certificats", icon: Star },
-  { title: "Enregistrements", href: "/admin/recordings", description: "Gérer les enregistrements audio", icon: Mic },
   { title: "Feedbacks", href: "/admin/feedbacks", description: "Analyser les feedbacks", icon: FileText },
   { title: "Exports", href: "/admin/export", description: "Exporter des données et rapports", icon: Download },
   { title: "Paramètres", href: "/admin/settings", description: "Configuration du système", icon: Settings },
@@ -62,8 +61,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       .toUpperCase();
   }, [session?.user?.name]);
 
-  const isActive = (href: string) =>
-    href === "/admin" ? pathname === "/admin" || pathname === "/admin/" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/admin") {
+      return pathname === "/admin" || pathname === "/admin/";
+    }
+    // Pour éviter les conflits avec les sous-routes similaires
+    return pathname === href ||
+           (pathname.startsWith(`${href}/`) &&
+            !pathname.startsWith(`${href}/[id]`));
+  };
 
   const handleSignOut = async () => {
     try {

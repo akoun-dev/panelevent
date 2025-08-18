@@ -51,11 +51,6 @@ const organizerNavItems = [
     description: 'Gérer les certificats'
   },
   {
-    title: 'Enregistrements',
-    href: '/dashboard/recordings',
-    description: 'Gérer les enregistrements audio'
-  },
-  {
     title: 'Feedbacks',
     href: '/dashboard/feedbacks',
     description: 'Analyser les feedbacks'
@@ -147,9 +142,11 @@ export default function DashboardLayout({
           {/* Navigation */}
           <nav className="grid gap-1 p-3">
             {organizerNavItems.map((item) => {
-              const isActive = pathname === item.href ||
-                (pathname.startsWith(item.href + '/') &&
-                !pathname.startsWith('/dashboard/events/[id]'))
+              const isActive =
+                pathname === item.href ||
+                pathname === `${item.href}/` ||
+                (pathname.startsWith(`${item.href}/`) &&
+                !pathname.includes('/[id]'));
 
               return (
                 <Link key={item.href} href={item.href}>

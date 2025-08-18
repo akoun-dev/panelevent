@@ -12,13 +12,15 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import Link from 'next/link'
 
+interface User {
+  id?: string
+  name?: string | null
+  email?: string | null
+}
+
 interface Registration {
   id: string
-  user: {
-    id: string
-    name: string
-    email: string
-  }
+  user: User | null
   event: {
     id: string
     title: string
@@ -57,18 +59,22 @@ export default function ParticipantsPage() {
     return format(new Date(dateString), 'dd MMM yyyy à HH:mm', { locale: fr })
   }
 
-  const filteredRegistrations = registrations.filter(reg => 
-    reg.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reg.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reg.event.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredRegistrations = registrations.filter(reg => {
+    const userName = reg.user?.name || ''
+    const userEmail = reg.user?.email || ''
+    return (
+      userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reg.event.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })
 
   const exportParticipants = () => {
     const csvContent = [
       ['Nom', 'Email', 'Événement', 'Date d\'inscription', 'Statut'],
       ...filteredRegistrations.map(reg => [
-        reg.user.name,
-        reg.user.email,
+        reg.user?.name || reg.user?.email?.split('@')[0] || 'Inconnu',
+       reg.user?.email || 'Email non disponible',
         reg.event.title,
         format(new Date(reg.registeredAt), 'dd/MM/yyyy HH:mm', { locale: fr }),
         reg.status === 'confirmed' ? 'Confirmé' : 'En attente'
@@ -200,16 +206,16 @@ export default function ParticipantsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-primary">
-                            {registration.user.name?.charAt(0).toUpperCase() || registration.user.email.charAt(0).toUpperCase()}
+                            {(registration.user?.name?.charAt(0) || registration.user?.email?.charAt(0) || '?').toUpperCase()}
                           </span>
                         </div>
                         <div>
                           <div className="font-medium">
-                            {registration.user.name || 'Nom non renseigné'}
+                            {registration.user?.name || registration.user?.email?.split('@')[0] || 'Utilisateur inconnu'}
                           </div>
                           <div className="text-sm text-muted-foreground flex items-center gap-1">
                             <Mail className="w-3 h-3" />
-                            {registration.user.email}
+                            {registration.user?.email || 'Email non disponible'}
                           </div>
                         </div>
                       </div>
