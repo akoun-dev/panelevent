@@ -32,12 +32,13 @@ async function createCustomServer() {
     });
 
     // Setup Socket.IO
+    const allowedOrigins = process.env.WS_ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) ?? [];
     const io = new Server(server, {
       path: '/api/socketio',
       cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-      }
+        origin: allowedOrigins,
+        methods: ['GET', 'POST'],
+      },
     });
 
     setupSocket(io);
