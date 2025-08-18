@@ -49,7 +49,11 @@ export async function POST(request: NextRequest) {
     const template = await db.certificateTemplate.findUnique({
       where: { id: templateId },
       include: {
-        event: true,
+        event: {
+          include: {
+            organizer: true
+          }
+        },
         user: true
       }
     })

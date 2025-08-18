@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema updated to match current application models
 
 generator client {
   provider = "prisma-client-js"
@@ -22,13 +18,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
   eventRegistrations EventRegistration[]
   organizedEvents    Event[]          @relation("OrganizedEvents")
-  questions          Question[]
   pollResponses      PollResponse[]
   feedbacks          Feedback[]
   certificates       Certificate[]
+  certificateTemplates CertificateTemplate[]
+  helpfulVotes       HelpfulVote[]
+  questionVotes      QuestionVote[]
 
   @@map("users")
 }
@@ -44,27 +41,27 @@ model Event {
   isPublic    Boolean     @default(true)
   isActive    Boolean     @default(false)
   branding    Json?
-  program     String?     // Programme de l'événement (texte formaté ou JSON)
-  qrCode      String?     // QR code pour l'inscription publique
-  maxAttendees Int?       // Nombre maximum de participants
+  program     String?
+  qrCode      String?
+  maxAttendees Int?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  // Relations
-  organizerId     String
-  organizer       User           @relation("OrganizedEvents", fields: [organizerId], references: [id])
-  panels          Panel[]
+  organizerId String
+  organizer   User        @relation("OrganizedEvents", fields: [organizerId], references: [id])
+  panels      Panel[]
   registrations   EventRegistration[]
-  questions       Question[]
-  polls           Poll[]
+  questions   Question[]
+  polls       Poll[]
   certificates    Certificate[]
   feedbacks       Feedback[]
+  certificateTemplates CertificateTemplate[]
 
   @@map("events")
 }
 
 model Panel {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   title       String
   description String?
   startTime   DateTime
@@ -76,17 +73,17 @@ model Panel {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Relations
   eventId String
-  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   questions Question[]
+  polls     Poll[]
 
   @@map("panels")
 }
 
 model EventRegistration {
-  id         String            @id @default(cuid())
-  email      String
+  id         String   @id @default(cuid())
+  email      String?
   firstName  String?
   lastName   String?
   phone      String?
@@ -95,52 +92,70 @@ model EventRegistration {
   experience String?
   expectations String?
   dietaryRestrictions String?
-  consent    Boolean           @default(false)
-  isPublic   Boolean           @default(true)  // Pour les inscriptions publiques sans compte utilisateur
-  createdAt  DateTime          @default(now())
+  consent    Boolean  @default(false)
+  isPublic   Boolean  @default(true)
+  attended   Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
-  // Relations
   userId  String?
-  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user    User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
   eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
   @@map("event_registrations")
 }
 
 model Question {
-  id        String        @id @default(cuid())
+  id        String   @id @default(cuid())
   content   String
   status    QuestionStatus @default(PENDING)
-  votes     Int           @default(0)
-  isAnswered Boolean      @default(false)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  authorName  String
+  authorEmail String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Relations
-  userId   String
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventId  String
-  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  panelId  String?
-  panel    Panel? @relation(fields: [panelId], references: [id], onDelete: SetNull)
+  eventId String?
+  event   Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  panelId String
+  panel   Panel @relation(fields: [panelId], references: [id], onDelete: Cascade)
+  votes   QuestionVote[]
 
   @@map("questions")
 }
 
+model QuestionVote {
+  questionId String
+  userId     String
+  type       VoteType
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, userId])
+  @@map("question_votes")
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
 model Poll {
   id          String   @id @default(cuid())
-  title       String
+  question    String
   description String?
   isActive    Boolean  @default(false)
-  showResults Boolean  @default(false)
+  isAnonymous Boolean  @default(false)
+  allowMultipleVotes Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
-  eventId String
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String?
+  event   Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  panelId String
+  panel   Panel @relation(fields: [panelId], references: [id], onDelete: Cascade)
   options PollOption[]
   responses PollResponse[]
 
@@ -150,13 +165,11 @@ model Poll {
 model PollOption {
   id     String @id @default(cuid())
   text   String
-  votes  Int    @default(0)
   order  Int    @default(0)
 
-  // Relations
-  pollId     String
-  poll       Poll           @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  responses  PollResponse[]
+  pollId String
+  poll   Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  responses PollResponse[]
 
   @@map("poll_options")
 }
@@ -165,32 +178,51 @@ model PollResponse {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  // Relations
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pollId     String
-  poll       Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  optionId   String
-  option     PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pollId   String
+  poll     Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, pollId])
+  @@unique([userId, pollId, optionId])
   @@map("poll_responses")
 }
 
-model Certificate {
+model CertificateTemplate {
   id          String   @id @default(cuid())
-  qrCode      String   @unique
-  issuedAt    DateTime @default(now())
-  verifiedAt  DateTime?
-  metadata    Json?
+  title       String
+  description String?
+  content     String
+  autoGenerate Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // Relations
+  eventId String
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId  String?
+  user    User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  certificates Certificate[]
+
+  @@map("certificate_templates")
+}
+
+model Certificate {
+  id           String   @id @default(cuid())
+  content      String
+  issuedAt     DateTime @default(now())
+  certificateUrl String
+  qrCodeUrl    String
+  verifiedAt   DateTime?
+
+  templateId String
+  template   CertificateTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   userId  String
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, eventId])
+  @@unique([templateId, userId])
   @@map("certificates")
 }
 
@@ -198,16 +230,30 @@ model Feedback {
   id         String   @id @default(cuid())
   rating     Int
   comment    String?
+  category   String
+  resolved   Boolean @default(false)
   createdAt  DateTime @default(now())
 
-  // Relations
   userId  String
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   eventId String
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  helpfulVotes HelpfulVote[]
 
   @@unique([userId, eventId])
   @@map("feedbacks")
+}
+
+model HelpfulVote {
+  feedbackId String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([feedbackId, userId])
+  @@map("helpful_votes")
 }
 
 enum UserRole {

@@ -28,7 +28,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let programData = null
+    let programData: any = null
     if (event.program) {
       try {
         programData = JSON.parse(event.program)
@@ -83,7 +83,7 @@ export async function PUT(
     const body = await request.json()
     const { hasProgram, programText, programItems } = body
 
-    let programValue = null
+    let programValue: string | null = null
     if (hasProgram) {
       programValue = JSON.stringify({
         hasProgram: true,

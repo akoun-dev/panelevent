@@ -16,11 +16,14 @@ export async function GET() {
       authOptionsConfigured: !!authOptions,
       providersCount: authOptions.providers?.length || 0
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('NextAuth test error:', error)
-    return NextResponse.json({ 
-      error: 'NextAuth test failed',
-      details: error.message 
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'NextAuth test failed',
+        details: error instanceof Error ? error.message : String(error)
+      },
+      { status: 500 }
+    )
   }
 }

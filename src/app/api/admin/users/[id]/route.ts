@@ -21,7 +21,6 @@ export async function GET(
           select: {
             eventRegistrations: true,
             organizedEvents: true,
-            questions: true,
             pollResponses: true,
             feedbacks: true,
             certificates: true
@@ -86,7 +85,6 @@ export async function PATCH(
           select: {
             eventRegistrations: true,
             organizedEvents: true,
-            questions: true,
             pollResponses: true,
             feedbacks: true,
             certificates: true

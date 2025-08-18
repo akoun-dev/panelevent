@@ -36,7 +36,7 @@ export default function CreateEvent() {
         body: JSON.stringify({
           ...formData,
           slug,
-          organizerId: session.user?.id
+          organizerId: session?.user?.id
         })
       })
 

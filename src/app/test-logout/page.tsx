@@ -7,6 +7,7 @@ import { LogOut, User, CheckCircle, XCircle } from 'lucide-react'
 
 export default function TestLogout() {
   const { data: session, status } = useSession()
+  const isDisabled = (!session) || ((status as string) === 'loading')
 
   const handleSignOut = async () => {
     try {
@@ -155,18 +156,18 @@ export default function TestLogout() {
             <div className="space-y-4">
               <h3 className="font-semibold">Options de déconnexion</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button 
+                <Button
                   onClick={handleSignOut}
-                  disabled={!session || status === 'loading'}
+                  disabled={isDisabled}
                   className="w-full"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Déconnexion standard
                 </Button>
                 
-                <Button 
+                <Button
                   onClick={handleSignOutWithRedirect}
-                  disabled={!session || status === 'loading'}
+                  disabled={isDisabled}
                   variant="outline"
                   className="w-full"
                 >
@@ -174,9 +175,9 @@ export default function TestLogout() {
                   Déconnexion avec redirect
                 </Button>
                 
-                <Button 
+                <Button
                   onClick={handleSignOutWithoutRedirect}
-                  disabled={!session || status === 'loading'}
+                  disabled={isDisabled}
                   variant="outline"
                   className="w-full"
                 >
