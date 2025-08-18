@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { logger } from './lib/logger'
 
 export async function middleware(request: NextRequest) {
   let token
   try {
-    token = await getToken({ 
-      req: request, 
+    token = await getToken({
+      req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: false
+      secureCookie: process.env.NODE_ENV === 'production'
     })
   } catch (error) {
-    console.log('JWT decryption error, clearing session and redirecting to login')
+    logger.error('JWT decryption error, clearing session and redirecting to login', { error })
     // Clear the session cookie and redirect to login
     const response = NextResponse.redirect(new URL('/auth/signin', request.url))
     response.cookies.delete('next-auth.session-token')
@@ -21,8 +22,8 @@ export async function middleware(request: NextRequest) {
   
   const { pathname } = request.nextUrl
 
-  console.log('Middleware - Path:', pathname)
-  console.log('Middleware - Token:', token)
+  logger.info('Middleware - Path', { pathname })
+  logger.info('Middleware - Token present', { tokenPresent: !!token })
 
   // Si l'utilisateur n'est pas connecté et essaie d'accéder à une page protégée
   if (!token && (
@@ -31,18 +32,18 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/events/create') ||
     pathname.startsWith('/admin-simple')
   )) {
-    console.log('Redirecting to signin - no token')
+    logger.info('Redirecting to signin - no token')
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
   // Si l'utilisateur est connecté
   if (token) {
     const userRole = token.role as string
-    console.log('User role:', userRole)
+    logger.info('User role', { userRole })
 
     // Redirection selon le rôle après connexion (uniquement depuis la page de connexion)
     if (pathname === '/auth/signin') {
-      console.log('Redirecting from signin based on role:', userRole)
+      logger.info('Redirecting from signin based on role', { userRole })
       if (userRole === 'ADMIN') {
         return NextResponse.redirect(new URL('/admin', request.url))
       } else if (userRole === 'ORGANIZER') {
@@ -54,25 +55,25 @@ export async function middleware(request: NextRequest) {
 
     // Protection des routes admin
     if (pathname.startsWith('/admin') && userRole !== 'ADMIN') {
-      console.log('Access denied to admin route for role:', userRole)
+      logger.info('Access denied to admin route for role', { userRole })
       return NextResponse.redirect(new URL('/', request.url))
     }
 
     // Protection des routes admin-simple
     if (pathname.startsWith('/admin-simple') && userRole !== 'ADMIN') {
-      console.log('Access denied to admin-simple route for role:', userRole)
+      logger.info('Access denied to admin-simple route for role', { userRole })
       return NextResponse.redirect(new URL('/', request.url))
     }
 
     // Protection des routes dashboard
     if (pathname.startsWith('/dashboard') && userRole !== 'ORGANIZER' && userRole !== 'ADMIN') {
-      console.log('Access denied to dashboard route for role:', userRole)
+      logger.info('Access denied to dashboard route for role', { userRole })
       return NextResponse.redirect(new URL('/', request.url))
     }
 
     // Protection des routes de création d'événements
     if (pathname.startsWith('/events/create') && userRole !== 'ORGANIZER' && userRole !== 'ADMIN') {
-      console.log('Access denied to events/create route for role:', userRole)
+      logger.info('Access denied to events/create route for role', { userRole })
       return NextResponse.redirect(new URL('/', request.url))
     }
   }
