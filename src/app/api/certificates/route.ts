@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
-// POST /api/certificates - Générer un nouveau certificat
+// POST /api/certificates - Générer un nouveau certificat pour l'utilisateur authentifié
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { templateId, userId, eventId } = body
+    const session = await getServerSession(authOptions)
 
-    if (!templateId || !userId || !eventId) {
+    if (!session || (session.user?.role !== 'ORGANIZER' && session.user?.role !== 'ADMIN')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { templateId, eventId } = body
+    const userId = session.user!.id
+
+    if (!templateId || !eventId) {
       return NextResponse.json(
-        { error: 'TemplateId, userId, and eventId are required' },
+        { error: 'TemplateId and eventId are required' },
         { status: 400 }
       )
     }

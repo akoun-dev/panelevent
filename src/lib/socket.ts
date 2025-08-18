@@ -6,8 +6,8 @@ export const setupSocket = (io: Server) => {
     
     // Handle messages
     socket.on('message', (msg: { text: string; senderId: string }) => {
-      // Echo: broadcast message only the client who send the message
-      socket.emit('message', {
+      // Broadcast message to all connected clients
+      io.emit('message', {
         text: `Echo: ${msg.text}`,
         senderId: 'system',
         timestamp: new Date().toISOString(),
@@ -19,7 +19,7 @@ export const setupSocket = (io: Server) => {
       console.log('Client disconnected:', socket.id);
     });
 
-    // Send welcome message
+    // Send welcome message to the newly connected client
     socket.emit('message', {
       text: 'Welcome to WebSocket Echo Server!',
       senderId: 'system',

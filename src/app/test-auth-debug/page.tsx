@@ -10,12 +10,7 @@ export default function TestAuthDebug() {
 
   const handleSignIn = async () => {
     try {
-      const result = await signIn('credentials', {
-        email: 'admin@panelevent.com',
-        password: 'admin123',
-        redirect: false
-      })
-      console.log('Sign in result:', result)
+      await signIn()
     } catch (error) {
       console.error('Sign in error:', error)
     }
@@ -72,7 +67,7 @@ export default function TestAuthDebug() {
 
             <div className="flex gap-4">
               <Button onClick={handleSignIn} disabled={status === 'loading'}>
-                Se connecter en tant qu'admin
+                Se connecter
               </Button>
               <Button onClick={handleSignOut} disabled={status === 'loading'} variant="outline">
                 Se déconnecter
