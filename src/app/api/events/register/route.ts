@@ -1,10 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+// Simple in-memory rate limiting
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const RATE_LIMIT_MAX = 5
+const rateLimitStore = new Map<string, { count: number; firstRequest: number }>()
+
+function isRateLimited(ip: string) {
+  const now = Date.now()
+  const entry = rateLimitStore.get(ip)
+
+  if (!entry) {
+    rateLimitStore.set(ip, { count: 1, firstRequest: now })
+    return false
+  }
+
+  if (now - entry.firstRequest > RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(ip, { count: 1, firstRequest: now })
+    return false
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return true
+  }
+
+  entry.count++
+  return false
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const ip =
+      request.ip ||
+      request.headers.get('x-forwarded-for') ||
+      'unknown'
+
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: 'Trop de tentatives. Veuillez réessayer plus tard.' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
-    
+
     const {
       eventId,
       email,
@@ -15,13 +54,25 @@ export async function POST(request: NextRequest) {
       position,
       experience,
       expectations,
-      dietaryRestrictions
+      dietaryRestrictions,
+      consent
     } = body
 
     // Validation des champs obligatoires
-    if (!eventId || !email || !firstName || !lastName) {
+    if (!eventId || !email || !firstName || !lastName || consent !== true) {
       return NextResponse.json(
-        { error: 'Les champs email, prénom et nom sont obligatoires' },
+        {
+          error:
+            'Les champs email, prénom, nom et consentement sont obligatoires'
+        },
+        { status: 400 }
+      )
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: "Format d'adresse email invalide" },
         { status: 400 }
       )
     }
@@ -93,7 +144,7 @@ export async function POST(request: NextRequest) {
         expectations,
         dietaryRestrictions,
         isPublic: true,
-        consent: true
+        consent
       }
     })
 
