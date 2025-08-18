@@ -19,11 +19,18 @@ const authOptions = {
         }
 
         // Simple validation for demo
-        if (credentials?.email === 'admin@panelevent.com' && credentials?.password === 'admin123') {
+        const adminEmail = process.env.ADMIN_EMAIL
+        const adminPassword = process.env.ADMIN_PASSWORD
+        if (
+          adminEmail &&
+          adminPassword &&
+          credentials?.email === adminEmail &&
+          credentials?.password === adminPassword
+        ) {
           console.log('Admin authentication successful')
           return {
             id: 'admin-id',
-            email: 'admin@panelevent.com',
+            email: adminEmail,
             name: 'Administrateur',
             role: 'ADMIN'
           }

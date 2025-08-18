@@ -32,14 +32,6 @@ export default function TestAuthSimple() {
       
       <div className="space-y-4">
         <button
-          onClick={() => handleLogin('admin@panelevent.com', 'admin123')}
-          disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-        >
-          {loading ? 'Chargement...' : 'Se connecter en tant qu\'admin'}
-        </button>
-        
-        <button
           onClick={() => handleLogin('organizer@example.com', 'demo123')}
           disabled={loading}
           className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"

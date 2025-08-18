@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // In-memory user store for demo
+const adminEmail = process.env.ADMIN_EMAIL
+const adminPassword = process.env.ADMIN_PASSWORD
 const users = [
-  {
-    id: 'admin-id',
-    email: 'admin@panelevent.com',
-    name: 'Administrateur',
-    role: 'ADMIN',
-    password: 'admin123'
-  },
+  ...(adminEmail && adminPassword
+    ? [
+        {
+          id: 'admin-id',
+          email: adminEmail,
+          name: 'Administrateur',
+          role: 'ADMIN',
+          password: adminPassword
+        }
+      ]
+    : []),
   {
     id: 'organizer-id',
     email: 'organizer@example.com',

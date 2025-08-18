@@ -1,29 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-
-// Simple admin authentication (bypass NextAuth for now)
-async function getAdminUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader || !authHeader.startsWith('Basic ')) {
-    return null
-  }
-
-  const base64Credentials = authHeader.split(' ')[1]
-  const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii')
-  const [email, password] = credentials.split(':')
-
-  // Simple validation for demo
-  if (email === 'admin@panelevent.com' && password === 'admin123') {
-    return { id: 'admin-id', email, role: 'ADMIN' }
-  }
-
-  return null
-}
 
 export async function GET(request: NextRequest) {
   try {
-    const adminUser = await getAdminUser(request)
-    if (!adminUser) {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user?.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -37,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: any = {}
-    
+
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },

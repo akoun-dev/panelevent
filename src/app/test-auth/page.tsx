@@ -44,25 +44,10 @@ export default function TestAuthPage() {
               <div className="space-y-2">
                 <h3 className="font-semibold">Comptes de démonstration:</h3>
                 <div className="grid gap-2">
-                  <Button 
+                  <Button
                     onClick={() => {
-                      signIn('credentials', { 
-                        email: 'admin@panelevent.com', 
-                        password: 'admin123',
-                        callbackUrl: '/admin'
-                      })
-                    }}
-                    variant="outline"
-                    className="justify-start"
-                  >
-                    <div className="text-left">
-                      <div>Admin: admin@panelevent.com / admin123</div>
-                    </div>
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      signIn('credentials', { 
-                        email: 'organizer@example.com', 
+                      signIn('credentials', {
+                        email: 'organizer@example.com',
                         password: 'demo123',
                         callbackUrl: '/dashboard'
                       })
@@ -111,18 +96,6 @@ export default function TestAuthPage() {
                       </a>
                     </Button>
                   )}
-                  <Button 
-                    onClick={() => {
-                      signIn('credentials', { 
-                        email: 'admin@panelevent.com', 
-                        password: 'admin123',
-                        callbackUrl: '/admin'
-                      })
-                    }}
-                    variant="outline"
-                  >
-                    Tester la connexion admin
-                  </Button>
                 </div>
               </div>
             )}
