@@ -86,9 +86,9 @@ fi
 
 echo ""
 echo "🎯 Comptes de démonstration:"
-echo "   Admin: admin@panelevent.com / admin123"
-echo "   Organisateur: organizer@example.com / demo123"
-echo "   Participant: attendee@example.com / demo123"
+[ -n "$ADMIN_EMAIL" ] && echo "   Admin: $ADMIN_EMAIL"
+[ -n "$ORGANIZER_EMAIL" ] && echo "   Organisateur: $ORGANIZER_EMAIL"
+[ -n "$ATTENDEE_EMAIL" ] && echo "   Participant: $ATTENDEE_EMAIL"
 
 echo ""
 echo "✨ Environnement vérifié!"

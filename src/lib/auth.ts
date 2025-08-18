@@ -1,5 +1,10 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import { db } from '@/lib/db'
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is not set')
+}
 
 const authOptions = {
   providers: [
@@ -11,46 +16,37 @@ const authOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('Authorize function called with:', credentials?.email)
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log('Missing credentials')
           return null
         }
 
-        // Simple validation for demo
-        if (credentials?.email === 'admin@panelevent.com' && credentials?.password === 'admin123') {
-          console.log('Admin authentication successful')
-          return {
-            id: 'admin-id',
-            email: 'admin@panelevent.com',
-            name: 'Administrateur',
-            role: 'ADMIN'
-          }
+        const user = await db.user.findUnique({
+          where: { email: credentials.email }
+        })
+
+        if (!user) {
+          return null
         }
-        
-        if (credentials?.email === 'organizer@example.com' && credentials?.password === 'demo123') {
-          console.log('Organizer authentication successful')
-          return {
-            id: 'organizer-id',
-            email: 'organizer@example.com',
-            name: 'Organisateur Demo',
-            role: 'ORGANIZER'
-          }
+
+        const rolePasswords: Record<string, string | undefined> = {
+          ADMIN: process.env.ADMIN_PASSWORD,
+          ORGANIZER: process.env.ORGANIZER_PASSWORD,
+          ATTENDEE: process.env.ATTENDEE_PASSWORD
         }
-        
-        if (credentials?.email === 'attendee@example.com' && credentials?.password === 'demo123') {
-          console.log('Attendee authentication successful')
-          return {
-            id: 'attendee-id',
-            email: 'attendee@example.com',
-            name: 'Participant Demo',
-            role: 'ATTENDEE'
-          }
+
+        const expectedPassword =
+          rolePasswords[user.role] ?? process.env.DEMO_PASSWORD
+
+        if (!expectedPassword || credentials.password !== expectedPassword) {
+          return null
         }
-        
-        console.log('Authentication failed')
-        return null
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? undefined,
+          role: user.role
+        }
       }
     })
   ],
@@ -81,8 +77,8 @@ const authOptions = {
     maxAge: 30 * 24 * 60 * 60 // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
-  useSecureCookies: false,
-  debug: true // Enable debug mode
+  useSecureCookies: true,
+  debug: process.env.NODE_ENV !== 'production'
 }
 
 const handler = NextAuth(authOptions)
