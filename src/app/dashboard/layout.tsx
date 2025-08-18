@@ -26,11 +26,6 @@ const organizerNavItems = [
     description: 'Vue d\'ensemble et statistiques'
   },
   {
-    title: 'Créer un événement',
-    href: '/events/create',
-    description: 'Créer un nouvel événement'
-  },
-  {
     title: 'Mes événements',
     href: '/dashboard/events',
     description: 'Gérer tous mes événements'
@@ -117,12 +112,12 @@ export default function DashboardLayout({
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <div className={cn(
-        "border-r bg-gray-50/40 transition-all duration-300",
-        isSidebarCollapsed ? "w-16" : "w-64"
+        "border-r bg-muted/20 transition-[width] duration-300 ease-in-out",
+        isSidebarCollapsed ? "w-[72px]" : "w-64"
       )}>
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex h-16 items-center border-b px-4">
+          <div className="flex h-16 items-center gap-3 border-b px-3">
             {!isSidebarCollapsed && (
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -150,12 +145,18 @@ export default function DashboardLayout({
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 p-4">
+          <nav className="grid gap-1 p-3">
             {organizerNavItems.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+              const isActive = item.href === '/dashboard'
+                ? pathname === '/dashboard' || pathname === '/dashboard/'
+                : pathname === item.href || pathname.startsWith(`${item.href}/`)
 
               return (
-                <Link key={item.href} href={item.href}>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                >
                   <div
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
@@ -191,7 +192,7 @@ export default function DashboardLayout({
           </nav>
 
           {/* User Section */}
-          <div className="border-t p-4">
+          <div className="border-t p-3">
             <div className={cn(
               "flex items-center gap-3",
               isSidebarCollapsed && "flex-col gap-2"
@@ -226,12 +227,11 @@ export default function DashboardLayout({
         </div>
       </div>
       
-      <main className={cn(
-        "flex-1 overflow-auto",
-        isSidebarCollapsed ? "ml-16" : "ml-64"
-      )}>
-        <div className="container mx-auto p-6">
-          {children}
+      <main className="flex-1 overflow-auto">
+        <div className="mx-auto max-w-[1400px] p-6 md:p-10">
+          <div className="rounded-xl border bg-background p-6 md:p-10 shadow-sm">
+            {children}
+          </div>
         </div>
       </main>
     </div>
