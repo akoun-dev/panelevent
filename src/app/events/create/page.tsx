@@ -35,8 +35,7 @@ export default function CreateEvent() {
         },
         body: JSON.stringify({
           ...formData,
-          slug,
-          organizerId: session?.user?.id
+          slug
         })
       })
 
@@ -44,8 +43,11 @@ export default function CreateEvent() {
         router.push('/dashboard/events')
       } else {
         const error = await response.json()
-        console.error('Failed to create event:', error.error)
-        alert(error.error || 'Erreur lors de la création de l\'événement')
+        console.error('Failed to create event:', error)
+        const message = Array.isArray(error.details)
+          ? `${error.error}: ${error.details.join(', ')}`
+          : error.error
+        alert(message || 'Erreur lors de la création de l\'événement')
       }
     } catch (error) {
       console.error('Error creating event:', error)
