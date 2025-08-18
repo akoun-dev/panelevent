@@ -13,12 +13,12 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { 
-  Certificate, 
-  Download, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Award,
+  Download,
+  Plus,
+  Edit,
+  Trash2,
   Users,
   CheckCircle,
   Clock,
@@ -407,7 +407,7 @@ Délivré le [DATE DE DÉLIVRANCE]
                               {template.autoGenerate && <Badge variant="outline">Auto</Badge>}
                             </div>
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Certificate className="w-4 h-4" />
+                              <Award className="w-4 h-4" />
                               {template.issuedCount}
                             </div>
                           </div>
@@ -479,7 +479,7 @@ Délivré le [DATE DE DÉLIVRANCE]
 
                     <div className="flex items-center gap-4 text-sm">
                       <span className="flex items-center gap-1">
-                        <Certificate className="w-4 h-4" />
+                        <Award className="w-4 h-4" />
                         {selectedTemplate.issuedCount} certificats délivrés
                       </span>
                       <span>Créé le {format(new Date(selectedTemplate.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}</span>

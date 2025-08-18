@@ -13,10 +13,10 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { 
-  Mic, 
-  Square, 
-  Play, 
+import {
+  Mic,
+  Square,
+  Play,
   Pause,
   Download,
   FileText,
@@ -24,7 +24,7 @@ import {
   Volume2,
   Trash2,
   Headphones,
-  Transcription,
+  AudioLines,
   Save,
   Share2
 } from 'lucide-react'
@@ -575,7 +575,7 @@ export default function EventRecordingsPage({ params }: { params: { id: string }
                           size="sm"
                           onClick={() => startTranscription(selectedRecording.id)}
                         >
-                          <Transcription className="w-4 h-4 mr-2" />
+                          <AudioLines className="w-4 h-4 mr-2" />
                           Transcrire
                         </Button>
                       )}

@@ -13,18 +13,18 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { 
-  Poll, 
-  BarChart3, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Play, 
+import {
+  BarChart3,
+  Plus,
+  Edit,
+  Trash2,
+  Play,
   Pause,
   Users,
   CheckCircle,
   Clock,
-  MoreVertical
+  MoreVertical,
+  Vote
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -400,7 +400,7 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Poll className="w-5 h-5" />
+              <Vote className="w-5 h-5" />
               Sondages ({filteredPolls.length})
             </CardTitle>
           </CardHeader>

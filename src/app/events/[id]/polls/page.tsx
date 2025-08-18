@@ -8,10 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Poll, 
-  BarChart3, 
-  CheckCircle, 
+import {
+  BarChart3,
+  CheckCircle,
   Users,
   Clock,
   Vote
@@ -291,7 +290,7 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
           <div className="col-span-full">
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Poll className="h-12 w-12 text-muted-foreground mb-4" />
+                <Vote className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Aucun sondage actif</h3>
                 <p className="text-muted-foreground text-center">
                   Il n'y a aucun sondage actif pour cette session.

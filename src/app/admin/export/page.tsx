@@ -11,16 +11,16 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
-import { 
-  Download, 
-  FileText, 
-  Database, 
+import {
+  Download,
+  FileText,
+  Database,
+  BarChart2,
   BarChart3,
   Users,
   MessageSquare,
-  Poll,
-  Certificate,
-  Feedback,
+  MessageCircle,
+  Award,
   Calendar as CalendarIcon,
   Filter,
   RefreshCw,
@@ -312,9 +312,9 @@ export default function AdminExportPage() {
       case 'users': return <Users className="w-4 h-4" />
       case 'registrations': return <Users className="w-4 h-4" />
       case 'questions': return <MessageSquare className="w-4 h-4" />
-      case 'polls': return <Poll className="w-4 h-4" />
-      case 'certificates': return <Certificate className="w-4 h-4" />
-      case 'feedback': return <Feedback className="w-4 h-4" />
+      case 'polls': return <BarChart2 className="w-4 h-4" />
+      case 'certificates': return <Award className="w-4 h-4" />
+      case 'feedback': return <MessageCircle className="w-4 h-4" />
       case 'financial': return <BarChart3 className="w-4 h-4" />
       default: return <FileText className="w-4 h-4" />
     }
