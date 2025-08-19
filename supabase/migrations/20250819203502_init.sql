@@ -14,7 +14,7 @@ CREATE TABLE users (
   "updatedAt" timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT users_email_key UNIQUE (email)
 );
-
+-- Events are organized by users; an event can have many panels and registrations
 CREATE TABLE events (
   id text PRIMARY KEY,
   title text NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE events (
   CONSTRAINT events_slug_key UNIQUE (slug),
   CONSTRAINT events_organizerId_fkey FOREIGN KEY ("organizerId") REFERENCES users(id) ON DELETE RESTRICT
 );
-
+-- Panels belong to events
 CREATE TABLE panels (
   id text PRIMARY KEY,
   title text NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE poll_responses (
   CONSTRAINT poll_responses_pollId_fkey FOREIGN KEY ("pollId") REFERENCES polls(id) ON DELETE CASCADE,
   CONSTRAINT poll_responses_optionId_fkey FOREIGN KEY ("optionId") REFERENCES poll_options(id) ON DELETE CASCADE
 );
-
+-- Association table linking users and events with dedicated RLS policies
 CREATE TABLE event_registrations (
   id text PRIMARY KEY,
   email text,
@@ -132,6 +132,21 @@ CREATE TABLE event_registrations (
   CONSTRAINT event_registrations_userId_fkey FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT event_registrations_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
+
+-- Enable row level security for the association table
+ALTER TABLE event_registrations ENABLE ROW LEVEL SECURITY;
+
+-- Users can manage their own registrations
+CREATE POLICY "Users manage own registrations" ON event_registrations
+  FOR ALL USING (auth.uid() = "userId") WITH CHECK (auth.uid() = "userId");
+
+-- Event organizers can manage registrations for their events
+CREATE POLICY "Organizers manage event registrations" ON event_registrations
+  FOR ALL USING (
+    auth.uid() = (
+      SELECT "organizerId" FROM events WHERE events.id = event_registrations."eventId"
+    )
+  );
 
 CREATE TABLE certificate_templates (
   id text PRIMARY KEY,

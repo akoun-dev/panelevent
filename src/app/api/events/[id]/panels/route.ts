@@ -15,17 +15,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: panels, error } = await supabase
-      .from('panels')
-      .select('*')
-      .eq('eventId', id)
-      .order('order', { ascending: true })
+    const { data: eventWithPanels, error } = await supabase
+      .from('events')
+      .select('panels(*)')
+      .eq('id', id)
+      .order('order', { ascending: true, foreignTable: 'panels' })
+      .single()
 
     if (error) {
       console.error('Failed to fetch panels:', error)
       return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 
+    const panels = eventWithPanels?.panels || []
     return NextResponse.json({ panels })
   } catch (error) {
     console.error('Failed to fetch panels:', error)
