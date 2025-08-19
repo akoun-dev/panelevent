@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const slug = params.slug
+    const { slug } = await params
 
     // Récupérer l'événement par son slug
     const event = await db.event.findUnique({

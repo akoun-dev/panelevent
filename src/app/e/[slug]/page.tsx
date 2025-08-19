@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,20 +31,17 @@ interface Event {
 }
 
 export default function EventPage() {
-  const params = useParams()
+  const { slug } = useParams<{ slug: string }>()
   const router = useRouter()
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [registering, setRegistering] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
 
-  useEffect(() => {
-    fetchEvent()
-  }, [params.slug])
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch(`/api/events/by-slug/${params.slug}`)
+      const response = await fetch(`/api/events/by-slug/${slug}`)
       if (response.ok) {
         const data = await response.json()
         setEvent(data.event)
@@ -69,7 +66,8 @@ export default function EventPage() {
   const handleRegistration = async (data: { email: string; consent: boolean }) => {
     setRegistering(true)
     try {
-      const response = await fetch(`/api/events/${event!.id}/registrations`, {
+      if (!event?.id) return
+      const response = await fetch(`/api/events/${event.id}/registrations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

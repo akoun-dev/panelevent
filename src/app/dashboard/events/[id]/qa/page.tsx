@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,7 +50,9 @@ interface Panel {
   eventId: string
 }
 
-export default function EventQAPage({ params }: { params: { id: string } }) {
+export default function EventQAPage() {
+  const params = useParams<{ id: string }>()
+  const id = params?.id ?? ''
   const [activePanel, setActivePanel] = useState<string>('')
   const [panels, setPanels] = useState<Panel[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
@@ -71,7 +74,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
           description: 'Session d\'ouverture de la conférence',
           startTime: '2024-01-15T09:00:00',
           endTime: '2024-01-15T10:00:00',
-          eventId: params.id
+          eventId: id,
         },
         {
           id: '2',
@@ -79,7 +82,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
           description: 'Discussion sur les dernières tendances tech',
           startTime: '2024-01-15T10:30:00',
           endTime: '2024-01-15T12:00:00',
-          eventId: params.id
+          eventId: id,
         },
         {
           id: '3',
@@ -87,7 +90,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
           description: 'Atelier pratique sur les solutions durables',
           startTime: '2024-01-15T14:00:00',
           endTime: '2024-01-15T15:30:00',
-          eventId: params.id
+          eventId: id,
         }
       ]
 
@@ -153,7 +156,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
     }
 
     loadData()
-  }, [params.id])
+  }, [id])
 
   // Filtrer les questions
   useEffect(() => {
@@ -353,7 +356,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
                           <p className="text-sm font-medium mb-1">Réponse:</p>
                           <p className="text-sm">{question.answer}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Par {question.answeredBy} - {format(new Date(question.answeredAt!), 'HH:mm', { locale: fr })}
+                            Par {question.answeredBy} - {question.answeredAt ? format(new Date(question.answeredAt), 'HH:mm', { locale: fr }) : ''}
                           </p>
                         </div>
                       )}
@@ -447,7 +450,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
                     <div className="p-3 bg-muted rounded-lg">
                       <p className="text-sm">{selectedQuestion.answer}</p>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Par {selectedQuestion.answeredBy} - {format(new Date(selectedQuestion.answeredAt!), 'HH:mm', { locale: fr })}
+                        Par {selectedQuestion.answeredBy} - {selectedQuestion.answeredAt ? format(new Date(selectedQuestion.answeredAt), 'HH:mm', { locale: fr }) : ''}
                       </p>
                     </div>
                   </div>

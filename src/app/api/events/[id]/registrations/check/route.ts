@@ -8,6 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session || !session.user?.id) {
@@ -18,7 +19,7 @@ export async function GET(
       where: {
         userId_eventId: {
           userId: session.user.id,
-          eventId: params.id
+          eventId: id
         }
       }
     })
