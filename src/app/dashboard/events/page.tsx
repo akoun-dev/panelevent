@@ -7,6 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, Users, Plus, Eye, Edit, FileText } from 'lucide-react'
 import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import CreateEventForm from '@/components/events/CreateEventForm'
 
 interface Event {
   id: string
@@ -73,12 +81,22 @@ export default function EventsPage() {
             Gérez tous vos événements créés
           </p>
         </div>
-        <Button asChild>
-          <Link href="/events/create">
-            <Plus className="w-4 h-4 mr-2" />
-            Créer un événement
-          </Link>
-        </Button>
+        
+        {/* Déplacer le Dialog au niveau racine */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Créer un événement
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px]">
+            <DialogHeader>
+              <DialogTitle>Créer un nouvel événement</DialogTitle>
+            </DialogHeader>
+            <CreateEventForm onSuccess={() => window.location.reload()} />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {events.length === 0 ? (
@@ -89,12 +107,20 @@ export default function EventsPage() {
             <p className="text-muted-foreground text-center mb-4">
               Vous n'avez pas encore créé d'événement.
             </p>
-            <Button asChild>
-              <Link href="/events/create">
-                <Plus className="w-4 h-4 mr-2" />
-                Créer votre premier événement
-              </Link>
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Créer votre premier événement
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[800px]">
+                <DialogHeader>
+                  <DialogTitle>Créer un nouvel événement</DialogTitle>
+                </DialogHeader>
+                <CreateEventForm onSuccess={() => window.location.reload()} />
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       ) : (
