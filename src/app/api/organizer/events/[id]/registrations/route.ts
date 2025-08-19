@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import supabase from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -17,7 +18,14 @@ export async function GET(
         { status: 401 }
       )
     }
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('organizer_id')
+      .eq('id', id)
+      .eq('organizer_id', session.user.id)
+      .single()
 
+    if (eventError || !event) {
     const { data: event, error: findError } = await supabase
       .from('events')
       .select('organizerId')
@@ -31,13 +39,21 @@ export async function GET(
       )
     }
 
-    if (event.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('id,email,first_name,last_name,phone,company,position,attended,created_at, user:users(email,name)')
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
+
+    if (error || !data) {
       return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
+        { error: 'Failed to fetch registrations' },
+        { status: 500 }
       )
     }
 
+
+    const formattedRegistrations = data.map(reg => ({
     const { data: registrations, error } = await supabase
       .from('event_registrations')
       .select(
@@ -54,8 +70,8 @@ export async function GET(
     const formattedRegistrations = (registrations || []).map((reg) => ({
       id: reg.id,
       email: reg.email || reg.user?.email || '',
-      firstName: reg.firstName || reg.user?.name?.split(' ')[0] || '',
-      lastName: reg.lastName || reg.user?.name?.split(' ').slice(1).join(' ') || '',
+      firstName: reg.first_name || reg.user?.name?.split(' ')[0] || '',
+      lastName: reg.last_name || reg.user?.name?.split(' ').slice(1).join(' ') || '',
       phone: reg.phone || '',
       company: reg.company || '',
       position: reg.position || '',

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import supabase from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET() {
   try {
@@ -14,6 +14,25 @@ export async function GET() {
       )
     }
 
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('organizer_id', session.user.id)
+
+    if (error) throw error
+
+    const events = (data || []).map(
+      ({ organizer_id, start_date, end_date, is_public, is_active, max_attendees, ...rest }) => ({
+        ...rest,
+        organizerId: organizer_id,
+        startDate: start_date,
+        endDate: end_date,
+        isPublic: is_public,
+        isActive: is_active,
+        maxAttendees: max_attendees
+      })
+    )
+
     const { data: events, error } = await supabase
       .from('events')
       .select('*')
@@ -22,7 +41,6 @@ export async function GET() {
     if (error) {
       throw error
     }
-
     return NextResponse.json(events)
   } catch {
     return NextResponse.json(
@@ -44,6 +62,23 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
+    const { data, error } = await supabase
+      .from('events')
+      .insert({ ...body, organizer_id: session.user.id })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    const event = {
+      ...data,
+      organizerId: data.organizer_id,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      isPublic: data.is_public,
+      isActive: data.is_active,
+      maxAttendees: data.max_attendees
+
     const { data: event, error } = await supabase
       .from('events')
       .insert({ ...body, organizerId: session.user.id })
