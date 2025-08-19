@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,17 +37,15 @@ export default function OrganizerEventProgramPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    fetchEventAndProgram()
-  }, [params.id])
-
-  const fetchEventAndProgram = async () => {
+  const fetchEventAndProgram = useCallback(async () => {
     try {
       // Fetch event details
       const eventsResponse = await fetch('/api/events/my-events')
       if (eventsResponse.ok) {
-        const eventsData = await eventsResponse.json()
-        const currentEvent = eventsData.find((e: Event) => e.id === params.id)
+        const { events } = await eventsResponse.json()
+        const currentEvent = Array.isArray(events)
+          ? events.find((e: Event) => e.id === String(params.id))
+          : null
         if (currentEvent) {
           setEvent(currentEvent)
         }
@@ -64,7 +62,11 @@ export default function OrganizerEventProgramPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
+
+  useEffect(() => {
+    fetchEventAndProgram()
+  }, [fetchEventAndProgram])
 
   const handleSaveProgram = async (data: ProgramData) => {
     setSaving(true)
@@ -116,9 +118,9 @@ export default function OrganizerEventProgramPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
-            <Link href={`/dashboard/events/${params.id}`}>
+            <Link href="/dashboard/events">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour
+              Retour à la liste
             </Link>
           </Button>
           <div>

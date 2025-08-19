@@ -3,11 +3,27 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
+interface ProgramData {
+  hasProgram: boolean
+  programText?: string
+  programItems?: Array<{
+    id: string
+    time: string
+    title: string
+    description?: string
+    speaker?: string
+    location?: string
+  }>
+  updatedAt?: string
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Await params to ensure they're resolved
+    const { id } = params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
@@ -16,7 +32,7 @@ export async function GET(
 
     // Check if user has access to this event
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { organizerId: true, program: true }
     })
 
@@ -28,10 +44,10 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let programData: any = null
+    let programData: ProgramData | null = null
     if (event.program) {
       try {
-        programData = JSON.parse(event.program)
+        programData = JSON.parse(event.program) as ProgramData
       } catch {
         // If it's not JSON, treat it as plain text
         programData = {
@@ -60,6 +76,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Await params to ensure they're resolved
+    const { id } = params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
@@ -68,7 +86,7 @@ export async function PUT(
 
     // Check if user has access to this event
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { organizerId: true }
     })
 
@@ -83,6 +101,19 @@ export async function PUT(
     const body = await request.json()
     const { hasProgram, programText, programItems } = body
 
+    // Validate program items time format
+    if (programItems) {
+      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
+      for (const item of programItems) {
+        if (!timeRegex.test(item.time)) {
+          return NextResponse.json(
+            { error: `Format d'heure invalide pour "${item.title}"` },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
     let programValue: string | null = null
     if (hasProgram) {
       programValue = JSON.stringify({
@@ -94,7 +125,7 @@ export async function PUT(
     }
 
     const updatedEvent = await db.event.update({
-      where: { id: params.id },
+      where: { id },
       data: { program: programValue },
       select: {
         id: true,
