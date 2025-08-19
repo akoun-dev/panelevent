@@ -2,7 +2,6 @@ import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
 import { supabase } from '@/lib/supabase'
-
 import bcrypt from 'bcryptjs'
 interface Logger {
   info(message: string, meta?: Record<string, unknown>): void
