@@ -27,7 +27,7 @@ This scaffold provides a robust foundation built with:
 - **🌐 Axios** - Promise-based HTTP client
 
 ### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
+- **🗄️ Supabase** - Postgres backend with migrations, auth, and Row Level Security
 - **🔐 NextAuth.js** - Complete open-source authentication solution
 
 ### 🎨 Advanced UI Features
@@ -47,7 +47,7 @@ This scaffold provides a robust foundation built with:
 - **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
 - **🔒 Type Safety** - Full TypeScript configuration with Zod validation
 - **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
+- **🗄️ Database Ready** - Supabase configured with PostgreSQL migrations and Row Level Security
 - **🔐 Auth Included** - NextAuth.js for secure authentication flows
 - **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
 - **🌍 i18n Ready** - Multi-language support with Next Intl
@@ -125,7 +125,7 @@ This scaffold includes a comprehensive set of modern web development tools:
 
 ### 🔐 Backend Integration
 - **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
+- **Database**: Supabase Postgres with migrations and Row Level Security
 - **API Client**: HTTP requests with Axios + TanStack Query
 - **State Management**: Simple and scalable with Zustand
 
