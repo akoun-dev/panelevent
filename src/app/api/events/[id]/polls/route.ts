@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import { Prisma } from '@prisma/client'
 
 // GET /api/events/[id]/polls - Récupérer tous les sondages d'un événement
@@ -91,14 +92,14 @@ export async function POST(
     }
 
     // Vérifier que le panel appartient à l'événement
-    const panel = await db.panel.findFirst({
-      where: {
-        id: panelId,
-        eventId: id
-      }
-    })
+    const { data: panel, error: panelError } = await supabase
+      .from('panels')
+      .select('id')
+      .eq('id', panelId)
+      .eq('eventId', id)
+      .single()
 
-    if (!panel) {
+    if (panelError || !panel) {
       return NextResponse.json(
         { error: 'Panel not found or does not belong to this event' },
         { status: 404 }

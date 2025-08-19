@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { QuestionStatus } from '@prisma/client'
+import { supabase } from '@/lib/supabase'
 
 interface QuestionUpdateData {
-  status?: QuestionStatus
+  status?: string
   answer?: string | null
-  answeredAt?: Date | null
-  answeredBy?: string
+  answered_at?: string | null
+  answered_by?: string
 }
 
 // PATCH /api/questions/[id] - Mettre à jour une question (statut, réponse)
@@ -20,35 +19,28 @@ export async function PATCH(
     const { status, answer, answeredBy } = body
 
     const updateData: QuestionUpdateData = {}
-    
+
     if (status) {
       updateData.status = status
     }
-    
+
     if (answer !== undefined) {
       updateData.answer = answer
-      updateData.answeredAt = answer ? new Date() : null
-    }
-    
-    if (answeredBy) {
-      updateData.answeredBy = answeredBy
+      updateData.answered_at = answer ? new Date().toISOString() : null
     }
 
-    const question = await db.question.update({
-      where: { id: resolvedParams.id },
-      data: updateData,
-      include: {
-        panel: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            endTime: true
-          }
-        },
-        votes: true
-      }
-    })
+    if (answeredBy) {
+      updateData.answered_by = answeredBy
+    }
+
+    const { data: question, error } = await supabase
+      .from('questions')
+      .update(updateData)
+      .eq('id', resolvedParams.id)
+      .select(`*, panel:panels(id,title,start_time,end_time)`)
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(question)
   } catch (error) {
@@ -67,9 +59,12 @@ export async function DELETE(
 ) {
   try {
     const resolvedParams = await params
-    await db.question.delete({
-      where: { id: resolvedParams.id }
-    })
+    const { error } = await supabase
+      .from('questions')
+      .delete()
+      .eq('id', resolvedParams.id)
+
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {

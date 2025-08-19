@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -16,14 +16,16 @@ export async function GET(
       return NextResponse.json({ registered: false })
     }
 
-    const registration = await db.eventRegistration.findUnique({
-      where: {
-        userId_eventId: {
-          userId: session.user.id,
-          eventId: id
-        }
-      }
-    })
+    const { data: registration } = await supabase
+      .from('event_registrations')
+      .select('id')
+
+      .eq('userId', session.user.id)
+      .eq('eventId', id)
+
+      .eq('user_id', session.user.id)
+      .eq('event_id', id)
+      .maybeSingle()
 
     return NextResponse.json({ registered: !!registration })
   } catch (error) {
