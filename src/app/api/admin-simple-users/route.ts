@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { Prisma } from '@prisma/client'
+import supabase from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,51 +16,56 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || ''
     const role = searchParams.get('role') || ''
 
-    const skip = (page - 1) * limit
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
-    // Build where clause
-    const where: Prisma.UserWhereInput = {}
+    let query = supabase
+      .from('users')
+      .select(
+        `id, email, name, role, createdAt,
+         eventRegistrations:event_registrations(id),
+         organizedEvents:events!organizerId(id),
+         pollResponses:poll_responses(id),
+         feedbacks:feedback(id),
+         certificates:certificates(id)`,
+        { count: 'exact' }
+      )
+      .order('createdAt', { ascending: false })
+      .range(from, to)
 
     if (search) {
-      where.OR = [
-        { email: { contains: search } },
-        { name: { contains: search } }
-      ]
+      query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`)
     }
 
     if (role && role !== 'all') {
-      where.role = role as 'ADMIN' | 'ORGANIZER' | 'ATTENDEE'
+      query = query.eq('role', role)
     }
 
-    const [users, total] = await Promise.all([
-      db.user.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: {
-            select: {
-              eventRegistrations: true,
-              organizedEvents: true,
-              pollResponses: true,
-              feedbacks: true,
-              certificates: true
-            }
-          }
-        }
-      }),
-      db.user.count({ where })
-    ])
+    const { data, count, error: usersError } = await query
+
+    if (usersError) {
+      throw usersError
+    }
+
+    const users = (data || []).map((u) => ({
+      ...u,
+      _count: {
+        eventRegistrations: u.eventRegistrations?.length || 0,
+        organizedEvents: u.organizedEvents?.length || 0,
+        pollResponses: u.pollResponses?.length || 0,
+        feedbacks: u.feedbacks?.length || 0,
+        certificates: u.certificates?.length || 0,
+      },
+    }))
 
     return NextResponse.json({
       users,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
     })
   } catch (error) {
     console.error('Failed to fetch users:', error)
