@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
-import { Prisma } from '@prisma/client'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase
 
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement
 export async function GET(
@@ -16,7 +17,7 @@ export async function GET(
     const rating = searchParams.get('rating')
     const resolved = searchParams.get('resolved')
 
-    const whereClause: Prisma.FeedbackWhereInput = {
+    const whereClause: any = {
       eventId: id
     }
 

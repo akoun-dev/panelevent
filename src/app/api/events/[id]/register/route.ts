@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import { generateRegistrationToken } from '@/lib/tokens'
 
 export async function GET(
@@ -8,10 +8,11 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params
-    const event = await db.event.findUnique({
-      where: { id: resolvedParams.id },
-      select: { id: true, title: true }
-    })
+    const { data: event } = await supabase
+      .from('events')
+      .select('id, title')
+      .eq('id', resolvedParams.id)
+      .maybeSingle()
 
     if (!event) {
       return NextResponse.json(

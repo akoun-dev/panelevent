@@ -1,6 +1,6 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 interface Logger {
   info(message: string, meta?: Record<string, unknown>): void
@@ -73,16 +73,11 @@ const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await db.user.findUnique({
-          where: { email: credentials.email },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            passwordHash: true
-          }
-        })
+        const { data: user } = await supabase
+          .from('users')
+          .select('id, email, name, role, passwordHash')
+          .eq('email', credentials.email)
+          .maybeSingle()
 
         if (!user || !user.passwordHash) {
           logger.warn(`Invalid user or password hash for: ${credentials.email}`)

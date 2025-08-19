@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 
 export async function PATCH(
@@ -19,11 +18,11 @@ export async function PATCH(
     const body = await request.json()
     const { title, description, startTime, endTime, speaker, location, order, isActive } = body
 
-    // Check if user has access to this event
-    const event = await db.event.findUnique({
-      where: { id: resolvedParams.id },
-      select: { organizerId: true }
-    })
+    const { data: event } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', resolvedParams.id)
+      .maybeSingle()
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
@@ -75,11 +74,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has access to this event
-    const event = await db.event.findUnique({
-      where: { id: resolvedParams.id },
-      select: { organizerId: true }
-    })
+    const { data: event } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', resolvedParams.id)
+      .maybeSingle()
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })

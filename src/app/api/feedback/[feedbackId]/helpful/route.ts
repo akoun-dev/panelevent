@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 // POST /api/feedback/[feedbackId]/helpful - Ajouter ou supprimer un vote utile
 export async function POST(
@@ -18,37 +18,29 @@ export async function POST(
       )
     }
 
-    // Vérifier si l'utilisateur a déjà voté
-    const existingVote = await db.helpfulVote.findUnique({
-      where: {
-        feedbackId_userId: {
-          feedbackId: resolvedParams.feedbackId,
-          userId
-        }
-      }
-    })
-
-    let vote
+    const { data: existingVote } = await supabase
+      .from('helpful_votes')
+      .select('feedbackId')
+      .eq('feedbackId', resolvedParams.feedbackId)
+      .eq('userId', userId)
+      .maybeSingle()
 
     if (existingVote) {
-      // Si le vote existe déjà, le supprimer (toggle)
-      vote = await db.helpfulVote.delete({
-        where: {
-          feedbackId_userId: {
-            feedbackId: resolvedParams.feedbackId,
-            userId
-          }
-        }
-      })
-    } else {
-      // Créer un nouveau vote
-      vote = await db.helpfulVote.create({
-        data: {
-          feedbackId: resolvedParams.feedbackId,
-          userId
-        }
-      })
+      const { data: deleted } = await supabase
+        .from('helpful_votes')
+        .delete()
+        .eq('feedbackId', resolvedParams.feedbackId)
+        .eq('userId', userId)
+        .select()
+        .single()
+      return NextResponse.json(deleted)
     }
+
+    const { data: vote } = await supabase
+      .from('helpful_votes')
+      .insert({ feedbackId: resolvedParams.feedbackId, userId })
+      .select()
+      .single()
 
     return NextResponse.json(vote)
   } catch (error) {
@@ -67,18 +59,14 @@ export async function GET(
 ) {
   try {
     const resolvedParams = await params
-    const votes = await db.helpfulVote.findMany({
-      where: { feedbackId: resolvedParams.feedbackId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    })
+    const { data: votes, error } = await supabase
+      .from('helpful_votes')
+      .select('user:users(id,name,email)')
+      .eq('feedbackId', resolvedParams.feedbackId)
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json(votes)
   } catch (error) {

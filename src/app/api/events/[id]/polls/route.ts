@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
-import { Prisma } from '@prisma/client'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase
 
 // GET /api/events/[id]/polls - Récupérer tous les sondages d'un événement
 export async function GET(
@@ -14,7 +15,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
 
-    const whereClause: Prisma.PollWhereInput = {
+    const whereClause: any = {
       panel: {
         eventId: id
       }

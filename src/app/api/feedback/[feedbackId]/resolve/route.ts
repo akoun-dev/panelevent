@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 // POST /api/feedback/[feedbackId]/resolve - Marquer un feedback comme résolu/non résolu
 export async function POST(
@@ -18,24 +18,20 @@ export async function POST(
       )
     }
 
-    const feedback = await db.feedback.update({
-      where: { id: resolvedParams.feedbackId },
-      data: { resolved },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        helpfulVotes: true
-      }
-    })
+    const { data: feedback, error } = await supabase
+      .from('feedbacks')
+      .update({ resolved })
+      .eq('id', resolvedParams.feedbackId)
+      .select('id, rating, comment, category, resolved, user:users(id,name,email), helpfulVotes:helpful_votes(userId)')
+      .single()
+
+    if (error || !feedback) {
+      throw error
+    }
 
     const feedbackWithVotes = {
       ...feedback,
-      helpful: feedback.helpfulVotes.length
+      helpful: feedback.helpfulVotes?.length || 0
     }
 
     return NextResponse.json(feedbackWithVotes)

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET() {
   if (process.env.NODE_ENV !== 'development') {
@@ -7,15 +7,13 @@ export async function GET() {
   }
 
   try {
-    const users = await db.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true
-      }
-    })
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, email, name, role, createdAt')
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json({ users })
   } catch (error) {

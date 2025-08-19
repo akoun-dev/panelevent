@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 
 interface ProgramData {
@@ -31,11 +30,11 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has access to this event
-    const event = await db.event.findUnique({
-      where: { id },
-      select: { organizerId: true, program: true }
-    })
+    const { data: event } = await supabase
+      .from('events')
+      .select('organizerId, program')
+      .eq('id', id)
+      .maybeSingle()
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
@@ -85,11 +84,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user has access to this event
-    const event = await db.event.findUnique({
-      where: { id },
-      select: { organizerId: true }
-    })
+    const { data: event } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .maybeSingle()
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })

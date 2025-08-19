@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-import { supabase } from '@/lib/supabase'
-import { Prisma, QuestionStatus } from '@prisma/client'
-
 
 // GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
 export async function GET(
