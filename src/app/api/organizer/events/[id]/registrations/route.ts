@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { supabase } from '@/lib/supabase'
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -17,56 +18,70 @@ export async function GET(
         { status: 401 }
       )
     }
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('organizer_id')
+      .eq('id', id)
+      .eq('organizer_id', session.user.id)
+      .single()
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const event = await prisma.event.findUnique({
-      where: { id }
-    })
+    if (eventError || !event) {
+    const { data: event, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
 
-    if (!event) {
+    if (findError || !event) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
 
-    if (event.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('id,email,first_name,last_name,phone,company,position,attended,created_at, user:users(email,name)')
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
+
+    if (error || !data) {
       return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
+        { error: 'Failed to fetch registrations' },
+        { status: 500 }
       )
     }
 
-    // Récupérer les inscriptions avec les informations utilisateur
-    const registrations = await prisma.eventRegistration.findMany({
-      where: { eventId: id },
-      include: {
-        user: {
-          select: {
-            email: true,
-            name: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
 
-    // Formater les données pour inclure les informations utilisateur
-    const formattedRegistrations = registrations.map(reg => ({
+    const formattedRegistrations = data.map(reg => ({
+    const { data: registrations, error } = await supabase
+      .from('event_registrations')
+      .select(
+        `id, email, firstName, lastName, phone, company, position, attended, createdAt,
+         user:users(email,name)`
+      )
+      .eq('eventId', id)
+      .order('createdAt', { ascending: false })
+
+    if (error) {
+      throw error
+    }
+
+    const formattedRegistrations = (registrations || []).map((reg) => ({
       id: reg.id,
       email: reg.email || reg.user?.email || '',
-      firstName: reg.firstName || reg.user?.name?.split(' ')[0] || '',
-      lastName: reg.lastName || reg.user?.name?.split(' ').slice(1).join(' ') || '',
+      firstName: reg.first_name || reg.user?.name?.split(' ')[0] || '',
+      lastName: reg.last_name || reg.user?.name?.split(' ').slice(1).join(' ') || '',
       phone: reg.phone || '',
       company: reg.company || '',
       position: reg.position || '',
       attended: reg.attended,
-      createdAt: reg.createdAt.toISOString()
+      createdAt: reg.createdAt,
     }))
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       registrations: formattedRegistrations,
-      total: formattedRegistrations.length
+      total: formattedRegistrations.length,
     })
   } catch (error) {
     console.error('Failed to fetch registrations:', error)

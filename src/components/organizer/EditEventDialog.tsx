@@ -1,6 +1,6 @@
 'use client'
 
-import { Event } from '@prisma/client'
+import type { Database } from '@/types/supabase'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Edit } from 'lucide-react'
@@ -11,7 +11,7 @@ export default function EditEventDialog({
   event,
   onSuccess,
 }: {
-  event: Event
+  event: Database['public']['Tables']['events']['Row']
   onSuccess: () => void
 }) {
   const [isOpen, setIsOpen] = useState(false)

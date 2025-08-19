@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 // POST /api/questions/[id]/votes - Ajouter ou modifier un vote
 export async function POST(
@@ -27,49 +27,49 @@ export async function POST(
     }
 
     // Vérifier si l'utilisateur a déjà voté pour cette question
-    const existingVote = await db.questionVote.findUnique({
-      where: {
-        questionId_userId: {
-          questionId: id,
-          userId
-        }
-      }
-    })
+    const { data: existingVote } = await supabase
+      .from('question_votes')
+      .select('*')
+      .eq('question_id', id)
+      .eq('user_id', userId)
+      .single()
 
     let vote
 
     if (existingVote) {
       if (existingVote.type === type) {
         // Si le vote est le même, le supprimer (toggle)
-        vote = await db.questionVote.delete({
-          where: {
-            questionId_userId: {
-              questionId: id,
-              userId
-            }
-          }
-        })
+        const { data } = await supabase
+          .from('question_votes')
+          .delete()
+          .eq('question_id', id)
+          .eq('user_id', userId)
+          .select()
+          .single()
+        vote = data
       } else {
         // Si le vote est différent, le mettre à jour
-        vote = await db.questionVote.update({
-          where: {
-            questionId_userId: {
-              questionId: id,
-              userId
-            }
-          },
-          data: { type }
-        })
+        const { data } = await supabase
+          .from('question_votes')
+          .update({ type })
+          .eq('question_id', id)
+          .eq('user_id', userId)
+          .select()
+          .single()
+        vote = data
       }
     } else {
       // Créer un nouveau vote
-      vote = await db.questionVote.create({
-        data: {
-          questionId: id,
-          userId,
+      const { data } = await supabase
+        .from('question_votes')
+        .insert({
+          question_id: id,
+          user_id: userId,
           type
-        }
-      })
+        })
+        .select()
+        .single()
+      vote = data
     }
 
     return NextResponse.json(vote)
@@ -90,18 +90,12 @@ export async function GET(
   const resolvedParams = await params
   const { id } = resolvedParams
   try {
-    const votes = await db.questionVote.findMany({
-      where: { questionId: id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    })
+    const { data: votes, error } = await supabase
+      .from('question_votes')
+      .select('*, user:users(id,name,email)')
+      .eq('question_id', id)
+
+    if (error) throw error
 
     return NextResponse.json(votes)
   } catch (error) {
