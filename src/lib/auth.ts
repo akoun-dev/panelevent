@@ -80,7 +80,6 @@ const authOptions: NextAuthOptions = {
             email: true,
             name: true,
             role: true,
-            // @ts-expect-error - passwordHash exists but not in generated types
             passwordHash: true
           }
         })

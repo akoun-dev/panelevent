@@ -9,33 +9,35 @@ import { EventActions } from '@/components/organizer/EventActions'
 
 interface EventsTableProps {
   events: Event[]
+  onRefresh: () => void
 }
 
-const columns: ColumnDef<Event>[] = [
-  {
-    accessorKey: 'title',
-    header: 'Titre',
-  },
-  {
-    accessorKey: 'startDate',
-    header: 'Date de début',
-    cell: ({ row }) => format(new Date(row.getValue('startDate')), 'PPp', { locale: fr }),
-  },
-  {
-    accessorKey: 'location',
-    header: 'Lieu',
-  },
-  {
-    accessorKey: 'isPublic',
-    header: 'Public',
-    cell: ({ row }) => (row.getValue('isPublic') ? 'Oui' : 'Non'),
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => <EventActions event={row.original} onRefresh={() => {}} />,
-  },
-]
 
-export function EventsTable({ events }: EventsTableProps) {
-  return <DataTable columns={columns} data={events} />
+export function EventsTable({ events, onRefresh }: EventsTableProps) {
+  const columnsWithRefresh: ColumnDef<Event>[] = [
+    {
+      accessorKey: 'title',
+      header: 'Titre',
+    },
+    {
+      accessorKey: 'startDate',
+      header: 'Date de début',
+      cell: ({ row }) => format(new Date(row.getValue('startDate')), 'PPp', { locale: fr }),
+    },
+    {
+      accessorKey: 'location',
+      header: 'Lieu',
+    },
+    {
+      accessorKey: 'isPublic',
+      header: 'Public',
+      cell: ({ row }) => (row.getValue('isPublic') ? 'Oui' : 'Non'),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => <EventActions event={row.original} onRefresh={onRefresh} />,
+    },
+  ]
+
+  return <DataTable columns={columnsWithRefresh} data={events} />
 }

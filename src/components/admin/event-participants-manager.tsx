@@ -249,7 +249,6 @@ export default function EventParticipantsManager({ eventId }: EventParticipantsM
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedRegistration(registration)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
