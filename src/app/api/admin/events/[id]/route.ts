@@ -85,38 +85,34 @@ export async function PATCH(
 
     const { title, description, startDate, endDate, location, isPublic, isActive, organizerId } = await request.json()
 
-    interface UpdateData {
-      title?: string
-      slug?: string
-      description?: string
-      startDate?: Date
-      endDate?: Date | null
-      location?: string
-      isPublic?: boolean
-      isActive?: boolean
-      organizerId?: string
-    }
-
-    const updateData: UpdateData = {}
+    const updateData: Record<string, any> = {}
     if (title !== undefined) {
       updateData.title = title
-      // Update slug if title changes
       updateData.slug = title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '')
     }
     if (description !== undefined) updateData.description = description
-    if (startDate !== undefined) updateData.startDate = new Date(startDate)
-    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null
+    if (startDate !== undefined) updateData.startDate = new Date(startDate).toISOString()
+    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate).toISOString() : null
     if (location !== undefined) updateData.location = location
     if (isPublic !== undefined) updateData.isPublic = isPublic
     if (isActive !== undefined) updateData.isActive = isActive
     if (organizerId !== undefined) updateData.organizerId = organizerId
 
-    const event = await db.event.update({
+    const { error: updateError } = await supabase
+      .from('events')
+      .update(updateData)
+      .eq('id', resolvedParams.id)
+
+    if (updateError) {
+      console.error('Failed to update event:', updateError)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
+
+    const event = await db.event.findUnique({
       where: { id: resolvedParams.id },
-      data: updateData,
       include: {
         organizer: {
           select: {
@@ -157,6 +153,17 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Delete related panels using Supabase
+    const { error: panelError } = await supabase
+      .from('panels')
+      .delete()
+      .eq('eventId', resolvedParams.id)
+
+    if (panelError) {
+      console.error('Failed to delete panels:', panelError)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
+
     // Delete related data first due to foreign key constraints
     await supabase
       .from('event_registrations')
@@ -174,9 +181,6 @@ export async function DELETE(
         where: { eventId: resolvedParams.id }
       }),
       db.certificate.deleteMany({
-        where: { eventId: resolvedParams.id }
-      }),
-      db.panel.deleteMany({
         where: { eventId: resolvedParams.id }
       }),
       db.event.delete({
