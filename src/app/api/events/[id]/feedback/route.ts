@@ -94,8 +94,12 @@ export async function POST(
     const { data: registration } = await supabase
       .from('event_registrations')
       .select('id')
+      .eq('userId', userId)
+      .eq('eventId', id)
+
       .eq('user_id', userId)
       .eq('event_id', id)
+
       .eq('attended', true)
       .maybeSingle()
 

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 
 export async function GET(
@@ -21,11 +20,13 @@ export async function GET(
     const eventId = resolvedParams.id
 
     // Vérifier si l'événement existe
-    const event = await db.event.findUnique({
-      where: { id: eventId }
-    })
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('id, title, slug, program')
+      .eq('id', eventId)
+      .single()
 
-    if (!event) {
+    if (eventError || !event) {
       return NextResponse.json(
         { error: 'Événement non trouvé' },
         { status: 404 }
@@ -35,6 +36,12 @@ export async function GET(
     // Vérifier l'inscription
     const { data: registration } = await supabase
       .from('event_registrations')
+
+      .select('id, firstName, lastName, email, createdAt')
+      .eq('eventId', eventId)
+      .eq('email', email)
+      .eq('isPublic', true)
+
       .select('id, first_name, last_name, email, created_at')
       .eq('event_id', eventId)
       .eq('email', email)

@@ -19,6 +19,10 @@ export async function GET(
     const { data: registration } = await supabase
       .from('event_registrations')
       .select('id')
+
+      .eq('userId', session.user.id)
+      .eq('eventId', id)
+
       .eq('user_id', session.user.id)
       .eq('event_id', id)
       .maybeSingle()
