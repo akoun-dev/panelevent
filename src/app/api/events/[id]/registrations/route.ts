@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -30,19 +31,21 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const registrations = await db.eventRegistration.findMany({
-      where: { eventId: id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { data: registrations, error } = await supabase
+      .from('event_registrations')
+      .select(
+        `id, consent, created_at, user:users(id, name, email)`
+      )
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Failed to fetch registrations:', error)
+      return NextResponse.json(
+        { error: 'Internal Server Error' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({ registrations })
   } catch (error) {
@@ -96,51 +99,60 @@ export async function POST(
     }
 
     // Find or create user
-    let user = await db.user.findUnique({
-      where: { email }
-    })
+    let { data: user } = await supabase
+      .from('users')
+      .select('id, name, email')
+      .eq('email', email)
+      .maybeSingle()
 
     if (!user) {
-      user = await db.user.create({
-        data: {
+      const { data: newUser, error: userError } = await supabase
+        .from('users')
+        .insert({
           email,
-          name: email.split('@')[0], // Default name from email
+          name: email.split('@')[0],
           role: 'ATTENDEE'
-        }
-      })
+        })
+        .select('id, name, email')
+        .single()
+      if (userError) {
+        return NextResponse.json(
+          { error: 'Failed to create user' },
+          { status: 500 }
+        )
+      }
+      user = newUser
     }
 
     // Check if already registered
-    const existingRegistration = await db.eventRegistration.findUnique({
-      where: {
-        userId_eventId: {
-          userId: user.id,
-          eventId: id
-        }
-      }
-    })
+    const { data: existingRegistration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('event_id', id)
+      .maybeSingle()
 
     if (existingRegistration) {
       return NextResponse.json({ error: 'Already registered' }, { status: 400 })
     }
 
     // Create registration
-    const registration = await db.eventRegistration.create({
-      data: {
-        userId: user.id,
-        eventId: id,
+    const { data: registration, error: insertError } = await supabase
+      .from('event_registrations')
+      .insert({
+        user_id: user.id,
+        event_id: id,
         consent
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    })
+      })
+      .select('id, consent, created_at, user:users(id, name, email)')
+      .single()
+
+    if (insertError) {
+      return NextResponse.json(
+        { error: 'Failed to create registration' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({ registration }, { status: 201 })
   } catch (error) {

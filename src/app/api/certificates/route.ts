@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import { Prisma } from '@prisma/client'
 
 // POST /api/certificates - Générer un nouveau certificat pour l'utilisateur authentifié
@@ -28,13 +29,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si l'utilisateur est inscrit et a participé à l'événement
-    const registration = await db.eventRegistration.findFirst({
-      where: {
-        userId,
-        eventId,
-        attended: true
-      }
-    })
+    const { data: registration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('event_id', eventId)
+      .eq('attended', true)
+      .maybeSingle()
 
     if (!registration) {
       return NextResponse.json(
@@ -79,9 +80,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Récupérer les informations de l'utilisateur
-    const user = await db.user.findUnique({
-      where: { id: userId }
-    })
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, name, email')
+      .eq('id', userId)
+      .single()
 
     if (!user) {
       return NextResponse.json(
