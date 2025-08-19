@@ -111,7 +111,6 @@ export default function AdminDashboard() {
 
       setStats(mockStats)
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to fetch dashboard data:', error)
     } finally {
       setLoading(false)

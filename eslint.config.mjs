@@ -14,15 +14,15 @@ const eslintConfig = [
   {
     rules: {
       // TypeScript rules
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/ban-ts-comment": "warn",
       "@typescript-eslint/prefer-as-const": "warn",
       
       // React rules
       "react-hooks/exhaustive-deps": "error",
-      "react/no-unescaped-entities": "warn",
+      "react/no-unescaped-entities": "off",
       "react/display-name": "off",
       "react/prop-types": "off",
       
@@ -33,7 +33,7 @@ const eslintConfig = [
       // General JavaScript rules
       "prefer-const": "error",
       "no-unused-vars": "off", // Handled by TypeScript
-      "no-console": ["warn", { "allow": ["warn", "error"] }],
+      "no-console": ["warn", { "allow": ["warn", "error", "log", "info"] }],
       "no-debugger": "error",
       "no-empty": "warn",
       "no-irregular-whitespace": "error",

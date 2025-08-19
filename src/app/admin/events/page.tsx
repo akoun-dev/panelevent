@@ -151,7 +151,6 @@ export default function AdminEventsPage() {
     setDeleteModalOpen(true)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteConfirmed = async () => {
     if (!selectedEventId) return
     
@@ -203,7 +202,6 @@ export default function AdminEventsPage() {
   }
 
   // Responsive event card component for mobile
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const EventCard = ({ event }: { event: Event }) => (
     <Card className="mb-4">
       <CardContent className="p-4">

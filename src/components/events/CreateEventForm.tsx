@@ -1,6 +1,5 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -31,7 +30,6 @@ const eventFormSchema = z.object({
 })
 
 export default function CreateEventForm({ onSuccess }: { onSuccess: () => void }) {
-  const router = useRouter()
   const form = useForm({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
@@ -73,7 +71,7 @@ export default function CreateEventForm({ onSuccess }: { onSuccess: () => void }
       } else {
         throw new Error("Erreur lors de la création")
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la création de l'événement",

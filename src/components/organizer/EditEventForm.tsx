@@ -46,7 +46,7 @@ export default function EditEventForm({
         })
         onSuccess()
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la modification",

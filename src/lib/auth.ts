@@ -21,7 +21,7 @@ const logger: Logger = {
 }
 
 // Rate limiting implementation
-const checkRateLimit = async (email: string): Promise<boolean> => {
+const checkRateLimit = async (_email: string): Promise<boolean> => {
   // TODO: Implement proper rate limiting with Redis
   return false
 }
@@ -80,7 +80,7 @@ const authOptions: NextAuthOptions = {
             email: true,
             name: true,
             role: true,
-            // @ts-ignore - passwordHash exists but not in generated types
+            // @ts-expect-error - passwordHash exists but not in generated types
             passwordHash: true
           }
         })
