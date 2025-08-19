@@ -14,7 +14,6 @@ import {
   MessageSquare,
   BarChart,
   Star,
-  Mic,
   FileText,
   Download,
   Settings,

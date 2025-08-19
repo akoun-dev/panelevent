@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Mic, Search, Calendar, Play, Pause, Download, Trash2 } from 'lucide-react'
+import { Mic, Search, Calendar, Play, Download, Trash2 } from 'lucide-react'
 
 interface Recording {
   id: string

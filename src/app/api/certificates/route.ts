@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
 // POST /api/certificates - Générer un nouveau certificat pour l'utilisateur authentifié
 export async function POST(request: NextRequest) {
@@ -160,7 +161,7 @@ export async function GET(request: NextRequest) {
     const eventId = searchParams.get('eventId')
     const templateId = searchParams.get('templateId')
 
-    const whereClause: any = {}
+    const whereClause: Prisma.CertificateWhereInput = {}
 
     if (userId) whereClause.userId = userId
     if (eventId) whereClause.eventId = eventId

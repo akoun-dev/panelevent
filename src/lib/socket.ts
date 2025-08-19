@@ -1,10 +1,19 @@
 import { Server } from 'socket.io';
 
+interface SocketHandshake {
+  auth?: {
+    token?: string;
+  };
+  query?: {
+    token?: string;
+  };
+}
+
 export const setupSocket = (io: Server) => {
   const authToken = process.env.WEBSOCKET_AUTH_TOKEN;
   if (authToken) {
     io.use((socket, next) => {
-      const token = (socket.handshake.auth as any)?.token || (socket.handshake.query as any)?.token;
+      const token = (socket.handshake as SocketHandshake).auth?.token || (socket.handshake as SocketHandshake).query?.token;
       if (token !== authToken) {
         return next(new Error('Unauthorized'));
       }

@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { QuestionStatus } from '@prisma/client'
+
+interface QuestionUpdateData {
+  status?: QuestionStatus
+  answer?: string | null
+  answeredAt?: Date | null
+  answeredBy?: string
+}
 
 // PATCH /api/questions/[id] - Mettre à jour une question (statut, réponse)
 export async function PATCH(
@@ -11,7 +19,7 @@ export async function PATCH(
     const body = await request.json()
     const { status, answer, answeredBy } = body
 
-    const updateData: any = {}
+    const updateData: QuestionUpdateData = {}
     
     if (status) {
       updateData.status = status

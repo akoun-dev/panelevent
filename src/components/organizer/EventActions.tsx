@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Edit, Trash, QrCode } from 'lucide-react'
+import { Trash, QrCode } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import EditEventDialog from '@/components/organizer/EditEventDialog'

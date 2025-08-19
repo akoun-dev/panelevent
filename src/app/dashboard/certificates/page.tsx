@@ -29,7 +29,7 @@ interface Certificate {
 }
 
 export default function CertificatesPage() {
-  const { data: session } = useSession()
+  const { data: _session } = useSession()
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')

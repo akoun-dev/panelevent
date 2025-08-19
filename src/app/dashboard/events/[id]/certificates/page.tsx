@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
@@ -19,11 +19,8 @@ import {
   Download,
   Plus,
   Edit,
-  Trash2,
   Users,
   CheckCircle,
-  Clock,
-  QrCode,
   FileText,
   Mail,
   Eye
@@ -63,7 +60,6 @@ export default function EventCertificatesPage() {
   const [registrations, setRegistrations] = useState<EventRegistration[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const [isPreviewing, setIsPreviewing] = useState(false)
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     description: '',
@@ -257,29 +253,10 @@ Délivré le [DATE DE DÉLIVRANCE]
     alert(`Certificat envoyé par email à ${registration.userEmail}`)
   }
 
-  const previewCertificate = (template: CertificateTemplate, registration?: EventRegistration) => {
-    setSelectedTemplate(template)
-    setIsPreviewing(true)
-  }
 
-  const getPreviewContent = () => {
-    if (!selectedTemplate) return ''
 
-    let content = selectedTemplate.content
-    const sampleRegistration = registrations.find(r => r.attended) || registrations[0]
     
-    if (sampleRegistration) {
-      content = content
-        .replace('[NOM DU PARTICIPANT]', sampleRegistration.userName)
-        .replace('[TITRE DE L\'ÉVÉNEMENT]', 'Conférence Technologique 2024')
-        .replace('[DATE DE DÉBUT]', '15 janvier 2024')
-        .replace('[DATE DE FIN]', '15 janvier 2024')
-        .replace('[DATE DE DÉLIVRANCE]', format(new Date(), 'dd MMMM yyyy', { locale: fr }))
-        .replace('[ORGANISATEUR]', 'PanelEvent')
-    }
 
-    return content
-  }
 
   if (isLoading) {
     return (
@@ -429,7 +406,7 @@ Délivré le [DATE DE DÉLIVRANCE]
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                previewCertificate(template)
+                                setSelectedTemplate(template)
                               }}
                             >
                               <Eye className="w-4 h-4" />
@@ -467,7 +444,7 @@ Délivré le [DATE DE DÉLIVRANCE]
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => previewCertificate(selectedTemplate)}
+                          onClick={() => setSelectedTemplate(selectedTemplate)}
                         >
                           <Eye className="w-4 h-4" />
                           Aperçu

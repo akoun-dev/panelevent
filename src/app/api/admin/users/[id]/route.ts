@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
@@ -74,8 +75,8 @@ export async function PATCH(
 
     const { role, name, email } = await request.json()
 
-    const updateData: any = {}
-    if (role) updateData.role = role
+    const updateData: Prisma.UserUpdateInput = {}
+    if (role) updateData.role = role as 'ADMIN' | 'ORGANIZER' | 'ATTENDEE'
     if (name !== undefined) updateData.name = name
     if (email) updateData.email = email
 

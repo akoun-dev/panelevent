@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement
 export async function GET(
@@ -14,7 +15,7 @@ export async function GET(
     const rating = searchParams.get('rating')
     const resolved = searchParams.get('resolved')
 
-    const whereClause: any = {
+    const whereClause: Prisma.FeedbackWhereInput = {
       eventId: id
     }
 

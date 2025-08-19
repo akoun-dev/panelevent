@@ -5,15 +5,10 @@ import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
-  BarChart3,
   CheckCircle,
   Users,
-  Clock,
   Vote
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -59,7 +54,6 @@ export default function EventPollsPage() {
   const [panels, setPanels] = useState<Panel[]>([])
   const [polls, setPolls] = useState<Poll[]>([])
   const [filteredPolls, setFilteredPolls] = useState<Poll[]>([])
-  const [userVotes, setUserVotes] = useState<Record<string, string[]>>({})
   const [isLoading, setIsLoading] = useState(true)
 
   // Simuler le chargement des données
@@ -247,7 +241,6 @@ export default function EventPollsPage() {
     )
   }
 
-  const currentPanel = panels.find(p => p.id === activePanel)
 
   return (
     <div className="container mx-auto py-8 space-y-6">

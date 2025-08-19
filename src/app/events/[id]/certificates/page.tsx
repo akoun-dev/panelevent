@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -15,7 +14,6 @@ import {
   QrCode,
   CheckCircle,
   Clock,
-  FileText,
   Share2
 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -148,11 +146,11 @@ export default function EventCertificatesPage() {
             <div className="border-b-2 border-gray-300 pb-2">
               <p className="text-2xl font-semibold text-gray-800">Votre Nom</p>
             </div>
-            <p className="text-lg">a participé à l'événement</p>
+            <p className="text-lg">a participé à l&apos;événement</p>
             <div className="border-b-2 border-gray-300 pb-2">
               <p className="text-xl font-semibold text-gray-800">{selectedCertificate.eventTitle}</p>
             </div>
-            <p>qui s'est déroulé le {selectedCertificate.eventDate}</p>
+            <p>qui s&apos;est déroulé le {selectedCertificate.eventDate}</p>
           </div>
           
           <div className="space-y-2">
@@ -204,7 +202,7 @@ export default function EventCertificatesPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Award className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Événement non trouvé</h3>
-            <p className="text-muted-foreground">L'événement demandé n'existe pas.</p>
+            <p className="text-muted-foreground">L&apos;événement demandé n&apos;existe pas.</p>
           </CardContent>
         </Card>
       </div>
@@ -219,7 +217,7 @@ export default function EventCertificatesPage() {
             <Clock className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Certificats non disponibles</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Vous devez avoir participé à l'événement pour recevoir des certificats.
+              Vous devez avoir participé à l&apos;événement pour recevoir des certificats.
             </p>
             <Badge variant="secondary">
               {event.userRegistered ? 'Inscrit mais non présent' : 'Non inscrit'}
@@ -236,15 +234,15 @@ export default function EventCertificatesPage() {
         <div>
           <h1 className="text-3xl font-bold">Mes Certificats</h1>
           <p className="text-muted-foreground">
-            Vos certificats pour l'événement: {event.title}
+            Vos certificats pour l&apos;événement: {event.title}
           </p>
         </div>
       </div>
 
-      {/* Informations sur l'événement */}
+      {/* Informations sur l&apos;événement */}
       <Card>
         <CardHeader>
-          <CardTitle>Informations sur l'événement</CardTitle>
+          <CardTitle>Informations sur l&apos;événement</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -406,7 +404,7 @@ export default function EventCertificatesPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-64 text-muted-foreground">
-                  <p>Sélectionnez un certificat pour voir l'aperçu</p>
+                  <p>Sélectionnez un certificat pour voir l&apos;aperçu</p>
                 </div>
               )}
             </ScrollArea>

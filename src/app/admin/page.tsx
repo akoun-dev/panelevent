@@ -14,7 +14,6 @@ import {
   BarChart,
   FileText,
   Mic,
-  Settings,
   Download
 } from 'lucide-react'
 

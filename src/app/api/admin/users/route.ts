@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,17 +21,17 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build where clause
-    const where: any = {}
+    const where: Prisma.UserWhereInput = {}
     
     if (search) {
       where.OR = [
-        { email: { contains: search, mode: 'insensitive' } },
-        { name: { contains: search, mode: 'insensitive' } }
+        { email: { contains: search } },
+        { name: { contains: search } }
       ]
     }
 
     if (role && role !== 'all') {
-      where.role = role
+      where.role = role as 'ADMIN' | 'ORGANIZER' | 'ATTENDEE'
     }
 
     const [users, total] = await Promise.all([

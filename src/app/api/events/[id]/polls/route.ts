@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 
 // GET /api/events/[id]/polls - Récupérer tous les sondages d'un événement
 export async function GET(
@@ -12,7 +13,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
 
-    const whereClause: any = {
+    const whereClause: Prisma.PollWhereInput = {
       panel: {
         eventId: id
       }

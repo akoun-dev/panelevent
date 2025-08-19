@@ -4,6 +4,34 @@ import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
+interface ProgramItem {
+  id?: string;
+  title?: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  speaker?: string;
+  location?: string;
+}
+
+interface ProgramData {
+  hasProgram?: boolean;
+  programText?: string;
+  programItems?: ProgramItem[];
+}
+
+interface EventUpdateData {
+  title?: string;
+  description?: string;
+  slug?: string;
+  startDate?: Date;
+  endDate?: Date | null;
+  location?: string;
+  isPublic?: boolean;
+  isActive?: boolean;
+  maxAttendees?: number;
+}
+
 const eventSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
@@ -71,7 +99,7 @@ export async function GET(
     }
 
     // Parse program if it exists
-    let parsedProgram: any = null
+    let parsedProgram: ProgramData | null = null
     if (event?.program) {
       try {
         parsedProgram = JSON.parse(event.program)
@@ -202,7 +230,7 @@ export async function PATCH(
       )
     }
     
-    const updateData: any = { ...body }
+    const updateData: EventUpdateData = { ...body }
     
     // Convertir les dates si elles sont présentes
     if (body.startDate) {

@@ -20,7 +20,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { User, Mail, Phone, Building, Briefcase, Calendar, ArrowLeft } from 'lucide-react'
+import { User, Mail, Phone, Building, Briefcase, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default function RegisterPage() {

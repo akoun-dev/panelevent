@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user info without password hash
-    const { passwordHash, ...userWithoutPassword } = user
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user
 
     return NextResponse.json({
       message: 'Admin login successful',

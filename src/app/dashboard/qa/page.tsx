@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { MessageSquare, Search, Calendar, Users, Eye, CheckCircle, XCircle } from 'lucide-react'
+import { MessageSquare, Search, Calendar, Eye, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface Question {

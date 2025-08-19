@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Plus, Search, Filter, MoreHorizontal, Edit, Trash2, Shield, User, Users } from 'lucide-react'
+import { Plus, Search, Filter, Edit, Trash2, Shield, User, Users } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -41,7 +40,7 @@ export default function AdminUsersPage() {
   const [newUser, setNewUser] = useState({
     email: '',
     name: '',
-    role: 'ATTENDEE' as const
+    role: 'ATTENDEE' as 'ADMIN' | 'ORGANIZER' | 'ATTENDEE'
   })
 
   useEffect(() => {
@@ -69,23 +68,7 @@ export default function AdminUsersPage() {
     return matchesSearch && matchesRole
   })
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'ADMIN': return 'destructive'
-      case 'ORGANIZER': return 'default'
-      case 'ATTENDEE': return 'secondary'
-      default: return 'secondary'
-    }
-  }
 
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'ADMIN': return 'Administrateur'
-      case 'ORGANIZER': return 'Organisateur'
-      case 'ATTENDEE': return 'Participant'
-      default: return role
-    }
-  }
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -204,7 +187,7 @@ export default function AdminUsersPage() {
               </div>
               <div>
                 <Label htmlFor="role">Rôle</Label>
-                <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value as any })}>
+                <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value as 'ADMIN' | 'ORGANIZER' | 'ATTENDEE' })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

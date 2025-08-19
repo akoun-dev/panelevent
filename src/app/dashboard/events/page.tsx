@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Plus, Eye, Edit, FileText, QrCode } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Eye, FileText, QrCode } from 'lucide-react'
 import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import Link from 'next/link'
 import {
@@ -34,7 +33,6 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const { data: session } = useSession()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
 

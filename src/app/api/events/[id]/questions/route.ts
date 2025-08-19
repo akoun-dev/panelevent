@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { Prisma, QuestionStatus } from '@prisma/client'
 
 // GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
 export async function GET(
@@ -14,7 +15,7 @@ export async function GET(
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
-    const whereClause: any = {
+    const whereClause: Prisma.QuestionWhereInput = {
       panel: {
         eventId: id
       }
@@ -25,13 +26,13 @@ export async function GET(
     }
 
     if (status && status !== 'all') {
-      whereClause.status = status.toUpperCase()
+      whereClause.status = status.toUpperCase() as QuestionStatus
     }
 
     if (search) {
       whereClause.OR = [
-        { content: { contains: search, mode: 'insensitive' } },
-        { authorName: { contains: search, mode: 'insensitive' } }
+        { content: { contains: search } },
+        { authorName: { contains: search } }
       ]
     }
 
