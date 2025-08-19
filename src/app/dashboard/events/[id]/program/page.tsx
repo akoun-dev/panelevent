@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,9 +28,7 @@ interface Event {
   program?: string
 }
 
-export default function OrganizerEventProgramPage() {
-  const params = useParams()
-  const router = useRouter()
+export default function OrganizerEventProgramPage({ params }: { params: Promise<{ id: string }> }) {
   const [event, setEvent] = useState<Event | null>(null)
   const [programData, setProgramData] = useState<ProgramData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,12 +36,14 @@ export default function OrganizerEventProgramPage() {
 
   const fetchEventAndProgram = useCallback(async () => {
     try {
+      const { id } = await params
+      
       // Fetch event details
       const eventsResponse = await fetch('/api/events/my-events')
       if (eventsResponse.ok) {
         const { events } = await eventsResponse.json()
         const currentEvent = Array.isArray(events)
-          ? events.find((e: Event) => e.id === String(params.id))
+          ? events.find((e: Event) => e.id === id)
           : null
         if (currentEvent) {
           setEvent(currentEvent)
@@ -52,7 +51,7 @@ export default function OrganizerEventProgramPage() {
       }
 
       // Fetch program data
-      const programResponse = await fetch(`/api/events/${params.id}/program`)
+      const programResponse = await fetch(`/api/events/${id}/program`)
       if (programResponse.ok) {
         const programData = await programResponse.json()
         setProgramData(programData.program)
@@ -62,7 +61,7 @@ export default function OrganizerEventProgramPage() {
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [params])
 
   useEffect(() => {
     fetchEventAndProgram()
@@ -71,7 +70,8 @@ export default function OrganizerEventProgramPage() {
   const handleSaveProgram = async (data: ProgramData) => {
     setSaving(true)
     try {
-      const response = await fetch(`/api/events/${params.id}/program`, {
+      const { id } = await params
+      const response = await fetch(`/api/events/${id}/program`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

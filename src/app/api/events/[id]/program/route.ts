@@ -19,11 +19,11 @@ interface ProgramData {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Await params to ensure they're resolved
-    const { id } = params
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
@@ -73,11 +73,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Await params to ensure they're resolved
-    const { id } = params
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
