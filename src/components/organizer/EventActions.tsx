@@ -7,10 +7,10 @@ import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import EditEventDialog from '@/components/organizer/EditEventDialog'
 import { DeleteEventModal } from '@/components/organizer/DeleteEventModal'
 import { useState } from 'react'
-import { Event } from '@prisma/client'
+import type { Database } from '@/types/supabase'
 
 interface EventActionsProps {
-  event: Event
+  event: Database['public']['Tables']['events']['Row']
   onRefresh: () => void
 }
 

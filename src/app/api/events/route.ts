@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import { authOptions } from '@/lib/auth'
 import QRCode from 'qrcode'
 
@@ -12,42 +12,18 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const offset = (page - 1) * limit
 
-    const events = await db.event.findMany({
-      where: {
-        isPublic: true
-        // startDate: {
-        //   gte: new Date()
-        // }
-      },
-      include: {
-        _count: {
-          select: {
-            registrations: true
-          }
-        },
-        organizer: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      },
-      orderBy: {
-        startDate: 'asc'
-      },
-      skip: offset,
-      take: limit
-    })
+    const { data: events = [], count, error } = await supabase
+      .from('events')
+      .select('*, registrations(*), organizer(id,name,email)', { count: 'exact' })
+      .eq('isPublic', true)
+      .order('startDate', { ascending: true })
+      .range(offset, offset + limit - 1)
 
-    const total = await db.event.count({
-      where: {
-        isPublic: true
-        // startDate: {
-        //   gte: new Date()
-        // }
-      }
-    })
+    if (error) {
+      throw error
+    }
+
+    const total = count || 0
 
     return NextResponse.json({
       events,
@@ -127,9 +103,11 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
 
-    const existingEvent = await db.event.findUnique({
-      where: { slug: eventSlug }
-    })
+    const { data: existingEvent } = await supabase
+      .from('events')
+      .select('id')
+      .eq('slug', eventSlug)
+      .maybeSingle()
 
     if (existingEvent) {
       return NextResponse.json(
@@ -148,33 +126,28 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    const event = await db.event.create({
-      data: {
+    const { data: event, error } = await supabase
+      .from('events')
+      .insert({
         title,
         description,
         slug: eventSlug,
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : null,
+        startDate: new Date(startDate).toISOString(),
+        endDate: endDate ? new Date(endDate).toISOString() : null,
         location,
         organizerId: session.user.id,
         isPublic: isPublic ?? true,
         isActive: isActive ?? false,
         maxAttendees: typeof maxAttendees === 'number' ? maxAttendees : null,
         qrCode,
-        branding: {
-          qrCode
-        }
-      },
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        }
-      }
-    })
+        branding: { qrCode }
+      })
+      .select('*, organizer(id,name,email)')
+      .single()
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json(event, { status: 201 })
   } catch (error) {

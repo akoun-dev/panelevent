@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+
+import { supabase } from '@/lib/supabase'
+
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -59,64 +61,91 @@ export async function GET(
       )
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        slug: true,
-        startDate: true,
-        endDate: true,
-        location: true,
-        isPublic: true,
-        isActive: true,
-        program: true,
-        organizerId: true,
-        _count: {
-          select: {
-            registrations: true,
-            questions: true,
-            polls: true
-          }
-        }
-      }
-    })
+    const { data, error } = await supabase
+      .from('events')
+      .select('id,title,description,slug,start_date,end_date,location,is_public,is_active,program,organizer_id, registrations(count), questions(count), polls(count)')
+      .eq('id', id)
+      .eq('organizer_id', session.user.id)
 
-    if (!event) {
+      .select(
+        `id, title, description, slug, startDate, endDate, location, isPublic, isActive, program, organizerId,
+         registrations:event_registrations(id),
+         questions:questions(id),
+         polls:polls(id)`
+      )
+      .eq('id', id)
+      .single()
+
+    if (error || !data) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
-
-    // Vérifier que l'utilisateur est l'organisateur de l'événement ou un admin
-    if (event.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
-      )
+    const counts = {
+      registrations: data.registrations?.[0]?.count ?? 0,
+      questions: data.questions?.[0]?.count ?? 0,
+      polls: data.polls?.[0]?.count ?? 0
     }
 
-    // Parse program if it exists
     let parsedProgram: ProgramData | null = null
-    if (event?.program) {
+    if (data.program) {
       try {
-        parsedProgram = JSON.parse(event.program)
+        parsedProgram = JSON.parse(data.program as string)
       } catch {
-        // If it's not JSON, treat it as plain text
         parsedProgram = {
           hasProgram: true,
-          programText: event.program,
+          programText: data.program as string,
           programItems: []
         }
       }
     }
 
     return NextResponse.json({
-      ...event,
-      program: parsedProgram
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      slug: data.slug,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      location: data.location,
+      isPublic: data.is_public,
+      isActive: data.is_active,
+      program: parsedProgram,
+      organizerId: data.organizer_id,
+      _count: counts
     })
+    if (data.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Unauthorized - Not event owner' },
+        { status: 403 }
+      )
+    }
+
+    let parsedProgram: ProgramData | null = null
+    if (data?.program) {
+      try {
+        parsedProgram = JSON.parse(data.program)
+      } catch {
+        parsedProgram = {
+          hasProgram: true,
+          programText: data.program,
+          programItems: [],
+        }
+      }
+    }
+
+    const event = {
+      ...data,
+      _count: {
+        registrations: data.registrations?.length || 0,
+        questions: data.questions?.length || 0,
+        polls: data.polls?.length || 0,
+      },
+      program: parsedProgram,
+    }
+
+    return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to fetch event:', error)
     return NextResponse.json(
@@ -150,33 +179,73 @@ export async function PUT(
       )
     }
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
-      where: { id }
-    })
+    const updateData = {
+      title: body.title,
+      description: body.description,
+      slug: body.slug,
+      start_date: body.startDate,
+      end_date: body.endDate ?? null,
+      location: body.location,
+      is_public: body.isPublic,
+      is_active: body.isActive,
+      max_attendees: body.maxAttendees
+    }
 
-    if (!existingEvent) {
+    const { data, error } = await supabase
+      .from('events')
+      .update(updateData)
+      .eq('id', id)
+      .eq('organizer_id', session.user.id)
+      .select()
+      .single()
+
+    if (error || !data) {
+
+    const { data: existingEvent, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
+
+    if (findError || !existingEvent) {
+
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
 
+    return NextResponse.json({
+      ...data,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      isPublic: data.is_public,
+      isActive: data.is_active,
+      maxAttendees: data.max_attendees,
+      organizerId: data.organizer_id
+    })
     if (existingEvent.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized - Not event owner' },
         { status: 403 }
       )
     }
-    
-    const event = await prisma.event.update({
-      where: { id },
-      data: {
+
+    const { data: event, error: updateError } = await supabase
+      .from('events')
+      .update({
         ...body,
         startDate: new Date(body.startDate),
         endDate: body.endDate ? new Date(body.endDate) : null,
-      },
-    })
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (updateError) {
+      throw updateError
+    }
+
     return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to update event:', error)
@@ -211,28 +280,69 @@ export async function PATCH(
       )
     }
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
-      where: { id }
-    })
+    const updateData: Record<string, any> = {}
+    if (body.title !== undefined) updateData.title = body.title
+    if (body.description !== undefined) updateData.description = body.description
+    if (body.slug !== undefined) updateData.slug = body.slug
+    if (body.startDate !== undefined) updateData.start_date = body.startDate
+    if (body.endDate !== undefined) updateData.end_date = body.endDate ?? null
+    if (body.location !== undefined) updateData.location = body.location
+    if (body.isPublic !== undefined) updateData.is_public = body.isPublic
+    if (body.isActive !== undefined) updateData.is_active = body.isActive
+    if (body.maxAttendees !== undefined) updateData.max_attendees = body.maxAttendees
 
-    if (!existingEvent) {
+    const { data, error } = await supabase
+      .from('events')
+      .update(updateData)
+      .eq('id', id)
+      .eq('organizer_id', session.user.id)
+      .select('id,title,description,slug,start_date,end_date,location,is_public,is_active,max_attendees,organizer_id,created_at,updated_at, registrations(count), questions(count), polls(count)')
+      .single()
+
+    if (error || !data) {
+    const { data: existingEvent, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
+
+    if (findError || !existingEvent) {
+
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
 
+    return NextResponse.json({
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      slug: data.slug,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      location: data.location,
+      isPublic: data.is_public,
+      isActive: data.is_active,
+      maxAttendees: data.max_attendees,
+      organizerId: data.organizer_id,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      _count: {
+        registrations: data.registrations?.[0]?.count ?? 0,
+        questions: data.questions?.[0]?.count ?? 0,
+        polls: data.polls?.[0]?.count ?? 0
+      }
+    })
     if (existingEvent.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized - Not event owner' },
         { status: 403 }
       )
     }
-    
+
     const updateData: EventUpdateData = { ...body }
-    
-    // Convertir les dates si elles sont présentes
+
     if (body.startDate) {
       updateData.startDate = new Date(body.startDate)
     }
@@ -240,32 +350,30 @@ export async function PATCH(
       updateData.endDate = body.endDate ? new Date(body.endDate) : null
     }
 
-    const event = await prisma.event.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        slug: true,
-        startDate: true,
-        endDate: true,
-        location: true,
-        isPublic: true,
-        isActive: true,
-        maxAttendees: true,
-        organizerId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: {
-            registrations: true,
-            questions: true,
-            polls: true
-          }
-        }
-      }
-    })
+    const { data, error: updateError } = await supabase
+      .from('events')
+      .update(updateData)
+      .eq('id', id)
+      .select(
+        `id, title, description, slug, startDate, endDate, location, isPublic, isActive, maxAttendees, organizerId, createdAt, updatedAt,
+         registrations:event_registrations(id),
+         questions:questions(id),
+         polls:polls(id)`
+      )
+      .single()
+
+    if (updateError || !data) {
+      throw updateError
+    }
+
+    const event = {
+      ...data,
+      _count: {
+        registrations: data.registrations?.length || 0,
+        questions: data.questions?.length || 0,
+        polls: data.polls?.length || 0,
+      },
+    }
 
     return NextResponse.json(event)
   } catch (error) {
@@ -292,28 +400,37 @@ export async function DELETE(
       )
     }
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
-      where: { id }
-    })
+    const { data, error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id)
+      .eq('organizer_id', session.user.id)
+      .select('id')
+      .single()
 
-    if (!existingEvent) {
+    if (error && error.code !== 'PGRST116') {
+
+    const { data: existingEvent, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
+
+    if (findError || !existingEvent) {
+      return NextResponse.json(
+        { error: 'Failed to delete event' },
+        { status: 500 }
+      )
+    }
+
+    if (!data) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
+    await supabase.from('events').delete().eq('id', id)
 
-    if (existingEvent.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
-      )
-    }
-
-    await prisma.event.delete({
-      where: { id },
-    })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to delete event:', error)
