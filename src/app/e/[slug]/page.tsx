@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,7 +15,7 @@ import type { Database } from '@/types/supabase'
 
 type Event = Database['public']['Tables']['events']['Row'] & {
   branding?: { qrCode?: string } | null
-  _count?: { registrations: number }
+  registeredCount?: number
 }
 
 export default function EventPage() {
@@ -26,20 +26,21 @@ export default function EventPage() {
   const [registering, setRegistering] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
 
+  const determinePhase = (ev: Event) => {
+    const now = new Date()
+    const start = new Date(ev.startDate)
+    const end = ev.endDate ? new Date(ev.endDate) : null
+    if (end && now > end) return 'post'
+    if (now >= start) return 'live'
+    return 'registration'
+  }
 
   const fetchEvent = async () => {
     try {
       const response = await fetch(`/api/events/by-slug/${slug}`)
       if (response.ok) {
         const data = await response.json()
-        setEvent(data.event)
-        
-        // Check if user is already registered
-        const registrationResponse = await fetch(`/api/events/${data.event.id}/registrations/check`)
-        if (registrationResponse.ok) {
-          const registrationData = await registrationResponse.json()
-          setIsRegistered(registrationData.registered)
-        }
+        setEvent(data)
       } else {
         router.push('/')
       }
@@ -51,21 +52,33 @@ export default function EventPage() {
     }
   }
 
-  const handleRegistration = async (data: { email: string; consent: boolean }) => {
+  const handleRegistration = async (
+    data: {
+      firstName: string
+      lastName: string
+      email: string
+      position: string
+      company: string
+      consent: boolean
+    }
+  ) => {
     setRegistering(true)
     try {
       if (!event?.id) return
-      const response = await fetch(`/api/events/${event.id}/registrations`, {
+      const response = await fetch('/api/events/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ eventId: event.id, ...data })
       })
 
       if (response.ok) {
         setIsRegistered(true)
-        // Refresh event data to update registration count
+        if (determinePhase(event) === 'live') {
+          router.push(`/events/${event.id}/qa`)
+          return
+        }
         fetchEvent()
       }
     } catch (error) {
@@ -74,6 +87,20 @@ export default function EventPage() {
       setRegistering(false)
     }
   }
+
+  useEffect(() => {
+    fetchEvent()
+  }, [])
+
+  useEffect(() => {
+    if (!event) return
+    const currentPhase = determinePhase(event)
+    if (currentPhase === 'post') {
+      router.replace(`/events/${event.id}/feedback`)
+    } else if (currentPhase === 'live' && isRegistered) {
+      router.replace(`/events/${event.id}/qa`)
+    }
+  }, [event, isRegistered, router])
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'dd MMM yyyy à HH:mm', { locale: fr })
@@ -160,7 +187,7 @@ export default function EventPage() {
                 )}
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-muted-foreground" />
-                  <span>{event._count?.registrations || 0} participant{event._count?.registrations !== 1 ? 's' : ''}</span>
+                  <span>{event.registeredCount || 0} participant{event.registeredCount !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             </div>

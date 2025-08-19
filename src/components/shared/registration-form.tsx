@@ -7,25 +7,46 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
-import { User, Mail, CheckCircle, Calendar, MapPin } from 'lucide-react'
+import {
+  User,
+  Mail,
+  CheckCircle,
+  Calendar,
+  MapPin,
+  Briefcase,
+  Building
+} from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Database } from '@/types/supabase'
 
 interface RegistrationFormProps {
   event: Database['public']['Tables']['events']['Row']
-  onSubmit: (data: { email: string; consent: boolean }) => Promise<void>
+  onSubmit: (
+    data: {
+      firstName: string
+      lastName: string
+      email: string
+      position: string
+      company: string
+      consent: boolean
+    }
+  ) => Promise<void>
   loading?: boolean
   isRegistered?: boolean
 }
 
 export function RegistrationForm({ event, onSubmit, loading = false, isRegistered = false }: RegistrationFormProps) {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [position, setPosition] = useState('')
+  const [company, setCompany] = useState('')
   const [consent, setConsent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit({ email, consent })
+    await onSubmit({ firstName, lastName, email, position, company, consent })
   }
 
   const formatDate = (dateString: string) => {
@@ -133,6 +154,37 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">Prénom *</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  placeholder="Jean"
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Nom *</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  placeholder="Dupont"
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="email">Email *</Label>
             <div className="relative">
@@ -141,7 +193,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 placeholder="votre@email.com"
                 className="pl-10"
                 required
@@ -149,11 +201,42 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="position">Fonction *</Label>
+              <div className="relative">
+                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  id="position"
+                  value={position}
+                  onChange={e => setPosition(e.target.value)}
+                  placeholder="Directeur"
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="company">Structure *</Label>
+              <div className="relative">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  id="company"
+                  value={company}
+                  onChange={e => setCompany(e.target.value)}
+                  placeholder="Entreprise"
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-start space-x-2">
             <Checkbox
               id="consent"
               checked={consent}
-              onCheckedChange={(checked) => setConsent(checked as boolean)}
+              onCheckedChange={checked => setConsent(checked as boolean)}
               required
             />
             <div className="grid gap-1.5 leading-none">
@@ -169,7 +252,19 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
             </div>
           </div>
 
-          <Button type="submit" disabled={loading || !email || !consent} className="w-full">
+          <Button
+            type="submit"
+            disabled={
+              loading ||
+              !email ||
+              !firstName ||
+              !lastName ||
+              !position ||
+              !company ||
+              !consent
+            }
+            className="w-full"
+          >
             {loading ? 'Inscription...' : "S'inscrire à l'événement"}
           </Button>
         </form>
