@@ -30,9 +30,7 @@ function isRateLimited(ip: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip =
-      request.headers.get('x-forwarded-for') ||
-      'unknown'
+    const ip = request.headers.get('x-forwarded-for') || 'unknown'
 
     if (isRateLimited(ip)) {
       return NextResponse.json(
@@ -158,8 +156,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  } catch (error) {
-    console.error('Erreur lors de l\'inscription:', error)
+  } catch {
     return NextResponse.json(
       { error: 'Une erreur est survenue lors de l\'inscription' },
       { status: 500 }

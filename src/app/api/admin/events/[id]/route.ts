@@ -84,7 +84,19 @@ export async function PATCH(
 
     const { title, description, startDate, endDate, location, isPublic, isActive, organizerId } = await request.json()
 
-    const updateData: any = {}
+    interface UpdateData {
+      title?: string
+      slug?: string
+      description?: string
+      startDate?: Date
+      endDate?: Date | null
+      location?: string
+      isPublic?: boolean
+      isActive?: boolean
+      organizerId?: string
+    }
+
+    const updateData: UpdateData = {}
     if (title !== undefined) {
       updateData.title = title
       // Update slug if title changes

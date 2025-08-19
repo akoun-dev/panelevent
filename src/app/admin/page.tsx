@@ -67,7 +67,7 @@ export default function AdminDashboard() {
         totalUsers: usersData.pagination?.total || 0,
         totalEvents: eventsData.pagination?.total || 0,
         totalRegistrations: 156,
-        activeEvents: eventsData.events?.filter((e: any) => e.isActive).length || 0,
+        activeEvents: eventsData.events?.filter((e: Record<string, unknown>) => e.isActive).length || 0,
         recentActivity: [
           {
             id: '1',
@@ -112,6 +112,7 @@ export default function AdminDashboard() {
 
       setStats(mockStats)
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to fetch dashboard data:', error)
     } finally {
       setLoading(false)
@@ -123,7 +124,7 @@ export default function AdminDashboard() {
     const now = new Date()
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
     
-    if (diffInMinutes < 1) return 'À l\'instant'
+    if (diffInMinutes < 1) return "À l'instant"
     if (diffInMinutes < 60) return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`
     
     const diffInHours = Math.floor(diffInMinutes / 60)

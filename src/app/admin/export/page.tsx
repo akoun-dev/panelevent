@@ -3,18 +3,16 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Download,
   FileText,
-  Database,
   BarChart2,
   BarChart3,
   Users,
@@ -22,7 +20,6 @@ import {
   MessageCircle,
   Award,
   Calendar as CalendarIcon,
-  Filter,
   RefreshCw,
   CheckCircle,
   Clock
@@ -394,7 +391,7 @@ export default function AdminExportPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label>Type de données</Label>
-                    <Select value={config.type} onValueChange={(value: any) => setConfig(prev => ({ ...prev, type: value }))}>
+                    <Select value={config.type} onValueChange={(value: ExportConfig['type']) => setConfig(prev => ({ ...prev, type: value }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -413,7 +410,7 @@ export default function AdminExportPage() {
                   
                   <div>
                     <Label>Format d'export</Label>
-                    <Select value={config.format} onValueChange={(value: any) => setConfig(prev => ({ ...prev, format: value }))}>
+                    <Select value={config.format} onValueChange={(value: ExportConfig['format']) => setConfig(prev => ({ ...prev, format: value }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -435,8 +432,8 @@ export default function AdminExportPage() {
                     <div>
                       <Label className="text-sm font-medium">Événement (optionnel)</Label>
                       <Select 
-                        value={config.filters.eventId || ''} 
-                        onValueChange={(value) => setConfig(prev => ({ 
+                        value={config.filters.eventId || ''}
+                        onValueChange={(value: string) => setConfig(prev => ({
                           ...prev, 
                           filters: { ...prev.filters, eventId: value || undefined }
                         }))}
@@ -461,8 +458,8 @@ export default function AdminExportPage() {
                       <div>
                         <Label className="text-sm font-medium">Note</Label>
                         <Select 
-                          value={config.filters.rating || ''} 
-                          onValueChange={(value) => setConfig(prev => ({ 
+                          value={config.filters.rating || ''}
+                          onValueChange={(value: string) => setConfig(prev => ({
                             ...prev, 
                             filters: { ...prev.filters, rating: value || undefined }
                           }))}
@@ -484,8 +481,8 @@ export default function AdminExportPage() {
                       <div>
                         <Label className="text-sm font-medium">Catégorie</Label>
                         <Select 
-                          value={config.filters.category || ''} 
-                          onValueChange={(value) => setConfig(prev => ({ 
+                          value={config.filters.category || ''}
+                          onValueChange={(value: string) => setConfig(prev => ({
                             ...prev, 
                             filters: { ...prev.filters, category: value || undefined }
                           }))}

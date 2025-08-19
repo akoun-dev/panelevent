@@ -4,6 +4,16 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import QRCode from 'qrcode'
 
+interface WhereClause {
+  OR?: Array<{
+    title?: { contains: string; mode: 'insensitive' }
+    description?: { contains: string; mode: 'insensitive' }
+    location?: { contains: string; mode: 'insensitive' }
+  }>
+  isActive?: boolean
+  isPublic?: boolean
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -21,7 +31,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build where clause
-    const where: any = {}
+    const where: WhereClause = {}
     
     if (search) {
       where.OR = [

@@ -71,9 +71,14 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
     }
 
     const init = async () => {
-      const { id } = await params
-      setEventId(id)
-      loadEventSettings(id)
+      try {
+        const { id } = await params
+        setEventId(id)
+        loadEventSettings(id)
+      } catch (error) {
+        console.error('Failed to get params:', error)
+        setIsLoading(false)
+      }
     }
 
     init()

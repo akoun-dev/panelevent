@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Save, FileText, List, Clock } from 'lucide-react'
+import { ArrowLeft, FileText, List, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { ProgramForm } from '@/components/shared/program-form'
 
@@ -31,7 +31,6 @@ interface Event {
 
 export default function AdminEventProgramPage() {
   const params = useParams()
-  const router = useRouter()
   const [event, setEvent] = useState<Event | null>(null)
   const [programData, setProgramData] = useState<ProgramData | null>(null)
   const [loading, setLoading] = useState(true)
