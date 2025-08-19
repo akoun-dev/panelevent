@@ -1,4 +1,4 @@
--- Initial schema derived from Prisma models
+-- Initial Supabase schema
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'ORGANIZER', 'ATTENDEE');
 CREATE TYPE "QuestionStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE "VoteType" AS ENUM ('UP', 'DOWN');
