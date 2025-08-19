@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
-import { Prisma } from '@prisma/client'
 
 // GET /api/events/[id]/polls - Récupérer tous les sondages d'un événement
 export async function GET(
@@ -14,46 +12,35 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
 
-    const whereClause: Prisma.PollWhereInput = {
-      panel: {
-        eventId: id
-      }
-    }
+    let query = supabase
+      .from('polls')
+      .select(
+        `*, panel:panels!inner(id,title,start_time,end_time), options:poll_options(*, responses:poll_responses(id))`
+      )
+      .eq('panel.event_id', id)
+      .order('created_at', { ascending: false })
 
     if (panelId) {
-      whereClause.panelId = panelId
+      query = query.eq('panel_id', panelId)
     }
 
-    const polls = await db.poll.findMany({
-      where: whereClause,
-      include: {
-        panel: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            endTime: true
-          }
-        },
-        options: {
-          include: {
-            responses: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+    const { data: polls, error } = await query
+    if (error) throw error
 
     // Calculer les votes et pourcentages
-    const pollsWithStats = polls.map(poll => {
-      const totalVotes = poll.options.reduce((sum, option) => sum + option.responses.length, 0)
-      
-      const optionsWithStats = poll.options.map(option => ({
+    const pollsWithStats = (polls || []).map(poll => {
+      const totalVotes = poll.options?.reduce(
+        (sum: number, option: any) => sum + option.responses.length,
+        0
+      ) || 0
+
+      const optionsWithStats = (poll.options || []).map((option: any) => ({
         ...option,
         votes: option.responses.length,
-        percentage: totalVotes > 0 ? Math.round((option.responses.length / totalVotes) * 100) : 0
+        percentage:
+          totalVotes > 0
+            ? Math.round((option.responses.length / totalVotes) * 100)
+            : 0
       }))
 
       return {
@@ -96,7 +83,7 @@ export async function POST(
       .from('panels')
       .select('id')
       .eq('id', panelId)
-      .eq('eventId', id)
+      .eq('event_id', id)
       .single()
 
     if (panelError || !panel) {
@@ -106,41 +93,46 @@ export async function POST(
       )
     }
 
-    // Créer le sondage avec ses options
-    const poll = await db.poll.create({
-      data: {
+    const { data: createdPoll, error: pollError } = await supabase
+      .from('polls')
+      .insert({
         question,
         description,
-        panelId,
-        isAnonymous: isAnonymous || false,
-        allowMultipleVotes: allowMultipleVotes || false,
-        options: {
-          create: options.map((optionText: string, index: number) => ({
-            text: optionText,
-            order: index
-          }))
-        }
-      },
-      include: {
-        panel: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            endTime: true
-          }
-        },
-        options: {
-          include: {
-            responses: true
-          }
-        }
-      }
-    })
+        panel_id: panelId,
+        event_id: id,
+        is_anonymous: isAnonymous || false,
+        allow_multiple_votes: allowMultipleVotes || false
+      })
+      .select('id')
+      .single()
 
-    // Calculer les stats initiales
-    const totalVotes = poll.options.reduce((sum, option) => sum + option.responses.length, 0)
-    const optionsWithStats = poll.options.map(option => ({
+    if (pollError || !createdPoll) throw pollError
+
+    const { error: optionsError } = await supabase.from('poll_options').insert(
+      options.map((optionText: string, index: number) => ({
+        poll_id: createdPoll.id,
+        text: optionText,
+        order: index
+      }))
+    )
+
+    if (optionsError) throw optionsError
+
+    const { data: poll, error: fetchError } = await supabase
+      .from('polls')
+      .select(
+        `*, panel:panels(id,title,start_time,end_time), options:poll_options(*, responses:poll_responses(id))`
+      )
+      .eq('id', createdPoll.id)
+      .single()
+
+    if (fetchError || !poll) throw fetchError
+
+    const totalVotes = poll.options.reduce(
+      (sum: number, option: any) => sum + option.responses.length,
+      0
+    )
+    const optionsWithStats = poll.options.map((option: any) => ({
       ...option,
       votes: option.responses.length,
       percentage: 0
