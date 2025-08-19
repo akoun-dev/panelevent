@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -54,7 +55,8 @@ interface FeedbackStats {
   recentTrend: 'up' | 'down' | 'stable'
 }
 
-export default function EventFeedbackPage({ params }: { params: { id: string } }) {
+export default function EventFeedbackPage() {
+  const { id } = useParams<{ id: string }>()
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [filteredFeedbacks, setFilteredFeedbacks] = useState<Feedback[]>([])
   const [stats, setStats] = useState<FeedbackStats | null>(null)
@@ -78,7 +80,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
           comment: 'Excellente conférence ! Les intervenants étaient très compétents et les sujets pertinents. J\'ai particulièrement apprécié la session sur l\'IA.',
           category: 'Général',
           createdAt: '2024-01-15T18:30:00',
-          eventId: params.id,
+          eventId: id,
           helpful: 8,
           resolved: true
         },
@@ -91,7 +93,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
           comment: 'Très bon événement dans l\'ensemble. Peut-être améliorer la logistique pour le café.',
           category: 'Logistique',
           createdAt: '2024-01-15T19:15:00',
-          eventId: params.id,
+          eventId: id,
           helpful: 5,
           resolved: false
         },
@@ -104,7 +106,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
           comment: 'Au top ! J\'ai appris énormément et le networking était génial.',
           category: 'Contenu',
           createdAt: '2024-01-15T20:00:00',
-          eventId: params.id,
+          eventId: id,
           helpful: 12,
           resolved: true
         },
@@ -117,7 +119,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
           comment: 'Correct mais j\'attendais plus de profondeur technique dans certaines présentations.',
           category: 'Contenu',
           createdAt: '2024-01-16T09:30:00',
-          eventId: params.id,
+          eventId: id,
           helpful: 2,
           resolved: false
         },
@@ -130,7 +132,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
           comment: 'Bonne organisation, salle confortable. Peut-être prévoir plus de temps pour les questions.',
           category: 'Format',
           createdAt: '2024-01-16T10:45:00',
-          eventId: params.id,
+          eventId: id,
           helpful: 6,
           resolved: true
         },
@@ -143,7 +145,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
           comment: 'Décevant, son de mauvaise qualité et retards dans le programme.',
           category: 'Technique',
           createdAt: '2024-01-16T14:20:00',
-          eventId: params.id,
+          eventId: id,
           helpful: 1,
           resolved: false
         }
@@ -192,7 +194,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
     }
 
     loadData()
-  }, [params.id])
+  }, [id])
 
   // Filtrer les feedbacks
   useEffect(() => {

@@ -7,12 +7,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
 
-    let whereClause: any = {
+    const whereClause: any = {
       panel: {
-        eventId: params.id
+        eventId: id
       }
     }
 
@@ -75,6 +76,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { question, description, panelId, isAnonymous, allowMultipleVotes, options } = body
 
@@ -89,7 +91,7 @@ export async function POST(
     const panel = await db.panel.findFirst({
       where: {
         id: panelId,
-        eventId: params.id
+        eventId: id
       }
     })
 

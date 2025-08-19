@@ -7,13 +7,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const rating = searchParams.get('rating')
     const resolved = searchParams.get('resolved')
 
-    let whereClause: any = {
-      eventId: params.id
+    const whereClause: any = {
+      eventId: id
     }
 
     if (category) {
@@ -67,6 +68,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const { userId, rating, comment, category } = body
 
@@ -88,7 +90,7 @@ export async function POST(
     const registration = await db.eventRegistration.findFirst({
       where: {
         userId,
-        eventId: params.id,
+        eventId: id,
         attended: true
       }
     })
@@ -104,7 +106,7 @@ export async function POST(
     const existingFeedback = await db.feedback.findFirst({
       where: {
         userId,
-        eventId: params.id
+        eventId: id
       }
     })
 
@@ -118,7 +120,7 @@ export async function POST(
     const feedback = await db.feedback.create({
       data: {
         userId,
-        eventId: params.id,
+        eventId: id,
         rating,
         comment: comment || null,
         category,

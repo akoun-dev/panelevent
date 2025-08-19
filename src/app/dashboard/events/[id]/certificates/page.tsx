@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,7 +57,8 @@ interface EventRegistration {
   } | null
 }
 
-export default function EventCertificatesPage({ params }: { params: { id: string } }) {
+export default function EventCertificatesPage() {
+  const { id } = useParams<{ id: string }>()
   const [templates, setTemplates] = useState<CertificateTemplate[]>([])
   const [registrations, setRegistrations] = useState<EventRegistration[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate | null>(null)
@@ -97,7 +99,7 @@ Délivré le [DATE DE DÉLIVRANCE]
           isActive: true,
           autoGenerate: true,
           createdAt: '2024-01-10T10:00:00',
-          eventId: params.id,
+          eventId: id,
           issuedCount: 45
         },
         {
@@ -122,7 +124,7 @@ Délivré le [DATE DE DÉLIVRANCE]
           isActive: true,
           autoGenerate: false,
           createdAt: '2024-01-12T14:30:00',
-          eventId: params.id,
+          eventId: id,
           issuedCount: 12
         }
       ]
@@ -183,7 +185,7 @@ Délivré le [DATE DE DÉLIVRANCE]
     }
 
     loadData()
-  }, [params.id])
+  }, [id])
 
   const handleCreateTemplate = async () => {
     if (!newTemplate.title.trim() || !newTemplate.content.trim()) {
@@ -198,7 +200,7 @@ Délivré le [DATE DE DÉLIVRANCE]
       isActive: true,
       autoGenerate: newTemplate.autoGenerate,
       createdAt: new Date().toISOString(),
-      eventId: params.id,
+      eventId: id,
       issuedCount: 0
     }
 
