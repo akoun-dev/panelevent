@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import type { QuestionStatus } from '@/types/supabase'
 
 
+
 // GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
 export async function GET(
   request: NextRequest,

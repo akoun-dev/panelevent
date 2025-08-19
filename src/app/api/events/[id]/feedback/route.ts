@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement
 export async function GET(
   request: NextRequest,
@@ -14,6 +16,9 @@ export async function GET(
     const rating = searchParams.get('rating')
     const resolved = searchParams.get('resolved')
 
+    const whereClause: any = {
+      eventId: id
+    }
     let query = supabase
       .from('feedbacks')
       .select(

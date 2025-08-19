@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 
 export async function GET(
@@ -53,11 +52,11 @@ export async function POST(
       return NextResponse.json({ error: 'Title and start time are required' }, { status: 400 })
     }
 
-    // Check if user has access to this event
-    const event = await db.event.findUnique({
-      where: { id: id },
-      select: { organizerId: true }
-    })
+    const { data: event } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .maybeSingle()
 
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })

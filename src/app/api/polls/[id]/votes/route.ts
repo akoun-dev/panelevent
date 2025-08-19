@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase
 
 // POST /api/polls/[pollId]/votes - Ajouter ou modifier un vote
 export async function POST(

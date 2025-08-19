@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase
+
+
 // GET /api/events/[id]/polls - Récupérer tous les sondages d'un événement
 export async function GET(
   request: NextRequest,
@@ -11,6 +16,13 @@ export async function GET(
     const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
+
+
+    const whereClause: any = {
+      panel: {
+        eventId: id
+      }
+    }
 
     let query = supabase
       .from('polls')

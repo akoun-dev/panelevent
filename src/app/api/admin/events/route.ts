@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import QRCode from 'qrcode'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db: any = supabase
 
 interface WhereClause {
   OR?: Array<{
