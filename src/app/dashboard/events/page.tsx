@@ -5,13 +5,15 @@ import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Plus, Eye, Edit, FileText } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Eye, Edit, FileText, QrCode } from 'lucide-react'
+import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import Link from 'next/link'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import CreateEventForm from '@/components/events/CreateEventForm'
@@ -192,6 +194,26 @@ export default function EventsPage() {
                       Feedbacks
                     </Link>
                   </Button>
+                                    <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <QrCode className="w-4 h-4 mr-2" />
+                        QR Code
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>QR Code d'inscription</DialogTitle>
+                        <DialogDescription>
+                          Scannez ce code pour accéder à la page d'inscription
+                        </DialogDescription>
+                      </DialogHeader>
+                      <QRCodeGenerator
+                        url={`${process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
+                        eventName={event.title}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
+import { DeleteEventModal } from '@/components/admin/DeleteEventModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { Calendar, MapPin, Users, Search, Filter, Plus, Edit, Trash2, Eye, ToggleLeft, ToggleRight, FileText } from 'lucide-react'
+import { Calendar, MapPin, Users, Search, Filter, Plus, Edit, Trash2, Eye, ToggleLeft, ToggleRight, FileText, QrCode } from 'lucide-react'
+import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -45,6 +47,8 @@ interface Event {
 }
 
 export default function AdminEventsPage() {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -142,11 +146,16 @@ export default function AdminEventsPage() {
     }
   }
 
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) return
+  const handleDeleteEvent = (eventId: string) => {
+    setSelectedEventId(eventId)
+    setDeleteModalOpen(true)
+  }
 
+  const handleDeleteConfirmed = async () => {
+    if (!selectedEventId) return
+    
     try {
-      const response = await fetch(`/api/admin/events/${eventId}`, {
+      const response = await fetch(`/api/admin/events/${selectedEventId}/delete`, {
         method: 'DELETE'
       })
 
@@ -155,6 +164,8 @@ export default function AdminEventsPage() {
       }
     } catch (error) {
       console.error('Failed to delete event:', error)
+    } finally {
+      setDeleteModalOpen(false)
     }
   }
 
@@ -289,6 +300,12 @@ export default function AdminEventsPage() {
 
   return (
     <div className="space-y-6">
+      <DeleteEventModal
+        eventId={selectedEventId || ''}
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        onSuccess={fetchEvents}
+      />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -537,6 +554,25 @@ export default function AdminEventsPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon" title="Générer QR Code">
+                            <QrCode className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>QR Code d'inscription</DialogTitle>
+                            <DialogDescription>
+                              Scannez ce code pour accéder à la page d'inscription
+                            </DialogDescription>
+                          </DialogHeader>
+                          <QRCodeGenerator
+                            url={`${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
+                            eventName={event.title}
+                          />
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         variant="ghost"
                         size="icon"
