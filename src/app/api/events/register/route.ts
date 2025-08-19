@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 
 // Simple in-memory rate limiting
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 import { QuestionStatus } from '@prisma/client'
 
 interface QuestionUpdateData {

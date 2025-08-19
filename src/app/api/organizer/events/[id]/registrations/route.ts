@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/supabase'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -19,7 +19,7 @@ export async function GET(
     }
 
     // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const event = await prisma.event.findUnique({
+    const event = await db.event.findUnique({
       where: { id }
     })
 
@@ -38,7 +38,7 @@ export async function GET(
     }
 
     // Récupérer les inscriptions avec les informations utilisateur
-    const registrations = await prisma.eventRegistration.findMany({
+    const registrations = await db.eventRegistration.findMany({
       where: { eventId: id },
       include: {
         user: {

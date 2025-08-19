@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 
 async function createAdmin() {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 
 // POST /api/feedback/[feedbackId]/resolve - Marquer un feedback comme résolu/non résolu
 export async function POST(

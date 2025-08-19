@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 
 // GET /api/polls/[pollId] - Récupérer un sondage spécifique
 export async function GET(

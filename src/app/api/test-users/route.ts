@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 
 export async function GET() {
   if (process.env.NODE_ENV !== 'development') {

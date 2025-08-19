@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 import { Prisma } from '@prisma/client'
 
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement

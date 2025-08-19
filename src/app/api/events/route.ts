@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 import { authOptions } from '@/lib/auth'
 import QRCode from 'qrcode'
 

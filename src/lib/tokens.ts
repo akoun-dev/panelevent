@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 
 export function generateRegistrationToken(eventId: string): string {
   const token = randomBytes(32).toString('hex')

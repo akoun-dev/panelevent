@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/supabase'
 
 export async function GET() {
   try {
@@ -14,7 +14,7 @@ export async function GET() {
       )
     }
 
-    const events = await prisma.event.findMany({
+    const events = await db.event.findMany({
       where: { organizerId: session.user.id },
     })
     return NextResponse.json(events)
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const event = await prisma.event.create({
+    const event = await db.event.create({
       data: {
         ...body,
         organizerId: session.user.id,

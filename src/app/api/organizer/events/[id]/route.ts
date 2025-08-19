@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { db } from '@/lib/supabase'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -59,7 +59,7 @@ export async function GET(
       )
     }
 
-    const event = await prisma.event.findUnique({
+    const event = await db.event.findUnique({
       where: { id },
       select: {
         id: true,
@@ -151,7 +151,7 @@ export async function PUT(
     }
 
     // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
+    const existingEvent = await db.event.findUnique({
       where: { id }
     })
 
@@ -169,7 +169,7 @@ export async function PUT(
       )
     }
     
-    const event = await prisma.event.update({
+    const event = await db.event.update({
       where: { id },
       data: {
         ...body,
@@ -212,7 +212,7 @@ export async function PATCH(
     }
 
     // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
+    const existingEvent = await db.event.findUnique({
       where: { id }
     })
 
@@ -240,7 +240,7 @@ export async function PATCH(
       updateData.endDate = body.endDate ? new Date(body.endDate) : null
     }
 
-    const event = await prisma.event.update({
+    const event = await db.event.update({
       where: { id },
       data: updateData,
       select: {
@@ -293,7 +293,7 @@ export async function DELETE(
     }
 
     // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
+    const existingEvent = await db.event.findUnique({
       where: { id }
     })
 
@@ -311,7 +311,7 @@ export async function DELETE(
       )
     }
 
-    await prisma.event.delete({
+    await db.event.delete({
       where: { id },
     })
     return NextResponse.json({ success: true })

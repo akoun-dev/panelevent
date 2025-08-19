@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/supabase'
 
 // GET /api/events/[id]/certificate-templates - Récupérer tous les modèles de certificats d'un événement
 export async function GET(
