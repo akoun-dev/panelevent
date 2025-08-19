@@ -45,6 +45,7 @@ interface Panel {
   startTime: string
   endTime: string
   eventId: string
+  allowQuestions: boolean
 }
 
 export default function EventQAPage({ params }: { params: Promise<{ id: string }> }) {
@@ -67,9 +68,10 @@ export default function EventQAPage({ params }: { params: Promise<{ id: string }
         const panelsResponse = await fetch(`/api/events/${eventId}/panels`)
         if (panelsResponse.ok) {
           const panelsData = await panelsResponse.json()
-          setPanels(panelsData.panels || [])
-          if (panelsData.panels?.length > 0) {
-            setActivePanel(panelsData.panels[0].id)
+          const questionPanels = (panelsData.panels || []).filter((p: Panel) => p.allowQuestions)
+          setPanels(questionPanels)
+          if (questionPanels.length > 0) {
+            setActivePanel(questionPanels[0].id)
           }
         }
 

@@ -74,6 +74,7 @@ async function main() {
           location: 'Amphithéâtre Principal',
           order: 1,
           isActive: true,
+          allowQuestions: true,
           eventId: event.id
         },
         {
@@ -85,6 +86,7 @@ async function main() {
           location: 'Salle B',
           order: 2,
           isActive: true,
+          allowQuestions: false,
           eventId: event.id
         }
       ])

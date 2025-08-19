@@ -43,6 +43,7 @@ interface Panel {
   startTime: string
   endTime: string
   eventId: string
+  allowQuestions?: boolean
   isActive: boolean
 }
 

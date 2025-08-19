@@ -48,7 +48,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { title, description, startTime, endTime, speaker, location, order, isActive } = body
+    const { title, description, startTime, endTime, speaker, location, order, isActive, allowQuestions } = body
 
     if (!title || !startTime) {
       return NextResponse.json({ error: 'Title and start time are required' }, { status: 400 })
@@ -79,6 +79,7 @@ export async function POST(
         location,
         order: order || 0,
         isActive: isActive ?? false,
+        allowQuestions: allowQuestions ?? false,
         eventId: id
       })
       .select()

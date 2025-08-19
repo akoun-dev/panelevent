@@ -36,6 +36,7 @@ interface Panel {
   location?: string
   order: number
   isActive: boolean
+  allowQuestions: boolean
   createdAt: string
   updatedAt: string
 }
@@ -68,7 +69,8 @@ export default function EventProgramManager({ eventId }: EventProgramManagerProp
     speaker: '',
     location: '',
     type: 'panel',
-    isActive: false
+    isActive: false,
+    allowQuestions: false
   })
 
   useEffect(() => {
@@ -220,7 +222,8 @@ export default function EventProgramManager({ eventId }: EventProgramManagerProp
       speaker: '',
       location: '',
       type: 'panel',
-      isActive: false
+      isActive: false,
+      allowQuestions: false
     })
     setEditingPanel(null)
   }
@@ -235,7 +238,8 @@ export default function EventProgramManager({ eventId }: EventProgramManagerProp
       speaker: panel.speaker || '',
       location: panel.location || '',
       type: 'panel', // Default type, could be stored in DB
-      isActive: panel.isActive
+      isActive: panel.isActive,
+      allowQuestions: panel.allowQuestions
     })
     setIsDialogOpen(true)
   }
@@ -373,6 +377,20 @@ export default function EventProgramManager({ eventId }: EventProgramManagerProp
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
+                  <Label htmlFor="allowQuestions">Autoriser les questions</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Permettre aux participants de poser des questions pour cette activité
+                  </p>
+                </div>
+                <Switch
+                  id="allowQuestions"
+                  checked={formData.allowQuestions}
+                  onCheckedChange={(checked) => handleInputChange('allowQuestions', checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
                   <Label htmlFor="isActive">Session active</Label>
                   <p className="text-xs text-muted-foreground">
                     Les sessions actives sont visibles par les participants
@@ -437,6 +455,9 @@ export default function EventProgramManager({ eventId }: EventProgramManagerProp
                           <Badge variant={panel.isActive ? 'default' : 'secondary'}>
                             {panel.isActive ? 'Actif' : 'Inactif'}
                           </Badge>
+                          {panel.allowQuestions && (
+                            <Badge variant="outline">Q&A</Badge>
+                          )}
                         </div>
                         {panel.description && (
                           <p className="text-sm text-muted-foreground mb-2">

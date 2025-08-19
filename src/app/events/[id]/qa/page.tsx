@@ -44,12 +44,13 @@ interface Panel {
   endTime: string
   eventId: string
   isActive: boolean
+  allowQuestions: boolean
 }
 
 export default function EventQAPage() {
   const params = useParams()
   const id = params.id as string
-  const [activePanel, setActivePanel] = useState<string>('')
+  const [activePanel, setActivePanel] = useState<string | null>(null)
   const [panels, setPanels] = useState<Panel[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([])
@@ -71,7 +72,8 @@ export default function EventQAPage() {
           startTime: '2024-01-15T09:00:00',
           endTime: '2024-01-15T10:00:00',
           eventId: id,
-          isActive: false
+          isActive: false,
+          allowQuestions: false
         },
         {
           id: '2',
@@ -80,7 +82,8 @@ export default function EventQAPage() {
           startTime: '2024-01-15T10:30:00',
           endTime: '2024-01-15T12:00:00',
           eventId: id,
-          isActive: true
+          isActive: true,
+          allowQuestions: true
         },
         {
           id: '3',
@@ -89,7 +92,8 @@ export default function EventQAPage() {
           startTime: '2024-01-15T14:00:00',
           endTime: '2024-01-15T15:30:00',
           eventId: id,
-          isActive: false
+          isActive: false,
+          allowQuestions: true
         }
       ]
 
@@ -165,15 +169,13 @@ export default function EventQAPage() {
         }
       ]
 
-      setPanels(mockPanels)
+      const questionPanels = mockPanels.filter(p => p.allowQuestions)
+      setPanels(questionPanels)
       setQuestions(mockQuestions)
-      
-      // Sélectionner le panel actif par défaut
-      const activePanel = mockPanels.find(p => p.isActive)
-      if (activePanel) {
-        setActivePanel(activePanel.id)
-      } else if (mockPanels.length > 0) {
-        setActivePanel(mockPanels[0].id)
+
+      const active = questionPanels.find(p => p.isActive)
+      if (active) {
+        setActivePanel(active.id)
       }
       
       setIsLoading(false)
@@ -213,7 +215,7 @@ export default function EventQAPage() {
   }, [questions, activePanel, searchTerm, sortBy])
 
   const handleSubmitQuestion = async () => {
-    if (!newQuestion.trim() || isSubmitting) return
+    if (!newQuestion.trim() || isSubmitting || !activePanel) return
 
     setIsSubmitting(true)
     
@@ -227,7 +229,7 @@ export default function EventQAPage() {
       upvotes: 0,
       downvotes: 0,
       createdAt: new Date().toISOString(),
-      panelId: activePanel,
+      panelId: activePanel as string,
       userVote: null
     }
 
@@ -301,35 +303,27 @@ export default function EventQAPage() {
         </div>
       </div>
 
-      {/* Sélection du panel */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Session en cours</CardTitle>
-          <CardDescription>Sélectionnez la session pour poser vos questions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {panels.map((panel) => (
-              <Button
-                key={panel.id}
-                variant={activePanel === panel.id ? "default" : "outline"}
-                className="h-auto p-4 flex flex-col items-start text-left"
-                onClick={() => setActivePanel(panel.id)}
-              >
-                <div className="font-medium">{panel.title}</div>
-                <div className="text-xs opacity-70 mt-1">
-                  {format(new Date(panel.startTime), 'HH:mm', { locale: fr })} - {format(new Date(panel.endTime), 'HH:mm', { locale: fr })}
-                </div>
-                {panel.isActive && (
-                  <Badge variant="secondary" className="mt-2 text-xs">
-                    En direct
-                  </Badge>
-                )}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Informations sur la session actuelle */}
+      {currentPanel ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Session en cours : {currentPanel.title}</CardTitle>
+            <CardDescription>
+              {format(new Date(currentPanel.startTime), 'HH:mm', { locale: fr })} -
+              {format(new Date(currentPanel.endTime), 'HH:mm', { locale: fr })}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Aucune session ouverte</CardTitle>
+            <CardDescription>
+              Il n'y a actuellement aucune activité permettant de poser des questions.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Formulaire de question */}
       {currentPanel && (

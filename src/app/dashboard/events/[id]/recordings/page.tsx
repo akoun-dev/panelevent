@@ -52,6 +52,7 @@ interface Panel {
   startTime: string
   endTime: string
   eventId: string
+  allowQuestions?: boolean
 }
 
 interface TranscriptionJob {

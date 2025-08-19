@@ -86,6 +86,7 @@ export interface Database {
           location: string | null;
           order: number;
           isActive: boolean;
+          allowQuestions: boolean;
           createdAt: string;
           updatedAt: string;
           eventId: string;
@@ -100,6 +101,7 @@ export interface Database {
           location?: string | null;
           order?: number;
           isActive?: boolean;
+          allowQuestions?: boolean;
           createdAt?: string;
           updatedAt?: string;
           eventId: string;
@@ -114,6 +116,7 @@ export interface Database {
           location?: string | null;
           order?: number;
           isActive?: boolean;
+          allowQuestions?: boolean;
           createdAt?: string;
           updatedAt?: string;
           eventId?: string;

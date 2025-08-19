@@ -16,7 +16,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { title, description, startTime, endTime, speaker, location, order, isActive } = body
+    const { title, description, startTime, endTime, speaker, location, order, isActive, allowQuestions } = body
 
     const { data: event } = await supabase
       .from('events')
@@ -41,6 +41,7 @@ export async function PATCH(
     if (location !== undefined) updateData.location = location
     if (order !== undefined) updateData.order = order
     if (isActive !== undefined) updateData.isActive = isActive
+    if (allowQuestions !== undefined) updateData.allowQuestions = allowQuestions
 
     const { data: panel, error } = await supabase
       .from('panels')
