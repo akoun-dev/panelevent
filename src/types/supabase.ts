@@ -69,7 +69,13 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Enums: {
+      UserRole: 'ADMIN' | 'ORGANIZER' | 'ATTENDEE'
+      QuestionStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
+      VoteType: 'UP' | 'DOWN'
+    };
     CompositeTypes: Record<string, never>;
   };
 }
+
+export type QuestionStatus = Database['public']['Enums']['QuestionStatus']
