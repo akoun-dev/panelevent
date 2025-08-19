@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { Prisma } from '@prisma/client'
+import { supabase } from '@/lib/supabase'
 
 export async function PATCH(
   request: NextRequest,
@@ -33,23 +33,28 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const updateData: Prisma.PanelUpdateInput = {}
+    const updateData: Record<string, any> = {}
     if (title !== undefined) updateData.title = title
     if (description !== undefined) updateData.description = description
-    if (startTime !== undefined) updateData.startTime = new Date(startTime)
-    if (endTime !== undefined) updateData.endTime = endTime ? new Date(endTime) : null
+    if (startTime !== undefined) updateData.startTime = new Date(startTime).toISOString()
+    if (endTime !== undefined) updateData.endTime = endTime ? new Date(endTime).toISOString() : null
     if (speaker !== undefined) updateData.speaker = speaker
     if (location !== undefined) updateData.location = location
     if (order !== undefined) updateData.order = order
     if (isActive !== undefined) updateData.isActive = isActive
 
-    const panel = await db.panel.update({
-      where: { 
-        id: resolvedParams.panelId,
-        eventId: resolvedParams.id
-      },
-      data: updateData
-    })
+    const { data: panel, error } = await supabase
+      .from('panels')
+      .update(updateData)
+      .eq('id', resolvedParams.panelId)
+      .eq('eventId', resolvedParams.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Failed to update panel:', error)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
 
     return NextResponse.json({ panel })
   } catch (error) {
@@ -84,12 +89,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await db.panel.delete({
-      where: { 
-        id: resolvedParams.panelId,
-        eventId: resolvedParams.id
-      }
-    })
+    const { error } = await supabase
+      .from('panels')
+      .delete()
+      .eq('id', resolvedParams.panelId)
+      .eq('eventId', resolvedParams.id)
+
+    if (error) {
+      console.error('Failed to delete panel:', error)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

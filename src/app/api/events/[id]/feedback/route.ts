@@ -96,6 +96,10 @@ export async function POST(
       .select('id')
       .eq('userId', userId)
       .eq('eventId', id)
+
+      .eq('user_id', userId)
+      .eq('event_id', id)
+
       .eq('attended', true)
       .maybeSingle()
 

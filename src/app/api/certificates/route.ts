@@ -3,6 +3,10 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 
+import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
+
+
 // POST /api/certificates - Générer un nouveau certificat pour l'utilisateur authentifié
 export async function POST(request: NextRequest) {
   try {
@@ -26,11 +30,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+
     const { data: registration, error: regError } = await supabase
       .from('event_registrations')
       .select('id')
       .eq('userId', userId)
       .eq('eventId', eventId)
+
+    // Vérifier si l'utilisateur est inscrit et a participé à l'événement
+    const { data: registration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('event_id', eventId)
+
       .eq('attended', true)
       .maybeSingle()
 
@@ -68,9 +81,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
+    // Récupérer les informations de l'utilisateur
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, name, email')
       .eq('id', userId)
       .single()
 
