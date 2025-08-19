@@ -4,10 +4,11 @@ import { db } from '@/lib/db'
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const rating = searchParams.get('rating')
@@ -65,10 +66,11 @@ export async function GET(
 // POST /api/events/[id]/feedback - Créer un nouveau feedback
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const body = await request.json()
     const { userId, rating, comment, category } = body
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,7 +65,9 @@ interface TranscriptionJob {
   error?: string
 }
 
-export default function EventRecordingsPage({ params }: { params: { id: string } }) {
+export default function EventRecordingsPage() {
+  const params = useParams()
+  const id = params.id as string
   const [activePanel, setActivePanel] = useState<string>('')
   const [panels, setPanels] = useState<Panel[]>([])
   const [recordings, setRecordings] = useState<AudioRecording[]>([])
@@ -96,7 +99,7 @@ export default function EventRecordingsPage({ params }: { params: { id: string }
           description: 'Session d\'ouverture de la conférence',
           startTime: '2024-01-15T09:00:00',
           endTime: '2024-01-15T10:00:00',
-          eventId: params.id
+          eventId: id
         },
         {
           id: '2',
@@ -104,7 +107,7 @@ export default function EventRecordingsPage({ params }: { params: { id: string }
           description: 'Discussion sur les dernières tendances tech',
           startTime: '2024-01-15T10:30:00',
           endTime: '2024-01-15T12:00:00',
-          eventId: params.id
+          eventId: id
         },
         {
           id: '3',
@@ -112,7 +115,7 @@ export default function EventRecordingsPage({ params }: { params: { id: string }
           description: 'Atelier pratique sur les solutions durables',
           startTime: '2024-01-15T14:00:00',
           endTime: '2024-01-15T15:30:00',
-          eventId: params.id
+          eventId: id
         }
       ]
 
@@ -183,7 +186,7 @@ export default function EventRecordingsPage({ params }: { params: { id: string }
     }
 
     loadData()
-  }, [params.id])
+  }, [id])
 
   // Filtrer les enregistrements
   useEffect(() => {

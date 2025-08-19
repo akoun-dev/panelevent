@@ -3,10 +3,11 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = await params
+    const resolvedParams = await params
+    const { slug } = resolvedParams
 
     // Récupérer l'événement par son slug
     const event = await db.event.findUnique({

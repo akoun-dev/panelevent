@@ -4,9 +4,10 @@ import { db } from '@/lib/db'
 // PATCH /api/questions/[id] - Mettre à jour une question (statut, réponse)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const body = await request.json()
     const { status, answer, answeredBy } = body
 
@@ -26,7 +27,7 @@ export async function PATCH(
     }
 
     const question = await db.question.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: updateData,
       include: {
         panel: {
@@ -54,11 +55,12 @@ export async function PATCH(
 // DELETE /api/questions/[id] - Supprimer une question
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     await db.question.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
     return NextResponse.json({ success: true })

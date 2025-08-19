@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Star, 
-  MessageSquare, 
-  Send, 
+import {
+  Star,
+  MessageSquare,
+  Send,
   ThumbsUp,
   TrendingUp,
   Users,
@@ -58,7 +59,10 @@ interface Event {
   userFeedback?: Feedback
 }
 
-export default function EventFeedbackPage({ params }: { params: { id: string } }) {
+export default function EventFeedbackPage() {
+  const params = useParams()
+  const id = params.id as string
+  
   const [event, setEvent] = useState<Event | null>(null)
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([])
   const [stats, setStats] = useState<EventStats | null>(null)
@@ -76,7 +80,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
     const loadData = async () => {
       // Données de démonstration pour l'événement
       const mockEvent: Event = {
-        id: params.id,
+        id: id,
         title: 'Conférence Technologique 2024',
         description: 'La plus grande conférence sur les innovations technologiques',
         startDate: '2024-01-15T09:00:00',
@@ -164,7 +168,7 @@ export default function EventFeedbackPage({ params }: { params: { id: string } }
     }
 
     loadData()
-  }, [params.id])
+   }, [id])
 
   const handleSubmitFeedback = async () => {
     if (newFeedback.rating === 0 || isSubmitting) return

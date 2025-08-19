@@ -3,8 +3,9 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
@@ -16,7 +17,7 @@ export async function GET(
       )
     }
 
-    const eventId = params.id
+    const eventId = resolvedParams.id
 
     // Vérifier si l'événement existe
     const event = await db.event.findUnique({

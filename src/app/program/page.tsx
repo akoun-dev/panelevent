@@ -22,6 +22,7 @@ interface RegistrationData {
   email: string
   registeredAt: string
   eventId: string
+  company?: string
 }
 
 export default function ProgramPage() {

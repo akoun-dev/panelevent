@@ -3,12 +3,14 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
+  const { id } = resolvedParams
   try {
     const registration = await db.eventRegistration.findFirst({
       where: {
-        id: params.id,
+        id: id,
         isPublic: true
       },
       include: {

@@ -5,8 +5,9 @@ import { db } from '@/lib/db'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; panelId: string } }
+  { params }: { params: Promise<{ id: string; panelId: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -19,7 +20,7 @@ export async function PATCH(
 
     // Check if user has access to this event
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       select: { organizerId: true }
     })
 
@@ -43,8 +44,8 @@ export async function PATCH(
 
     const panel = await db.panel.update({
       where: { 
-        id: params.panelId,
-        eventId: params.id
+        id: resolvedParams.panelId,
+        eventId: resolvedParams.id
       },
       data: updateData
     })
@@ -58,8 +59,9 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; panelId: string } }
+  { params }: { params: Promise<{ id: string; panelId: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const session = await getServerSession(authOptions)
     
@@ -69,7 +71,7 @@ export async function DELETE(
 
     // Check if user has access to this event
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       select: { organizerId: true }
     })
 
@@ -83,8 +85,8 @@ export async function DELETE(
 
     await db.panel.delete({
       where: { 
-        id: params.panelId,
-        eventId: params.id
+        id: resolvedParams.panelId,
+        eventId: resolvedParams.id
       }
     })
 

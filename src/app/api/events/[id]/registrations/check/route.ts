@@ -5,10 +5,11 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const session = await getServerSession(authOptions)
     
     if (!session || !session.user?.id) {

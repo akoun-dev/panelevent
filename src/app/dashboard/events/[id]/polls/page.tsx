@@ -75,9 +75,11 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
   })
   const [isLoading, setIsLoading] = useState(true)
 
-  // Simuler le chargement des données
+  // Charger les données
   useEffect(() => {
-    const loadData = async (eventId: string) => {
+    const loadData = async () => {
+      if (!eventId) return;
+      
       try {
         // Charger les panels
         const panelsResponse = await fetch(`/api/events/${eventId}/panels`)
@@ -102,13 +104,17 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
       }
     }
 
-    const init = async () => {
+    loadData()
+  }, [eventId])
+
+  // Initialiser l'eventId à partir des paramètres
+  useEffect(() => {
+    const initEventId = async () => {
       const { id } = await params
       setEventId(id)
-      loadData(id)
     }
-
-    init()
+    
+    initEventId()
   }, [params])
 
   // Filtrer les sondages

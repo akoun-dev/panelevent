@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -45,7 +46,9 @@ interface Event {
   userAttended: boolean
 }
 
-export default function EventCertificatesPage({ params }: { params: { id: string } }) {
+export default function EventCertificatesPage() {
+  const params = useParams()
+  const id = params.id as string
   const [event, setEvent] = useState<Event | null>(null)
   const [certificates, setCertificates] = useState<UserCertificate[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -56,7 +59,7 @@ export default function EventCertificatesPage({ params }: { params: { id: string
     const loadData = async () => {
       // Données de démonstration pour l'événement
       const mockEvent: Event = {
-        id: params.id,
+        id: id,
         title: 'Conférence Technologique 2024',
         description: 'La plus grande conférence sur les innovations technologiques',
         startDate: '2024-01-15T09:00:00',
@@ -103,7 +106,7 @@ export default function EventCertificatesPage({ params }: { params: { id: string
     }
 
     loadData()
-  }, [params.id])
+  }, [id])
 
   const handleDownload = (certificate: UserCertificate) => {
     // Simuler le téléchargement

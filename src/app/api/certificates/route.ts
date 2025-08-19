@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { templateId, eventId } = body
-    const userId = session.user!.id
+    const userId = session.user?.id
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 401 })
+    }
 
     if (!templateId || !eventId) {
       return NextResponse.json(
@@ -157,7 +160,7 @@ export async function GET(request: NextRequest) {
     const eventId = searchParams.get('eventId')
     const templateId = searchParams.get('templateId')
 
-    let whereClause: any = {}
+    const whereClause: any = {}
 
     if (userId) whereClause.userId = userId
     if (eventId) whereClause.eventId = eventId

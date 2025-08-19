@@ -4,10 +4,11 @@ import { db } from '@/lib/db'
 // GET /api/events/[id]/polls - Récupérer tous les sondages d'un événement
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
 
@@ -73,10 +74,11 @@ export async function GET(
 // POST /api/events/[id]/polls - Créer un nouveau sondage
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const body = await request.json()
     const { question, description, panelId, isAnonymous, allowMultipleVotes, options } = body
 

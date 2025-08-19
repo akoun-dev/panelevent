@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Calendar, MapPin, Users, MessageSquare, BarChart, Settings, ArrowLeft } from 'lucide-react'
+import { Calendar, MapPin, Users, MessageSquare, BarChart, Settings, ArrowLeft, QrCode } from 'lucide-react'
 import { toast } from 'sonner'
+import QRCodeComponent from '@/components/qr-code'
 
 interface ProgramData {
   hasProgram: boolean
@@ -169,34 +170,50 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             Détails et configuration de votre événement
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">Date de début</p>
-                <p className="text-sm text-muted-foreground">{formatDate(event.startDate)}</p>
-              </div>
-            </div>
-            {event.endDate && (
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Informations de l'événement */}
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Date de fin</p>
-                  <p className="text-sm text-muted-foreground">{formatDate(event.endDate)}</p>
+                  <p className="text-sm font-medium">Date de début</p>
+                  <p className="text-sm text-muted-foreground">{formatDate(event.startDate)}</p>
                 </div>
               </div>
-            )}
-            {event.location && (
+              {event.endDate && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Date de fin</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(event.endDate)}</p>
+                  </div>
+                </div>
+              )}
+              {event.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Lieu</p>
+                    <p className="text-sm text-muted-foreground">{event.location}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* QR Code pour le check-in */}
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-muted-foreground" />
+                <QrCode className="w-5 h-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Lieu</p>
-                  <p className="text-sm text-muted-foreground">{event.location}</p>
+                  <p className="text-sm font-medium">QR Code de check-in</p>
+                  <p className="text-sm text-muted-foreground">Scannez pour l'enregistrement</p>
                 </div>
               </div>
-            )}
+              <QRCodeComponent eventId={eventId} size={160} />
+            </div>
           </div>
+          
           {event.description && (
             <div>
               <p className="text-sm font-medium mb-2">Description</p>

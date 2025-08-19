@@ -59,7 +59,8 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
             endDate: eventData.endDate ? format(new Date(eventData.endDate), 'yyyy-MM-dd') : '',
             location: eventData.location || '',
             isPublic: eventData.isPublic || false,
-            maxAttendees: eventData.maxAttendees || 0
+            maxAttendees: eventData.maxAttendees || 0,
+            isActive: eventData.isActive || false
           })
         }
       } catch (error) {

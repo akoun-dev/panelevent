@@ -74,6 +74,20 @@ export default function EventProgramManager({ eventId, isAdmin = false }: EventP
   })
 
   useEffect(() => {
+    const fetchPanels = async () => {
+      try {
+        const response = await fetch(`/api/events/${eventId}/panels`)
+        if (response.ok) {
+          const data = await response.json()
+          setPanels(data.panels || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch panels:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchPanels()
   }, [eventId])
 

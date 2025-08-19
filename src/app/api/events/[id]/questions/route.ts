@@ -4,10 +4,11 @@ import { db } from '@/lib/db'
 // GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
     const panelId = searchParams.get('panelId')
     const status = searchParams.get('status')
@@ -72,10 +73,11 @@ export async function GET(
 // POST /api/events/[id]/questions - Créer une nouvelle question
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const body = await request.json()
     const { content, panelId, authorName, authorEmail } = body
 

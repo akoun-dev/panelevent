@@ -4,10 +4,11 @@ import { db } from '@/lib/db'
 // GET /api/polls/[pollId] - Récupérer un sondage spécifique
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: pollId } = await params
+    const resolvedParams = await params
+    const { id: pollId } = resolvedParams
 
     const poll = await db.poll.findUnique({
       where: { id: pollId },
@@ -63,10 +64,11 @@ export async function GET(
 // PATCH /api/polls/[pollId] - Mettre à jour un sondage
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: pollId } = await params
+    const resolvedParams = await params
+    const { id: pollId } = resolvedParams
     const body = await request.json()
     const { isActive, question, description, isAnonymous, allowMultipleVotes } = body
 
@@ -134,10 +136,11 @@ export async function PATCH(
 // DELETE /api/polls/[pollId] - Supprimer un sondage
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: pollId } = await params
+    const resolvedParams = await params
+    const { id: pollId } = resolvedParams
 
     const poll = await db.poll.findUnique({
       where: { id: pollId }

@@ -4,9 +4,10 @@ import { db } from '@/lib/db'
 // POST /api/feedback/[feedbackId]/helpful - Ajouter ou supprimer un vote utile
 export async function POST(
   request: NextRequest,
-  { params }: { params: { feedbackId: string } }
+  { params }: { params: Promise<{ feedbackId: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const body = await request.json()
     const { userId } = body
 
@@ -21,7 +22,7 @@ export async function POST(
     const existingVote = await db.helpfulVote.findUnique({
       where: {
         feedbackId_userId: {
-          feedbackId: params.feedbackId,
+          feedbackId: resolvedParams.feedbackId,
           userId
         }
       }
@@ -34,7 +35,7 @@ export async function POST(
       vote = await db.helpfulVote.delete({
         where: {
           feedbackId_userId: {
-            feedbackId: params.feedbackId,
+            feedbackId: resolvedParams.feedbackId,
             userId
           }
         }
@@ -43,7 +44,7 @@ export async function POST(
       // Créer un nouveau vote
       vote = await db.helpfulVote.create({
         data: {
-          feedbackId: params.feedbackId,
+          feedbackId: resolvedParams.feedbackId,
           userId
         }
       })
@@ -62,11 +63,12 @@ export async function POST(
 // GET /api/feedback/[feedbackId]/helpful - Récupérer les votes utiles d'un feedback
 export async function GET(
   request: NextRequest,
-  { params }: { params: { feedbackId: string } }
+  { params }: { params: Promise<{ feedbackId: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const votes = await db.helpfulVote.findMany({
-      where: { feedbackId: params.feedbackId },
+      where: { feedbackId: resolvedParams.feedbackId },
       include: {
         user: {
           select: {

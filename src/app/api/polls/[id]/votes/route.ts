@@ -4,10 +4,11 @@ import { db } from '@/lib/db'
 // POST /api/polls/[pollId]/votes - Ajouter ou modifier un vote
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: pollId } = await params
+    const resolvedParams = await params
+    const { id: pollId } = resolvedParams
     const body = await request.json()
     const { userId, optionIds } = body
 
@@ -154,10 +155,11 @@ export async function POST(
 // GET /api/polls/[pollId]/votes - Récupérer les votes d'un sondage
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: pollId } = await params
+    const resolvedParams = await params
+    const { id: pollId } = resolvedParams
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 

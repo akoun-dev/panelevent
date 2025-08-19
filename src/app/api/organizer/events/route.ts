@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma'
 export async function GET() {
   try {
     const events = await prisma.event.findMany({
-      where: { organizerId: 1 }, // TODO: Remplacer par l'ID de l'organisateur connecté
+      where: { organizerId: "1" }, // TODO: Remplacer par l'ID de l'organisateur connecté
     })
     return NextResponse.json(events)
   } catch (error) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const event = await prisma.event.create({
       data: {
         ...body,
-        organizerId: 1, // TODO: Remplacer par l'ID de l'organisateur connecté
+        organizerId: "1", // TODO: Remplacer par l'ID de l'organisateur connecté
       },
     })
     return NextResponse.json(event)

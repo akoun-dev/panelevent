@@ -5,9 +5,10 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const session = await getServerSession(authOptions)
     
     if (!session || session.user?.role !== 'ADMIN') {
@@ -15,7 +16,7 @@ export async function GET(
     }
 
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         organizer: {
           select: {
@@ -71,9 +72,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const session = await getServerSession(authOptions)
     
     if (!session || session.user?.role !== 'ADMIN') {
@@ -100,7 +102,7 @@ export async function PATCH(
     if (organizerId !== undefined) updateData.organizerId = organizerId
 
     const event = await db.event.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: updateData,
       include: {
         organizer: {
@@ -132,9 +134,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const session = await getServerSession(authOptions)
     
     if (!session || session.user?.role !== 'ADMIN') {
@@ -144,25 +147,25 @@ export async function DELETE(
     // Delete related data first due to foreign key constraints
     await db.$transaction([
       db.eventRegistration.deleteMany({
-        where: { eventId: params.id }
+        where: { eventId: resolvedParams.id }
       }),
       db.question.deleteMany({
-        where: { eventId: params.id }
+        where: { eventId: resolvedParams.id }
       }),
       db.poll.deleteMany({
-        where: { eventId: params.id }
+        where: { eventId: resolvedParams.id }
       }),
       db.feedback.deleteMany({
-        where: { eventId: params.id }
+        where: { eventId: resolvedParams.id }
       }),
       db.certificate.deleteMany({
-        where: { eventId: params.id }
+        where: { eventId: resolvedParams.id }
       }),
       db.panel.deleteMany({
-        where: { eventId: params.id }
+        where: { eventId: resolvedParams.id }
       }),
       db.event.delete({
-        where: { id: params.id }
+        where: { id: resolvedParams.id }
       })
     ])
 

@@ -11,10 +11,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    if (!session.user?.id) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 400 })
+    }
+
     const registrations = await db.eventRegistration.findMany({
       where: {
         event: {
-          organizerId: session.user!.id
+          organizerId: session.user.id
         }
       },
       include: {

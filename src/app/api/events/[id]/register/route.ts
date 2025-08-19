@@ -4,11 +4,12 @@ import { generateRegistrationToken } from '@/lib/tokens'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       select: { id: true, title: true }
     })
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  MessageSquare, 
-  ThumbsUp, 
-  ThumbsDown, 
+import {
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown,
   Send,
   Clock,
   CheckCircle,
@@ -48,7 +49,9 @@ interface Panel {
   isActive: boolean
 }
 
-export default function EventQAPage({ params }: { params: { id: string } }) {
+export default function EventQAPage() {
+  const params = useParams()
+  const id = params.id as string
   const [activePanel, setActivePanel] = useState<string>('')
   const [panels, setPanels] = useState<Panel[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
@@ -70,7 +73,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
           description: 'Session d\'ouverture de la conférence',
           startTime: '2024-01-15T09:00:00',
           endTime: '2024-01-15T10:00:00',
-          eventId: params.id,
+          eventId: id,
           isActive: false
         },
         {
@@ -79,7 +82,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
           description: 'Discussion sur les dernières tendances tech',
           startTime: '2024-01-15T10:30:00',
           endTime: '2024-01-15T12:00:00',
-          eventId: params.id,
+          eventId: id,
           isActive: true
         },
         {
@@ -88,7 +91,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
           description: 'Atelier pratique sur les solutions durables',
           startTime: '2024-01-15T14:00:00',
           endTime: '2024-01-15T15:30:00',
-          eventId: params.id,
+          eventId: id,
           isActive: false
         }
       ]
@@ -180,7 +183,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
     }
 
     loadData()
-  }, [params.id])
+  }, [id])
 
   // Filtrer et trier les questions
   useEffect(() => {
@@ -466,7 +469,7 @@ export default function EventQAPage({ params }: { params: { id: string } }) {
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-sm font-medium">Réponse:</span>
                                 <span className="text-xs text-muted-foreground">
-                                  Par {question.answeredBy} - {format(new Date(question.answeredAt!), 'HH:mm', { locale: fr })}
+                                  Par {question.answeredBy} - {question.answeredAt && format(new Date(question.answeredAt), 'HH:mm', { locale: fr })}
                                 </span>
                               </div>
                               <p className="text-sm">{question.answer}</p>

@@ -4,8 +4,10 @@ import { db } from '@/lib/db'
 // POST /api/questions/[id]/votes - Ajouter ou modifier un vote
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
+  const { id } = resolvedParams
   try {
     const body = await request.json()
     const { userId, type } = body
@@ -28,7 +30,7 @@ export async function POST(
     const existingVote = await db.questionVote.findUnique({
       where: {
         questionId_userId: {
-          questionId: params.id,
+          questionId: id,
           userId
         }
       }
@@ -42,7 +44,7 @@ export async function POST(
         vote = await db.questionVote.delete({
           where: {
             questionId_userId: {
-              questionId: params.id,
+              questionId: id,
               userId
             }
           }
@@ -52,7 +54,7 @@ export async function POST(
         vote = await db.questionVote.update({
           where: {
             questionId_userId: {
-              questionId: params.id,
+              questionId: id,
               userId
             }
           },
@@ -63,7 +65,7 @@ export async function POST(
       // Créer un nouveau vote
       vote = await db.questionVote.create({
         data: {
-          questionId: params.id,
+          questionId: id,
           userId,
           type
         }
@@ -83,11 +85,13 @@ export async function POST(
 // GET /api/questions/[id]/votes - Récupérer les votes d'une question
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
+  const { id } = resolvedParams
   try {
     const votes = await db.questionVote.findMany({
-      where: { questionId: params.id },
+      where: { questionId: id },
       include: {
         user: {
           select: {

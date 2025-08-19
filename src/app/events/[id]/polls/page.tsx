@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -50,7 +51,10 @@ interface Panel {
   isActive: boolean
 }
 
-export default function EventPollsPage({ params }: { params: { id: string } }) {
+export default function EventPollsPage() {
+  const params = useParams()
+  const id = params.id as string
+  
   const [activePanel, setActivePanel] = useState<string>('')
   const [panels, setPanels] = useState<Panel[]>([])
   const [polls, setPolls] = useState<Poll[]>([])
@@ -69,7 +73,7 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
           description: 'Session d\'ouverture de la conférence',
           startTime: '2024-01-15T09:00:00',
           endTime: '2024-01-15T10:00:00',
-          eventId: params.id,
+          eventId: id,
           isActive: false
         },
         {
@@ -78,7 +82,7 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
           description: 'Discussion sur les dernières tendances tech',
           startTime: '2024-01-15T10:30:00',
           endTime: '2024-01-15T12:00:00',
-          eventId: params.id,
+          eventId: id,
           isActive: true
         },
         {
@@ -87,7 +91,7 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
           description: 'Atelier pratique sur les solutions durables',
           startTime: '2024-01-15T14:00:00',
           endTime: '2024-01-15T15:30:00',
-          eventId: params.id,
+          eventId: id,
           isActive: false
         }
       ]
@@ -164,7 +168,7 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
     }
 
     loadData()
-  }, [params.id])
+   }, [id])
 
   // Filtrer les sondages
   useEffect(() => {

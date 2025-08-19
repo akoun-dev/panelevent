@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import CreateEventDialog from '@/components/organizer/CreateEventDialog'
-import EventsTable from '@/components/organizer/EventsTable'
+import { EventsTable } from '@/components/organizer/EventsTable'
 import { Event } from '@prisma/client'
 
 export default function OrganizerEventsPage() {

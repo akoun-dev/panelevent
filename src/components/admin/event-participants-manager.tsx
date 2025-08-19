@@ -45,6 +45,20 @@ export default function EventParticipantsManager({ eventId, isAdmin = false }: E
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null)
 
   useEffect(() => {
+    const fetchRegistrations = async () => {
+      try {
+        const response = await fetch(`/api/events/${eventId}/registrations`)
+        if (response.ok) {
+          const data = await response.json()
+          setRegistrations(data.registrations || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch registrations:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchRegistrations()
   }, [eventId])
 

@@ -5,9 +5,11 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
@@ -16,7 +18,7 @@ export async function GET(
 
     // Check if user has access to this event
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { organizerId: true }
     })
 
@@ -29,7 +31,7 @@ export async function GET(
     }
 
     const registrations = await db.eventRegistration.findMany({
-      where: { eventId: params.id },
+      where: { eventId: id },
       include: {
         user: {
           select: {
@@ -51,9 +53,11 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params
+    const { id } = resolvedParams
     const session = await getServerSession(authOptions)
     
     if (!session) {
@@ -80,7 +84,7 @@ export async function POST(
 
     // Check if event exists and is active
     const event = await db.event.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!event) {
@@ -111,7 +115,7 @@ export async function POST(
       where: {
         userId_eventId: {
           userId: user.id,
-          eventId: params.id
+          eventId: id
         }
       }
     })
@@ -124,7 +128,7 @@ export async function POST(
     const registration = await db.eventRegistration.create({
       data: {
         userId: user.id,
-        eventId: params.id,
+        eventId: id,
         consent
       },
       include: {

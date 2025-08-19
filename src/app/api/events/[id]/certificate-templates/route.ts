@@ -4,11 +4,12 @@ import { db } from '@/lib/db'
 // GET /api/events/[id]/certificate-templates - Récupérer tous les modèles de certificats d'un événement
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const templates = await db.certificateTemplate.findMany({
-      where: { eventId: params.id },
+      where: { eventId: resolvedParams.id },
       include: {
         certificates: {
           select: {
@@ -41,8 +42,9 @@ export async function GET(
 // POST /api/events/[id]/certificate-templates - Créer un nouveau modèle de certificat
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const resolvedParams = await params
   try {
     const body = await request.json()
     const { title, description, content, autoGenerate } = body
@@ -60,7 +62,7 @@ export async function POST(
         description,
         content,
         autoGenerate: autoGenerate || false,
-        eventId: params.id
+        eventId: resolvedParams.id
       },
       include: {
         certificates: {

@@ -4,9 +4,10 @@ import { db } from '@/lib/db'
 // POST /api/feedback/[feedbackId]/resolve - Marquer un feedback comme résolu/non résolu
 export async function POST(
   request: NextRequest,
-  { params }: { params: { feedbackId: string } }
+  { params }: { params: Promise<{ feedbackId: string }> }
 ) {
   try {
+    const resolvedParams = await params
     const body = await request.json()
     const { resolved } = body
 
@@ -18,7 +19,7 @@ export async function POST(
     }
 
     const feedback = await db.feedback.update({
-      where: { id: params.feedbackId },
+      where: { id: resolvedParams.feedbackId },
       data: { resolved },
       include: {
         user: {
