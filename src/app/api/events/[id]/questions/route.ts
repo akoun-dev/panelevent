@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import type { QuestionStatus } from '@/types/supabase'
+
 
 
 // GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
@@ -87,20 +89,11 @@ export async function POST(
 
     // Vérifier que le panel appartient à l'événement
 
-    const {
-      data: panel,
-      error: panelError
-    } = await supabase
-      .from('panels')
-      .select('id,title,start_time,end_time')
-      .eq('id', panelId)
-      .eq('event_id', id)
-
     const { data: panel, error: panelError } = await supabase
       .from('panels')
       .select('id')
       .eq('id', panelId)
-      .eq('eventId', id)
+      .eq('event_id', id)
       .single()
 
     if (panelError || !panel) {
@@ -117,7 +110,7 @@ export async function POST(
         panel_id: panelId,
         author_name: authorName,
         author_email: authorEmail,
-        status: 'PENDING'
+        status: 'PENDING' as QuestionStatus
       })
       .select(`*, panel:panels(id,title,start_time,end_time)`)
       .single()

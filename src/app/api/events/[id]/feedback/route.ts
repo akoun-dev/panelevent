@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db: any = supabase
-
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement
 export async function GET(
   request: NextRequest,
@@ -20,40 +19,33 @@ export async function GET(
     const whereClause: any = {
       eventId: id
     }
+    let query = supabase
+      .from('feedbacks')
+      .select(
+        `*, user:users(id,name,email), helpfulVotes:helpful_votes(user_id)`
+      )
+      .eq('event_id', id)
+      .order('created_at', { ascending: false })
 
     if (category) {
-      whereClause.category = category
+      query = query.eq('category', category)
     }
 
     if (rating) {
-      whereClause.rating = parseInt(rating)
+      query = query.eq('rating', parseInt(rating))
     }
 
     if (resolved !== null) {
-      whereClause.resolved = resolved === 'true'
+      query = query.eq('resolved', resolved === 'true')
     }
 
-    const feedbacks = await db.feedback.findMany({
-      where: whereClause,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        helpfulVotes: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+    const { data: feedbacks, error } = await query
+    if (error) throw error
 
     // Calculer les votes utiles
-    const feedbacksWithVotes = feedbacks.map(feedback => ({
+    const feedbacksWithVotes = (feedbacks || []).map(feedback => ({
       ...feedback,
-      helpful: feedback.helpfulVotes.length
+      helpful: feedback.helpfulVotes?.length || 0
     }))
 
     return NextResponse.json(feedbacksWithVotes)
@@ -95,12 +87,8 @@ export async function POST(
     const { data: registration } = await supabase
       .from('event_registrations')
       .select('id')
-      .eq('userId', userId)
-      .eq('eventId', id)
-
       .eq('user_id', userId)
       .eq('event_id', id)
-
       .eq('attended', true)
       .maybeSingle()
 
@@ -112,12 +100,12 @@ export async function POST(
     }
 
     // Vérifier si l'utilisateur a déjà laissé un feedback
-    const existingFeedback = await db.feedback.findFirst({
-      where: {
-        userId,
-        eventId: id
-      }
-    })
+    const { data: existingFeedback } = await supabase
+      .from('feedbacks')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('event_id', id)
+      .maybeSingle()
 
     if (existingFeedback) {
       return NextResponse.json(
@@ -125,31 +113,26 @@ export async function POST(
         { status: 400 }
       )
     }
-
-    const feedback = await db.feedback.create({
-      data: {
-        userId,
-        eventId: id,
+    const { data: feedback, error: feedbackError } = await supabase
+      .from('feedbacks')
+      .insert({
+        user_id: userId,
+        event_id: id,
         rating,
         comment: comment || null,
         category,
         resolved: false
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        helpfulVotes: true
-      }
-    })
+      })
+      .select(
+        `*, user:users(id,name,email), helpfulVotes:helpful_votes(user_id)`
+      )
+      .single()
+
+    if (feedbackError) throw feedbackError
 
     const feedbackWithVotes = {
       ...feedback,
-      helpful: feedback.helpfulVotes.length
+      helpful: feedback.helpfulVotes?.length || 0
     }
 
     return NextResponse.json(feedbackWithVotes)
