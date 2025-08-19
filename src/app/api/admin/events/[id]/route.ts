@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -157,10 +158,12 @@ export async function DELETE(
     }
 
     // Delete related data first due to foreign key constraints
+    await supabase
+      .from('event_registrations')
+      .delete()
+      .eq('event_id', resolvedParams.id)
+
     await db.$transaction([
-      db.eventRegistration.deleteMany({
-        where: { eventId: resolvedParams.id }
-      }),
       db.question.deleteMany({
         where: { eventId: resolvedParams.id }
       }),

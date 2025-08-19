@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 // Simple in-memory rate limiting
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
@@ -95,13 +96,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si l'email est déjà inscrit
-    const existingRegistration = await db.eventRegistration.findFirst({
-      where: {
-        eventId,
-        email,
-        isPublic: true
-      }
-    })
+    const { data: existingRegistration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('email', email)
+      .eq('is_public', true)
+      .maybeSingle()
 
     if (existingRegistration) {
       return NextResponse.json(
@@ -112,12 +113,11 @@ export async function POST(request: NextRequest) {
 
     // Vérifier le nombre maximum de participants
     if (event.maxAttendees) {
-      const registrationCount = await db.eventRegistration.count({
-        where: {
-          eventId,
-          isPublic: true
-        }
-      })
+      const { count: registrationCount } = await supabase
+        .from('event_registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', eventId)
+        .eq('is_public', true)
 
       if (registrationCount >= event.maxAttendees) {
         return NextResponse.json(
@@ -128,22 +128,31 @@ export async function POST(request: NextRequest) {
     }
 
     // Créer l'inscription
-    const registration = await db.eventRegistration.create({
-      data: {
-        eventId,
+    const { data: registration, error: insertError } = await supabase
+      .from('event_registrations')
+      .insert({
+        event_id: eventId,
         email,
-        firstName,
-        lastName,
+        first_name: firstName,
+        last_name: lastName,
         phone,
         company,
         position,
         experience,
         expectations,
-        dietaryRestrictions,
-        isPublic: true,
+        dietary_restrictions: dietaryRestrictions,
+        is_public: true,
         consent
-      }
-    })
+      })
+      .select('id')
+      .single()
+
+    if (insertError) {
+      return NextResponse.json(
+        { error: "Une erreur est survenue lors de l'inscription" },
+        { status: 500 }
+      )
+    }
 
     // Retourner une réponse de succès
     return NextResponse.json({

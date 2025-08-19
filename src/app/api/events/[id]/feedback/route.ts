@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 import { Prisma } from '@prisma/client'
 
 // GET /api/events/[id]/feedback - Récupérer tous les feedbacks d'un événement
@@ -90,13 +91,13 @@ export async function POST(
     }
 
     // Vérifier si l'utilisateur a participé à l'événement
-    const registration = await db.eventRegistration.findFirst({
-      where: {
-        userId,
-        eventId: id,
-        attended: true
-      }
-    })
+    const { data: registration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('event_id', id)
+      .eq('attended', true)
+      .maybeSingle()
 
     if (!registration) {
       return NextResponse.json(
