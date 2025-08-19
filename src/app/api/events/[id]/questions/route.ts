@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+import { supabase } from '@/lib/supabase'
+import { Prisma, QuestionStatus } from '@prisma/client'
+
+
 // GET /api/events/[id]/questions - Récupérer toutes les questions d'un événement
 export async function GET(
   request: NextRequest,
@@ -85,6 +89,7 @@ export async function POST(
     }
 
     // Vérifier que le panel appartient à l'événement
+
     const {
       data: panel,
       error: panelError
@@ -93,6 +98,12 @@ export async function POST(
       .select('id,title,start_time,end_time')
       .eq('id', panelId)
       .eq('event_id', id)
+
+    const { data: panel, error: panelError } = await supabase
+      .from('panels')
+      .select('id')
+      .eq('id', panelId)
+      .eq('eventId', id)
       .single()
 
     if (panelError || !panel) {

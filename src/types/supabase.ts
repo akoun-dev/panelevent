@@ -1,0 +1,75 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export interface Database {
+  public: {
+    Tables: {
+      events: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          slug: string;
+          startDate: string;
+          endDate: string | null;
+          location: string | null;
+          isPublic: boolean;
+          isActive: boolean;
+          branding: Json | null;
+          program: string | null;
+          qrCode: string | null;
+          maxAttendees: number | null;
+          createdAt: string;
+          updatedAt: string;
+          organizerId: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          slug: string;
+          startDate: string;
+          endDate?: string | null;
+          location?: string | null;
+          isPublic?: boolean;
+          isActive?: boolean;
+          branding?: Json | null;
+          program?: string | null;
+          qrCode?: string | null;
+          maxAttendees?: number | null;
+          createdAt?: string;
+          updatedAt?: string;
+          organizerId: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          slug?: string;
+          startDate?: string;
+          endDate?: string | null;
+          location?: string | null;
+          isPublic?: boolean;
+          isActive?: boolean;
+          branding?: Json | null;
+          program?: string | null;
+          qrCode?: string | null;
+          maxAttendees?: number | null;
+          createdAt?: string;
+          updatedAt?: string;
+          organizerId?: string;
+        };
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+}
