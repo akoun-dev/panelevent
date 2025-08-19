@@ -26,7 +26,8 @@ const eventFormSchema = z.object({
   endDate: z.string().optional(),
   location: z.string().optional(),
   isPublic: z.boolean().default(true),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
+  slug: z.string().optional()
 })
 
 export default function CreateEventForm({ onSuccess }: { onSuccess: () => void }) {
@@ -46,12 +47,21 @@ export default function CreateEventForm({ onSuccess }: { onSuccess: () => void }
 
   const onSubmit = async (values: z.infer<typeof eventFormSchema>) => {
     try {
+      // Générer un slug à partir du titre
+      const slug = values.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+
       const response = await fetch("/api/events", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify({
+          ...values,
+          slug
+        })
       })
 
       if (response.ok) {

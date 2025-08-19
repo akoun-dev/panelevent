@@ -19,6 +19,12 @@ export async function GET(request: NextRequest) {
         id: true,
         title: true,
         description: true,
+        slug: true,
+        startDate: true,
+        endDate: true,
+        location: true,
+        isPublic: true,
+        isActive: true,
         program: true,
         panels: {
           orderBy: {
@@ -38,7 +44,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(events)
+    return NextResponse.json({ events })
   } catch (error) {
     console.error('Error fetching organizer events:', error)
     return NextResponse.json(

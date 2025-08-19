@@ -188,11 +188,6 @@ export default function EventsPage() {
                     </Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/events/${event.id}/recordings`}>
-                      Enregistrements
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/events/${event.id}/feedback`}>
                       Feedbacks
                     </Link>

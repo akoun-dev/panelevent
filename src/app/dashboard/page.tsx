@@ -50,8 +50,8 @@ export default function Dashboard() {
     try {
       const response = await fetch('/api/events/my-events')
       if (response.ok) {
-        const data = await response.json()
-        setEvents(data)
+        const { events } = await response.json()
+        setEvents(events || [])
       }
     } catch (error) {
       console.error('Failed to fetch events:', error)
