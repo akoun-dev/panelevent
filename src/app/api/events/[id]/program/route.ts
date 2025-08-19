@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 interface ProgramData {
   hasProgram: boolean
@@ -124,15 +125,17 @@ export async function PUT(
       })
     }
 
-    const updatedEvent = await db.event.update({
-      where: { id },
-      data: { program: programValue },
-      select: {
-        id: true,
-        title: true,
-        program: true
-      }
-    })
+    const { data: updatedEvent, error: updateError } = await supabase
+      .from('events')
+      .update({ program: programValue })
+      .eq('id', id)
+      .select('id, title, program')
+      .single()
+
+    if (updateError) {
+      console.error('Failed to update event program:', updateError)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
 
     return NextResponse.json({ event: updatedEvent })
   } catch (error) {
