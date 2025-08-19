@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 
 // Simple in-memory rate limiting
@@ -76,9 +75,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si l'événement existe
-    const event = await db.event.findUnique({
-      where: { id: eventId }
-    })
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .maybeSingle()
+
+    if (eventError) {
+      throw eventError
+    }
 
     if (!event) {
       return NextResponse.json(
@@ -99,9 +104,14 @@ export async function POST(request: NextRequest) {
     const { data: existingRegistration } = await supabase
       .from('event_registrations')
       .select('id')
+      .eq('eventId', eventId)
+      .eq('email', email)
+      .eq('isPublic', true)
+
       .eq('event_id', eventId)
       .eq('email', email)
       .eq('is_public', true)
+
       .maybeSingle()
 
     if (existingRegistration) {
@@ -116,22 +126,32 @@ export async function POST(request: NextRequest) {
       const { count: registrationCount } = await supabase
         .from('event_registrations')
         .select('*', { count: 'exact', head: true })
+
+        .eq('eventId', eventId)
+        .eq('isPublic', true)
         .eq('event_id', eventId)
         .eq('is_public', true)
 
-      if (registrationCount >= event.maxAttendees) {
+
+      if ((registrationCount || 0) >= event.maxAttendees) {
         return NextResponse.json(
-          { error: 'L\'événement est complet' },
+          { error: "L'événement est complet" },
           { status: 409 }
         )
       }
     }
 
     // Créer l'inscription
+    const { data: registration, error: registrationError } = await supabase
+      .from('event_registrations')
+      .insert({
+        eventId,
+
     const { data: registration, error: insertError } = await supabase
       .from('event_registrations')
       .insert({
         event_id: eventId,
+
         email,
         first_name: firstName,
         last_name: lastName,
@@ -147,11 +167,14 @@ export async function POST(request: NextRequest) {
       .select('id')
       .single()
 
+    if (registrationError) {
+      throw registrationError
     if (insertError) {
       return NextResponse.json(
         { error: "Une erreur est survenue lors de l'inscription" },
         { status: 500 }
       )
+
     }
 
     // Retourner une réponse de succès

@@ -15,6 +15,20 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'User ID not found' }, { status: 400 })
     }
 
+
+    const { data: registrationsData = [], error } = await supabase
+      .from('event_registrations')
+      .select(
+        'id, consent, createdAt, user(id,name,email), event!inner(id,title,slug,startDate,organizerId)'
+      )
+      .eq('event.organizerId', session.user.id)
+      .order('createdAt', { ascending: false })
+
+    if (error) {
+      throw error
+    }
+
+    const registrations = registrationsData.map(reg => ({
     const { data: registrations, error } = await supabase
       .from('event_registrations')
       .select(
@@ -40,7 +54,7 @@ export async function GET(_request: NextRequest) {
       status: reg.consent ? 'confirmed' : 'pending'
     }))
 
-    return NextResponse.json({ registrations: transformedRegistrations })
+    return NextResponse.json({ registrations })
   } catch (error) {
     console.error('Failed to fetch organizer registrations:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
