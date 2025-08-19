@@ -2,9 +2,7 @@ import NextAuth, { type NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 
 import { supabase } from '@/lib/supabase'
-
 import bcrypt from 'bcryptjs'
-import { supabase } from '@/lib/supabase'
 interface Logger {
   info(message: string, meta?: Record<string, unknown>): void
   error(message: string, meta?: Record<string, unknown>): void
@@ -75,14 +73,6 @@ const authOptions: NextAuthOptions = {
           logger.warn(`Rate limited for email: ${credentials.email}`)
           return null
         }
-
-        const { data: user } = await supabase
-          .from('users')
-          .select('id, email, name, role, passwordHash')
-          .eq('email', credentials.email)
-          .maybeSingle()
-
-        if (!user || !user.passwordHash) {
 
         const { data: user, error } = await supabase
           .from('users')
