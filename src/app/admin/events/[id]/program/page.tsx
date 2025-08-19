@@ -38,30 +38,30 @@ export default function AdminEventProgramPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    const fetchEventAndProgram = async () => {
+      try {
+        // Fetch event details
+        const eventResponse = await fetch(`/api/admin/events/${params.id}`)
+        if (eventResponse.ok) {
+          const eventData = await eventResponse.json()
+          setEvent(eventData.event)
+        }
+
+        // Fetch program data
+        const programResponse = await fetch(`/api/events/${params.id}/program`)
+        if (programResponse.ok) {
+          const programData = await programResponse.json()
+          setProgramData(programData.program)
+        }
+      } catch (error) {
+        console.error('Failed to fetch event and program:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchEventAndProgram()
   }, [params.id])
-
-  const fetchEventAndProgram = async () => {
-    try {
-      // Fetch event details
-      const eventResponse = await fetch(`/api/admin/events/${params.id}`)
-      if (eventResponse.ok) {
-        const eventData = await eventResponse.json()
-        setEvent(eventData.event)
-      }
-
-      // Fetch program data
-      const programResponse = await fetch(`/api/events/${params.id}/program`)
-      if (programResponse.ok) {
-        const programData = await programResponse.json()
-        setProgramData(programData.program)
-      }
-    } catch (error) {
-      console.error('Failed to fetch event and program:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSaveProgram = async (data: ProgramData) => {
     setSaving(true)

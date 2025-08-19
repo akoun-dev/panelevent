@@ -50,9 +50,8 @@ interface Panel {
   eventId: string
 }
 
-export default function EventQAPage() {
-  const params = useParams<{ id: string }>()
-  const id = params?.id ?? ''
+export default function EventQAPage({ params }: { params: Promise<{ id: string }> }) {
+  const [eventId, setEventId] = useState<string>('')
   const [activePanel, setActivePanel] = useState<string>('')
   const [panels, setPanels] = useState<Panel[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
@@ -65,98 +64,39 @@ export default function EventQAPage() {
 
   // Simuler le chargement des données
   useEffect(() => {
-    const loadData = async () => {
-      // Données de démonstration
-      const mockPanels: Panel[] = [
-        {
-          id: '1',
-          title: 'Ouverture et présentation',
-          description: 'Session d\'ouverture de la conférence',
-          startTime: '2024-01-15T09:00:00',
-          endTime: '2024-01-15T10:00:00',
-          eventId: id,
-        },
-        {
-          id: '2',
-          title: 'Table ronde: Innovation technologique',
-          description: 'Discussion sur les dernières tendances tech',
-          startTime: '2024-01-15T10:30:00',
-          endTime: '2024-01-15T12:00:00',
-          eventId: id,
-        },
-        {
-          id: '3',
-          title: 'Atelier: Développement durable',
-          description: 'Atelier pratique sur les solutions durables',
-          startTime: '2024-01-15T14:00:00',
-          endTime: '2024-01-15T15:30:00',
-          eventId: id,
+    const loadData = async (eventId: string) => {
+      try {
+        // Charger les panels
+        const panelsResponse = await fetch(`/api/events/${eventId}/panels`)
+        if (panelsResponse.ok) {
+          const panelsData = await panelsResponse.json()
+          setPanels(panelsData.panels || [])
+          if (panelsData.panels?.length > 0) {
+            setActivePanel(panelsData.panels[0].id)
+          }
         }
-      ]
 
-      const mockQuestions: Question[] = [
-        {
-          id: '1',
-          content: 'Quelles sont les principales innovations présentées cette année ?',
-          authorName: 'Marie Dubois',
-          authorEmail: 'marie@example.com',
-          status: 'PENDING',
-          upvotes: 15,
-          downvotes: 2,
-          createdAt: '2024-01-15T09:15:00',
-          panelId: '1'
-        },
-        {
-          id: '2',
-          content: 'Comment puis-je participer au programme d\'incubation ?',
-          authorName: 'Jean Martin',
-          authorEmail: 'jean@example.com',
-          status: 'APPROVED',
-          upvotes: 23,
-          downvotes: 1,
-          createdAt: '2024-01-15T09:30:00',
-          panelId: '1',
-          answer: 'Vous pouvez postuler via notre site web à partir du mois prochain. Nous organiserons aussi des sessions d\'information.',
-          answeredAt: '2024-01-15T09:45:00',
-          answeredBy: 'Admin'
-        },
-        {
-          id: '3',
-          content: 'Est-ce que les présentations seront enregistrées ?',
-          authorName: 'Sophie Bernard',
-          authorEmail: 'sophie@example.com',
-          status: 'APPROVED',
-          upvotes: 31,
-          downvotes: 0,
-          createdAt: '2024-01-15T10:45:00',
-          panelId: '2',
-          answer: 'Oui, toutes les présentations seront enregistrées et disponibles sur notre plateforme dans 48h.',
-          answeredAt: '2024-01-15T11:00:00',
-          answeredBy: 'Organisateur'
-        },
-        {
-          id: '4',
-          content: 'Cette question n\'est pas pertinente',
-          authorName: 'Test User',
-          authorEmail: 'test@example.com',
-          status: 'REJECTED',
-          upvotes: 0,
-          downvotes: 5,
-          createdAt: '2024-01-15T11:15:00',
-          panelId: '2'
+        // Charger les questions
+        const questionsResponse = await fetch(`/api/events/${eventId}/questions`)
+        if (questionsResponse.ok) {
+          const questionsData = await questionsResponse.json()
+          setQuestions(questionsData || [])
         }
-      ]
-
-      setPanels(mockPanels)
-      setQuestions(mockQuestions)
-      if (mockPanels.length > 0) {
-        setActivePanel(mockPanels[0].id)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
-    loadData()
-  }, [id])
+    const init = async () => {
+      const { id } = await params
+      setEventId(id)
+      loadData(id)
+    }
+
+    init()
+  }, [params])
 
   // Filtrer les questions
   useEffect(() => {
@@ -184,39 +124,77 @@ export default function EventQAPage() {
   }, [questions, activePanel, statusFilter, searchTerm])
 
   const handleApproveQuestion = async (questionId: string) => {
-    setQuestions(prev => 
-      prev.map(q => 
-        q.id === questionId ? { ...q, status: 'APPROVED' as const } : q
-      )
-    )
+    try {
+      const response = await fetch(`/api/questions/${questionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'APPROVED' })
+      })
+
+      if (response.ok) {
+        setQuestions(prev =>
+          prev.map(q =>
+            q.id === questionId ? { ...q, status: 'APPROVED' as const } : q
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to approve question:', error)
+    }
   }
 
   const handleRejectQuestion = async (questionId: string) => {
-    setQuestions(prev => 
-      prev.map(q => 
-        q.id === questionId ? { ...q, status: 'REJECTED' as const } : q
-      )
-    )
+    try {
+      const response = await fetch(`/api/questions/${questionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'REJECTED' })
+      })
+
+      if (response.ok) {
+        setQuestions(prev =>
+          prev.map(q =>
+            q.id === questionId ? { ...q, status: 'REJECTED' as const } : q
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Failed to reject question:', error)
+    }
   }
 
   const handleAnswerQuestion = async () => {
     if (!selectedQuestion || !answerText.trim()) return
 
-    setQuestions(prev => 
-      prev.map(q => 
-        q.id === selectedQuestion.id 
-          ? { 
-              ...q, 
-              answer: answerText, 
-              answeredAt: new Date().toISOString(),
-              answeredBy: 'Organisateur'
-            } 
-          : q
-      )
-    )
+    try {
+      const response = await fetch(`/api/questions/${selectedQuestion.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          answer: answerText,
+          answeredBy: 'Organisateur'
+        })
+      })
 
-    setAnswerText('')
-    setSelectedQuestion(null)
+      if (response.ok) {
+        const updatedQuestion = await response.json()
+        setQuestions(prev =>
+          prev.map(q =>
+            q.id === selectedQuestion.id ? updatedQuestion : q
+          )
+        )
+        setAnswerText('')
+        setSelectedQuestion(null)
+      }
+    } catch (error) {
+      console.error('Failed to answer question:', error)
+    }
   }
 
   const getStatusBadge = (status: string) => {

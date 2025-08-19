@@ -58,7 +58,8 @@ interface Panel {
   eventId: string
 }
 
-export default function EventPollsPage({ params }: { params: { id: string } }) {
+export default function EventPollsPage({ params }: { params: Promise<{ id: string }> }) {
+  const [eventId, setEventId] = useState<string>('')
   const [activePanel, setActivePanel] = useState<string>('')
   const [panels, setPanels] = useState<Panel[]>([])
   const [polls, setPolls] = useState<Poll[]>([])
@@ -76,99 +77,39 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
 
   // Simuler le chargement des données
   useEffect(() => {
-    const loadData = async () => {
-      // Données de démonstration
-      const mockPanels: Panel[] = [
-        {
-          id: '1',
-          title: 'Ouverture et présentation',
-          description: 'Session d\'ouverture de la conférence',
-          startTime: '2024-01-15T09:00:00',
-          endTime: '2024-01-15T10:00:00',
-          eventId: params.id
-        },
-        {
-          id: '2',
-          title: 'Table ronde: Innovation technologique',
-          description: 'Discussion sur les dernières tendances tech',
-          startTime: '2024-01-15T10:30:00',
-          endTime: '2024-01-15T12:00:00',
-          eventId: params.id
-        },
-        {
-          id: '3',
-          title: 'Atelier: Développement durable',
-          description: 'Atelier pratique sur les solutions durables',
-          startTime: '2024-01-15T14:00:00',
-          endTime: '2024-01-15T15:30:00',
-          eventId: params.id
+    const loadData = async (eventId: string) => {
+      try {
+        // Charger les panels
+        const panelsResponse = await fetch(`/api/events/${eventId}/panels`)
+        if (panelsResponse.ok) {
+          const panelsData = await panelsResponse.json()
+          setPanels(panelsData.panels || [])
+          if (panelsData.panels?.length > 0) {
+            setActivePanel(panelsData.panels[0].id)
+          }
         }
-      ]
 
-      const mockPolls: Poll[] = [
-        {
-          id: '1',
-          question: 'Quelle technologie vous intéresse le plus pour 2024 ?',
-          description: 'Votez pour la technologie qui vous semble la plus prometteuse',
-          isActive: true,
-          isAnonymous: true,
-          allowMultipleVotes: false,
-          createdAt: '2024-01-15T10:45:00',
-          panelId: '2',
-          totalVotes: 45,
-          options: [
-            { id: '1', text: 'Intelligence Artificielle', votes: 18, percentage: 40 },
-            { id: '2', text: 'Blockchain', votes: 8, percentage: 18 },
-            { id: '3', text: 'Internet des Objets', votes: 12, percentage: 27 },
-            { id: '4', text: 'Réalité Virtuelle', votes: 7, percentage: 15 }
-          ]
-        },
-        {
-          id: '2',
-          question: 'Préférez-vous les présentations en présentiel ou en ligne ?',
-          description: 'Votre opinion sur le format des futures conférences',
-          isActive: false,
-          isAnonymous: true,
-          allowMultipleVotes: false,
-          createdAt: '2024-01-15T09:30:00',
-          panelId: '1',
-          totalVotes: 32,
-          options: [
-            { id: '1', text: 'Présentiel', votes: 20, percentage: 62.5 },
-            { id: '2', text: 'En ligne', votes: 5, percentage: 15.6 },
-            { id: '3', text: 'Hybride', votes: 7, percentage: 21.9 }
-          ]
-        },
-        {
-          id: '3',
-          question: 'Quel sujet souhaitez-vous approfondir dans les prochains ateliers ?',
-          description: 'Sélectionnez jusqu\'à 3 sujets qui vous intéressent',
-          isActive: true,
-          isAnonymous: true,
-          allowMultipleVotes: true,
-          createdAt: '2024-01-15T11:15:00',
-          panelId: '2',
-          totalVotes: 28,
-          options: [
-            { id: '1', text: 'Développement durable', votes: 15, percentage: 54 },
-            { id: '2', text: 'Cybersécurité', votes: 12, percentage: 43 },
-            { id: '3', text: 'Cloud Computing', votes: 8, percentage: 29 },
-            { id: '4', text: 'Data Science', votes: 10, percentage: 36 },
-            { id: '5', text: 'DevOps', votes: 6, percentage: 21 }
-          ]
+        // Charger les sondages
+        const pollsResponse = await fetch(`/api/events/${eventId}/polls`)
+        if (pollsResponse.ok) {
+          const pollsData = await pollsResponse.json()
+          setPolls(pollsData || [])
         }
-      ]
-
-      setPanels(mockPanels)
-      setPolls(mockPolls)
-      if (mockPanels.length > 0) {
-        setActivePanel(mockPanels[0].id)
+      } catch (error) {
+        console.error('Failed to fetch data:', error)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
-    loadData()
-  }, [params.id])
+    const init = async () => {
+      const { id } = await params
+      setEventId(id)
+      loadData(id)
+    }
+
+    init()
+  }, [params])
 
   // Filtrer les sondages
   useEffect(() => {
@@ -187,50 +128,82 @@ export default function EventPollsPage({ params }: { params: { id: string } }) {
       return
     }
 
-    const poll: Poll = {
-      id: Date.now().toString(),
-      question: newPoll.question,
-      description: newPoll.description,
-      isActive: false,
-      isAnonymous: newPoll.isAnonymous,
-      allowMultipleVotes: newPoll.allowMultipleVotes,
-      createdAt: new Date().toISOString(),
-      panelId: activePanel,
-      totalVotes: 0,
-      options: newPoll.options
-        .filter(opt => opt.trim())
-        .map((opt, index) => ({
-          id: (index + 1).toString(),
-          text: opt,
-          votes: 0,
-          percentage: 0
-        }))
-    }
+    try {
+      const response = await fetch(`/api/events/${eventId}/polls`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: newPoll.question,
+          description: newPoll.description,
+          panelId: activePanel,
+          isAnonymous: newPoll.isAnonymous,
+          allowMultipleVotes: newPoll.allowMultipleVotes,
+          options: newPoll.options.filter(opt => opt.trim())
+        })
+      })
 
-    setPolls(prev => [poll, ...prev])
-    setNewPoll({
-      question: '',
-      description: '',
-      isAnonymous: false,
-      allowMultipleVotes: false,
-      options: ['', '']
-    })
-    setIsCreating(false)
+      if (response.ok) {
+        const newPollData = await response.json()
+        setPolls(prev => [newPollData, ...prev])
+        setNewPoll({
+          question: '',
+          description: '',
+          isAnonymous: false,
+          allowMultipleVotes: false,
+          options: ['', '']
+        })
+        setIsCreating(false)
+      }
+    } catch (error) {
+      console.error('Failed to create poll:', error)
+    }
   }
 
   const handleTogglePoll = async (pollId: string) => {
-    setPolls(prev => 
-      prev.map(p => 
-        p.id === pollId ? { ...p, isActive: !p.isActive } : p
-      )
-    )
+    try {
+      const poll = polls.find(p => p.id === pollId)
+      if (!poll) return
+
+      const response = await fetch(`/api/polls/${pollId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !poll.isActive })
+      })
+
+      if (response.ok) {
+        setPolls(prev =>
+          prev.map(p =>
+            p.id === pollId ? { ...p, isActive: !p.isActive } : p
+          )
+        )
+        if (selectedPoll?.id === pollId) {
+          setSelectedPoll(prev => prev ? { ...prev, isActive: !prev.isActive } : null)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle poll:', error)
+    }
   }
 
   const handleDeletePoll = async (pollId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce sondage ?')) {
-      setPolls(prev => prev.filter(p => p.id !== pollId))
-      if (selectedPoll?.id === pollId) {
-        setSelectedPoll(null)
+      try {
+        const response = await fetch(`/api/polls/${pollId}`, {
+          method: 'DELETE'
+        })
+
+        if (response.ok) {
+          setPolls(prev => prev.filter(p => p.id !== pollId))
+          if (selectedPoll?.id === pollId) {
+            setSelectedPoll(null)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to delete poll:', error)
       }
     }
   }

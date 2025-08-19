@@ -5,9 +5,10 @@ import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
@@ -15,7 +16,7 @@ export async function GET(
     }
 
     const panels = await db.panel.findMany({
-      where: { eventId: params.id },
+      where: { eventId: id },
       orderBy: { order: 'asc' }
     })
 
@@ -28,9 +29,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     
     if (!session || (session.user?.role !== 'ADMIN' && session.user?.role !== 'ORGANIZER')) {
@@ -46,7 +48,7 @@ export async function POST(
 
     // Check if user has access to this event
     const event = await db.event.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       select: { organizerId: true }
     })
 
@@ -68,7 +70,7 @@ export async function POST(
         location,
         order: order || 0,
         isActive: isActive ?? false,
-        eventId: params.id
+        eventId: id
       }
     })
 

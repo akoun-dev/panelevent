@@ -4,9 +4,10 @@ import { db } from '@/lib/db'
 // POST /api/polls/[pollId]/votes - Ajouter ou modifier un vote
 export async function POST(
   request: NextRequest,
-  { params }: { params: { pollId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
+    const { id: pollId } = await params
     const body = await request.json()
     const { userId, optionIds } = body
 
@@ -19,7 +20,7 @@ export async function POST(
 
     // Récupérer le sondage pour vérifier s'il accepte les votes multiples
     const poll = await db.poll.findUnique({
-      where: { id: params.pollId },
+      where: { id: pollId },
       include: {
         options: true
       }
@@ -60,7 +61,7 @@ export async function POST(
     // Récupérer les votes existants de l'utilisateur pour ce sondage
     const existingVotes = await db.pollResponse.findMany({
       where: {
-        pollId: params.pollId,
+        pollId: pollId,
         userId
       }
     })
@@ -69,7 +70,7 @@ export async function POST(
     if (!poll.allowMultipleVotes && existingVotes.length > 0) {
       await db.pollResponse.deleteMany({
         where: {
-          pollId: params.pollId,
+          pollId: pollId,
           userId
         }
       })
@@ -83,7 +84,7 @@ export async function POST(
       if (optionsToRemove.length > 0) {
         await db.pollResponse.deleteMany({
           where: {
-            pollId: params.pollId,
+            pollId: pollId,
             userId,
             optionId: {
               in: optionsToRemove
@@ -100,7 +101,7 @@ export async function POST(
     if (newOptionIds.length > 0) {
       await db.pollResponse.createMany({
         data: newOptionIds.map(optionId => ({
-          pollId: params.pollId,
+          pollId: pollId,
           optionId,
           userId
         }))
@@ -109,7 +110,7 @@ export async function POST(
 
     // Récupérer le sondage mis à jour avec les stats
     const updatedPoll = await db.poll.findUnique({
-      where: { id: params.pollId },
+      where: { id: pollId },
       include: {
         options: {
           include: {
@@ -153,14 +154,15 @@ export async function POST(
 // GET /api/polls/[pollId]/votes - Récupérer les votes d'un sondage
 export async function GET(
   request: NextRequest,
-  { params }: { params: { pollId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
+    const { id: pollId } = await params
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 
     const responses = await db.pollResponse.findMany({
-      where: { pollId: params.pollId },
+      where: { pollId: pollId },
       include: {
         user: userId ? {
           select: {
