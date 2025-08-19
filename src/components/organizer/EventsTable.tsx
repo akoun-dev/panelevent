@@ -9,7 +9,6 @@ import { EventActions } from '@/components/organizer/EventActions'
 
 interface EventsTableProps {
   events: Event[]
-  onRefresh: () => void
 }
 
 const columns: ColumnDef<Event>[] = [
@@ -37,6 +36,6 @@ const columns: ColumnDef<Event>[] = [
   },
 ]
 
-export function EventsTable({ events, onRefresh }: EventsTableProps) {
+export function EventsTable({ events }: EventsTableProps) {
   return <DataTable columns={columns} data={events} />
 }

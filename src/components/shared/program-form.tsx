@@ -57,7 +57,7 @@ export function ProgramForm({ initialData, onSave, loading = false }: ProgramFor
     speaker: '',
     location: ''
   })
-  const [editingItem, setEditingItem] = useState<ProgramItem | null>(null)
+  const [, setEditingItem] = useState<ProgramItem | null>(null)
 
   const handleSave = async () => {
     await onSave(formData)

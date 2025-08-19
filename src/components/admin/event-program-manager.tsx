@@ -42,7 +42,6 @@ interface Panel {
 
 interface EventProgramManagerProps {
   eventId: string
-  isAdmin?: boolean
 }
 
 const sessionTypes = [
@@ -56,7 +55,7 @@ const sessionTypes = [
   { value: 'other', label: 'Autre', icon: '📋' }
 ]
 
-export default function EventProgramManager({ eventId, isAdmin = false }: EventProgramManagerProps) {
+export default function EventProgramManager({ eventId }: EventProgramManagerProps) {
   const [panels, setPanels] = useState<Panel[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -250,10 +249,6 @@ export default function EventProgramManager({ eventId, isAdmin = false }: EventP
     return sessionType?.icon || '📋'
   }
 
-  const getSessionLabel = (type: string) => {
-    const sessionType = sessionTypes.find(st => st.value === type)
-    return sessionType?.label || 'Session'
-  }
 
   if (loading) {
     return (
