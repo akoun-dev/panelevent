@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -15,34 +15,19 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: 'User ID not found' }, { status: 400 })
     }
 
-    const registrations = await db.eventRegistration.findMany({
-      where: {
-        event: {
-          organizerId: session.user.id
-        }
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            startDate: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { data: registrationsData = [], error } = await supabase
+      .from('event_registrations')
+      .select(
+        'id, consent, createdAt, user(id,name,email), event!inner(id,title,slug,startDate,organizerId)'
+      )
+      .eq('event.organizerId', session.user.id)
+      .order('createdAt', { ascending: false })
 
-    // Transform the data to match the expected format
-    const transformedRegistrations = registrations.map(reg => ({
+    if (error) {
+      throw error
+    }
+
+    const registrations = registrationsData.map(reg => ({
       id: reg.id,
       user: reg.user,
       event: reg.event,
@@ -50,7 +35,7 @@ export async function GET(_request: NextRequest) {
       status: reg.consent ? 'confirmed' : 'pending'
     }))
 
-    return NextResponse.json({ registrations: transformedRegistrations })
+    return NextResponse.json({ registrations })
   } catch (error) {
     console.error('Failed to fetch organizer registrations:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

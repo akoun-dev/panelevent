@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 // Simple in-memory rate limiting
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
@@ -75,9 +75,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si l'événement existe
-    const event = await db.event.findUnique({
-      where: { id: eventId }
-    })
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .maybeSingle()
+
+    if (eventError) {
+      throw eventError
+    }
 
     if (!event) {
       return NextResponse.json(
@@ -95,13 +101,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si l'email est déjà inscrit
-    const existingRegistration = await db.eventRegistration.findFirst({
-      where: {
-        eventId,
-        email,
-        isPublic: true
-      }
-    })
+    const { data: existingRegistration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('eventId', eventId)
+      .eq('email', email)
+      .eq('isPublic', true)
+      .maybeSingle()
 
     if (existingRegistration) {
       return NextResponse.json(
@@ -112,24 +118,24 @@ export async function POST(request: NextRequest) {
 
     // Vérifier le nombre maximum de participants
     if (event.maxAttendees) {
-      const registrationCount = await db.eventRegistration.count({
-        where: {
-          eventId,
-          isPublic: true
-        }
-      })
+      const { count: registrationCount } = await supabase
+        .from('event_registrations')
+        .select('*', { count: 'exact', head: true })
+        .eq('eventId', eventId)
+        .eq('isPublic', true)
 
-      if (registrationCount >= event.maxAttendees) {
+      if ((registrationCount || 0) >= event.maxAttendees) {
         return NextResponse.json(
-          { error: 'L\'événement est complet' },
+          { error: "L'événement est complet" },
           { status: 409 }
         )
       }
     }
 
     // Créer l'inscription
-    const registration = await db.eventRegistration.create({
-      data: {
+    const { data: registration, error: registrationError } = await supabase
+      .from('event_registrations')
+      .insert({
         eventId,
         email,
         firstName,
@@ -142,8 +148,13 @@ export async function POST(request: NextRequest) {
         dietaryRestrictions,
         isPublic: true,
         consent
-      }
-    })
+      })
+      .select('id')
+      .single()
+
+    if (registrationError) {
+      throw registrationError
+    }
 
     // Retourner une réponse de succès
     return NextResponse.json({
