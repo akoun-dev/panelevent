@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function DELETE(
   request: Request,
@@ -32,11 +33,17 @@ export async function DELETE(
     }
 
     // Vérifier les dépendances avant suppression
-    const dependencies = await db.$transaction([
-      db.eventRegistration.count({ where: { eventId: id } }),
+    const { count: registrationCount } = await supabase
+      .from('event_registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', id)
+
+    const [feedbackCount, certificateCount] = await Promise.all([
       db.feedback.count({ where: { eventId: id } }),
       db.certificate.count({ where: { eventId: id } })
     ])
+
+    const dependencies = [registrationCount ?? 0, feedbackCount, certificateCount]
 
     if (dependencies.some(count => count > 0)) {
       return NextResponse.json(
