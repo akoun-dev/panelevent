@@ -49,6 +49,7 @@ interface Panel {
   startTime: string
   endTime: string
   eventId: string
+  allowQuestions?: boolean
 }
 
 export default function EventPollsPage({ params }: { params: Promise<{ id: string }> }) {

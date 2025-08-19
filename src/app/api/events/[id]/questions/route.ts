@@ -91,7 +91,7 @@ export async function POST(
 
     const { data: panel, error: panelError } = await supabase
       .from('panels')
-      .select('id')
+      .select('id, allowQuestions')
       .eq('id', panelId)
       .eq('event_id', id)
       .single()
@@ -100,6 +100,13 @@ export async function POST(
       return NextResponse.json(
         { error: 'Panel not found or does not belong to this event' },
         { status: 404 }
+      )
+    }
+
+    if (!panel.allowQuestions) {
+      return NextResponse.json(
+        { error: 'Questions are not allowed for this activity' },
+        { status: 403 }
       )
     }
 
