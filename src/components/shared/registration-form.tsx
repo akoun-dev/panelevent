@@ -10,19 +10,10 @@ import { Badge } from '@/components/ui/badge'
 import { User, Mail, CheckCircle, Calendar, MapPin } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-
-interface Event {
-  id: string
-  title: string
-  description?: string
-  startDate: string
-  endDate?: string
-  location?: string
-  isActive: boolean
-}
+import type { Database } from '@/types/supabase'
 
 interface RegistrationFormProps {
-  event: Event
+  event: Database['public']['Tables']['events']['Row']
   onSubmit: (data: { email: string; consent: boolean }) => Promise<void>
   loading?: boolean
   isRegistered?: boolean

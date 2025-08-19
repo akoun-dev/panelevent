@@ -11,23 +11,11 @@ import { RegistrationForm } from '@/components/shared/registration-form'
 import { EventProgramDisplay } from '@/components/shared/event-program-display'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import type { Database } from '@/types/supabase'
 
-interface Event {
-  id: string
-  title: string
-  description?: string
-  startDate: string
-  endDate?: string
-  location?: string
-  isPublic: boolean
-  isActive: boolean
-  program?: string
-  branding?: {
-    qrCode?: string
-  }
-  _count?: {
-    registrations: number
-  }
+type Event = Database['public']['Tables']['events']['Row'] & {
+  branding?: { qrCode?: string } | null
+  _count?: { registrations: number }
 }
 
 export default function EventPage() {
