@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { Prisma } from '@prisma/client'
+import supabase from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -16,42 +15,35 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const user = await db.user.findUnique({
-      where: { id: resolvedParams.id },
-      include: {
-        _count: {
-          select: {
-            eventRegistrations: true,
-            organizedEvents: true,
-            pollResponses: true,
-            feedbacks: true,
-            certificates: true
-          }
-        },
-        organizedEvents: {
-          select: {
-            id: true,
-            title: true,
-            startDate: true,
-            isActive: true
-          }
-        },
-        eventRegistrations: {
-          include: {
-            event: {
-              select: {
-                id: true,
-                title: true,
-                startDate: true
-              }
-            }
-          }
-        }
-      }
-    })
+    const { data, error } = await supabase
+      .from('users')
+      .select(
+        `id, email, name, role,
+         organizedEvents:events!organizerId(id,title,startDate,isActive),
+         eventRegistrations:event_registrations(
+           id,
+           event:events(id,title,startDate)
+         ),
+         pollResponses:poll_responses(id),
+         feedbacks:feedback(id),
+         certificates:certificates(id)`
+      )
+      .eq('id', resolvedParams.id)
+      .single()
 
-    if (!user) {
+    if (error || !data) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const user = {
+      ...data,
+      _count: {
+        eventRegistrations: data.eventRegistrations?.length || 0,
+        organizedEvents: data.organizedEvents?.length || 0,
+        pollResponses: data.pollResponses?.length || 0,
+        feedbacks: data.feedbacks?.length || 0,
+        certificates: data.certificates?.length || 0,
+      },
     }
 
     return NextResponse.json({ user })
@@ -75,26 +67,39 @@ export async function PATCH(
 
     const { role, name, email } = await request.json()
 
-    const updateData: Prisma.UserUpdateInput = {}
+    const updateData: Record<string, unknown> = {}
     if (role) updateData.role = role as 'ADMIN' | 'ORGANIZER' | 'ATTENDEE'
     if (name !== undefined) updateData.name = name
     if (email) updateData.email = email
 
-    const user = await db.user.update({
-      where: { id: resolvedParams.id },
-      data: updateData,
-      include: {
-        _count: {
-          select: {
-            eventRegistrations: true,
-            organizedEvents: true,
-            pollResponses: true,
-            feedbacks: true,
-            certificates: true
-          }
-        }
-      }
-    })
+    const { data, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', resolvedParams.id)
+      .select(
+        `id, email, name, role,
+         eventRegistrations:event_registrations(id),
+         organizedEvents:events!organizerId(id),
+         pollResponses:poll_responses(id),
+         feedbacks:feedback(id),
+         certificates:certificates(id)`
+      )
+      .single()
+
+    if (error || !data) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const user = {
+      ...data,
+      _count: {
+        eventRegistrations: data.eventRegistrations?.length || 0,
+        organizedEvents: data.organizedEvents?.length || 0,
+        pollResponses: data.pollResponses?.length || 0,
+        feedbacks: data.feedbacks?.length || 0,
+        certificates: data.certificates?.length || 0,
+      },
+    }
 
     return NextResponse.json({ user })
   } catch (error) {
@@ -115,30 +120,31 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Prevent deleting the last admin
-    const userToDelete = await db.user.findUnique({
-      where: { id: resolvedParams.id }
-    })
+    const { data: userToDelete, error } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('id', resolvedParams.id)
+      .single()
 
-    if (!userToDelete) {
+    if (error || !userToDelete) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     if (userToDelete.role === 'ADMIN') {
-      const adminCount = await db.user.count({
-        where: { role: 'ADMIN' }
-      })
+      const { count: adminCount } = await supabase
+        .from('users')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'ADMIN')
 
-      if (adminCount <= 1) {
-        return NextResponse.json({ 
-          error: 'Cannot delete the last administrator' 
-        }, { status: 400 })
+      if ((adminCount || 0) <= 1) {
+        return NextResponse.json(
+          { error: 'Cannot delete the last administrator' },
+          { status: 400 }
+        )
       }
     }
 
-    await db.user.delete({
-      where: { id: resolvedParams.id }
-    })
+    await supabase.from('users').delete().eq('id', resolvedParams.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

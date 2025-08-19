@@ -107,6 +107,11 @@ export async function POST(request: NextRequest) {
       .eq('eventId', eventId)
       .eq('email', email)
       .eq('isPublic', true)
+
+      .eq('event_id', eventId)
+      .eq('email', email)
+      .eq('is_public', true)
+
       .maybeSingle()
 
     if (existingRegistration) {
@@ -121,8 +126,12 @@ export async function POST(request: NextRequest) {
       const { count: registrationCount } = await supabase
         .from('event_registrations')
         .select('*', { count: 'exact', head: true })
+
         .eq('eventId', eventId)
         .eq('isPublic', true)
+        .eq('event_id', eventId)
+        .eq('is_public', true)
+
 
       if ((registrationCount || 0) >= event.maxAttendees) {
         return NextResponse.json(
@@ -137,16 +146,22 @@ export async function POST(request: NextRequest) {
       .from('event_registrations')
       .insert({
         eventId,
+
+    const { data: registration, error: insertError } = await supabase
+      .from('event_registrations')
+      .insert({
+        event_id: eventId,
+
         email,
-        firstName,
-        lastName,
+        first_name: firstName,
+        last_name: lastName,
         phone,
         company,
         position,
         experience,
         expectations,
-        dietaryRestrictions,
-        isPublic: true,
+        dietary_restrictions: dietaryRestrictions,
+        is_public: true,
         consent
       })
       .select('id')
@@ -154,6 +169,12 @@ export async function POST(request: NextRequest) {
 
     if (registrationError) {
       throw registrationError
+    if (insertError) {
+      return NextResponse.json(
+        { error: "Une erreur est survenue lors de l'inscription" },
+        { status: 500 }
+      )
+
     }
 
     // Retourner une réponse de succès

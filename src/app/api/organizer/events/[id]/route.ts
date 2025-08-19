@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import supabase from '@/lib/supabase'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -59,64 +59,55 @@ export async function GET(
       )
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        slug: true,
-        startDate: true,
-        endDate: true,
-        location: true,
-        isPublic: true,
-        isActive: true,
-        program: true,
-        organizerId: true,
-        _count: {
-          select: {
-            registrations: true,
-            questions: true,
-            polls: true
-          }
-        }
-      }
-    })
+    const { data, error } = await supabase
+      .from('events')
+      .select(
+        `id, title, description, slug, startDate, endDate, location, isPublic, isActive, program, organizerId,
+         registrations:event_registrations(id),
+         questions:questions(id),
+         polls:polls(id)`
+      )
+      .eq('id', id)
+      .single()
 
-    if (!event) {
+    if (error || !data) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
       )
     }
 
-    // Vérifier que l'utilisateur est l'organisateur de l'événement ou un admin
-    if (event.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
+    if (data.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'Unauthorized - Not event owner' },
         { status: 403 }
       )
     }
 
-    // Parse program if it exists
     let parsedProgram: ProgramData | null = null
-    if (event?.program) {
+    if (data?.program) {
       try {
-        parsedProgram = JSON.parse(event.program)
+        parsedProgram = JSON.parse(data.program)
       } catch {
-        // If it's not JSON, treat it as plain text
         parsedProgram = {
           hasProgram: true,
-          programText: event.program,
-          programItems: []
+          programText: data.program,
+          programItems: [],
         }
       }
     }
 
-    return NextResponse.json({
-      ...event,
-      program: parsedProgram
-    })
+    const event = {
+      ...data,
+      _count: {
+        registrations: data.registrations?.length || 0,
+        questions: data.questions?.length || 0,
+        polls: data.polls?.length || 0,
+      },
+      program: parsedProgram,
+    }
+
+    return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to fetch event:', error)
     return NextResponse.json(
@@ -150,12 +141,13 @@ export async function PUT(
       )
     }
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
-      where: { id }
-    })
+    const { data: existingEvent, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
 
-    if (!existingEvent) {
+    if (findError || !existingEvent) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
@@ -168,15 +160,22 @@ export async function PUT(
         { status: 403 }
       )
     }
-    
-    const event = await prisma.event.update({
-      where: { id },
-      data: {
+
+    const { data: event, error: updateError } = await supabase
+      .from('events')
+      .update({
         ...body,
         startDate: new Date(body.startDate),
         endDate: body.endDate ? new Date(body.endDate) : null,
-      },
-    })
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (updateError) {
+      throw updateError
+    }
+
     return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to update event:', error)
@@ -211,12 +210,13 @@ export async function PATCH(
       )
     }
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
-      where: { id }
-    })
+    const { data: existingEvent, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
 
-    if (!existingEvent) {
+    if (findError || !existingEvent) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
@@ -229,10 +229,9 @@ export async function PATCH(
         { status: 403 }
       )
     }
-    
+
     const updateData: EventUpdateData = { ...body }
-    
-    // Convertir les dates si elles sont présentes
+
     if (body.startDate) {
       updateData.startDate = new Date(body.startDate)
     }
@@ -240,32 +239,30 @@ export async function PATCH(
       updateData.endDate = body.endDate ? new Date(body.endDate) : null
     }
 
-    const event = await prisma.event.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        slug: true,
-        startDate: true,
-        endDate: true,
-        location: true,
-        isPublic: true,
-        isActive: true,
-        maxAttendees: true,
-        organizerId: true,
-        createdAt: true,
-        updatedAt: true,
-        _count: {
-          select: {
-            registrations: true,
-            questions: true,
-            polls: true
-          }
-        }
-      }
-    })
+    const { data, error: updateError } = await supabase
+      .from('events')
+      .update(updateData)
+      .eq('id', id)
+      .select(
+        `id, title, description, slug, startDate, endDate, location, isPublic, isActive, maxAttendees, organizerId, createdAt, updatedAt,
+         registrations:event_registrations(id),
+         questions:questions(id),
+         polls:polls(id)`
+      )
+      .single()
+
+    if (updateError || !data) {
+      throw updateError
+    }
+
+    const event = {
+      ...data,
+      _count: {
+        registrations: data.registrations?.length || 0,
+        questions: data.questions?.length || 0,
+        polls: data.polls?.length || 0,
+      },
+    }
 
     return NextResponse.json(event)
   } catch (error) {
@@ -292,12 +289,13 @@ export async function DELETE(
       )
     }
 
-    // Vérifier que l'événement existe et que l'utilisateur est l'organisateur
-    const existingEvent = await prisma.event.findUnique({
-      where: { id }
-    })
+    const { data: existingEvent, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
 
-    if (!existingEvent) {
+    if (findError || !existingEvent) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
@@ -311,9 +309,7 @@ export async function DELETE(
       )
     }
 
-    await prisma.event.delete({
-      where: { id },
-    })
+    await supabase.from('events').delete().eq('id', id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to delete event:', error)
