@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 // GET /api/events/[id]/certificate-templates - Récupérer tous les modèles de certificats d'un événement
 export async function GET(
@@ -8,25 +8,17 @@ export async function GET(
 ) {
   const resolvedParams = await params
   try {
-    const templates = await db.certificateTemplate.findMany({
-      where: { eventId: resolvedParams.id },
-      include: {
-        certificates: {
-          select: {
-            id: true,
-            issuedAt: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+    const { data, error } = await supabase
+      .from('certificate_templates')
+      .select('*, event:events(*), user:users(*), certificates:certificates(id, issuedAt)')
+      .eq('eventId', resolvedParams.id)
+      .order('createdAt', { ascending: false })
 
-    // Calculer le nombre de certificats délivrés
-    const templatesWithStats = templates.map(template => ({
+    if (error) throw error
+
+    const templatesWithStats = (data || []).map(template => ({
       ...template,
-      issuedCount: template.certificates.length
+      issuedCount: template.certificates ? template.certificates.length : 0
     }))
 
     return NextResponse.json(templatesWithStats)
@@ -56,27 +48,23 @@ export async function POST(
       )
     }
 
-    const template = await db.certificateTemplate.create({
-      data: {
+    const { data, error } = await supabase
+      .from('certificate_templates')
+      .insert({
         title,
         description,
         content,
         autoGenerate: autoGenerate || false,
         eventId: resolvedParams.id
-      },
-      include: {
-        certificates: {
-          select: {
-            id: true,
-            issuedAt: true
-          }
-        }
-      }
-    })
+      })
+      .select('*, event:events(*), user:users(*), certificates:certificates(id, issuedAt)')
+      .single()
+
+    if (error) throw error
 
     const templateWithStats = {
-      ...template,
-      issuedCount: template.certificates.length
+      ...data,
+      issuedCount: data?.certificates ? data.certificates.length : 0
     }
 
     return NextResponse.json(templateWithStats)

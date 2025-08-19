@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { Prisma } from '@prisma/client'
+import { supabase } from '@/lib/supabase'
 
 // POST /api/certificates - Générer un nouveau certificat pour l'utilisateur authentifié
 export async function POST(request: NextRequest) {
@@ -27,29 +26,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Vérifier si l'utilisateur est inscrit et a participé à l'événement
-    const registration = await db.eventRegistration.findFirst({
-      where: {
-        userId,
-        eventId,
-        attended: true
-      }
-    })
+    const { data: registration, error: regError } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('userId', userId)
+      .eq('eventId', eventId)
+      .eq('attended', true)
+      .maybeSingle()
 
-    if (!registration) {
+    if (regError || !registration) {
       return NextResponse.json(
         { error: 'User did not attend the event' },
         { status: 400 }
       )
     }
 
-    // Vérifier si un certificat existe déjà pour ce modèle et utilisateur
-    const existingCertificate = await db.certificate.findFirst({
-      where: {
-        templateId,
-        userId
-      }
-    })
+    const { data: existingCertificate } = await supabase
+      .from('certificates')
+      .select('id')
+      .eq('templateId', templateId)
+      .eq('userId', userId)
+      .maybeSingle()
 
     if (existingCertificate) {
       return NextResponse.json(
@@ -58,57 +55,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Récupérer le modèle pour obtenir le contenu
-    const template = await db.certificateTemplate.findUnique({
-      where: { id: templateId },
-      include: {
-        event: {
-          include: {
-            organizer: true
-          }
-        },
-        user: true
-      }
-    })
+    const { data: template, error: templateError } = await supabase
+      .from('certificate_templates')
+      .select('*, event:events(*, organizer:users(*)), user:users(*)')
+      .eq('id', templateId)
+      .single()
 
-    if (!template) {
+    if (templateError || !template) {
       return NextResponse.json(
         { error: 'Template not found' },
         { status: 404 }
       )
     }
 
-    // Récupérer les informations de l'utilisateur
-    const user = await db.user.findUnique({
-      where: { id: userId }
-    })
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    // Générer le contenu du certificat en remplaçant les variables
     let content = template.content
     const issuedAt = new Date()
 
     content = content
       .replace('[NOM DU PARTICIPANT]', user.name || 'Participant')
       .replace('[TITRE DE L\'ÉVÉNEMENT]', template.event.title)
-      .replace('[DATE DE DÉBUT]', template.event.startDate.toLocaleDateString('fr-FR'))
-      .replace('[DATE DE FIN]', template.event.endDate?.toLocaleDateString('fr-FR') || '')
+      .replace('[DATE DE DÉBUT]', new Date(template.event.startDate).toLocaleDateString('fr-FR'))
+      .replace('[DATE DE FIN]', template.event.endDate ? new Date(template.event.endDate).toLocaleDateString('fr-FR') : '')
       .replace('[DATE DE DÉLIVRANCE]', issuedAt.toLocaleDateString('fr-FR'))
       .replace('[ORGANISATEUR]', template.event.organizer?.name || 'Organisateur')
 
-    // Générer un URL unique pour le certificat (simulation)
     const certificateUrl = `/certificates/${templateId}_${userId}_${Date.now()}.pdf`
     const qrCodeUrl = `/qrcodes/${templateId}_${userId}_${Date.now()}.png`
 
-    // Créer le certificat
-    const certificate = await db.certificate.create({
-      data: {
+    const { data: certificate, error: certError } = await supabase
+      .from('certificates')
+      .insert({
         templateId,
         userId,
         eventId,
@@ -116,32 +105,16 @@ export async function POST(request: NextRequest) {
         issuedAt,
         certificateUrl,
         qrCodeUrl
-      },
-      include: {
-        template: {
-          select: {
-            id: true,
-            title: true,
-            description: true
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
-            startDate: true,
-            endDate: true
-          }
-        }
-      }
-    })
+      })
+      .select('*, template:certificate_templates(id,title,description), user:users(id,name,email), event:events(id,title,startDate,endDate)')
+      .single()
+
+    if (certError) {
+      return NextResponse.json(
+        { error: 'Failed to generate certificate' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(certificate)
   } catch (error) {
@@ -161,44 +134,20 @@ export async function GET(request: NextRequest) {
     const eventId = searchParams.get('eventId')
     const templateId = searchParams.get('templateId')
 
-    const whereClause: Prisma.CertificateWhereInput = {}
+    let query = supabase
+      .from('certificates')
+      .select('*, template:certificate_templates(id,title,description), user:users(id,name,email), event:events(id,title,startDate,endDate)')
+      .order('issuedAt', { ascending: false })
 
-    if (userId) whereClause.userId = userId
-    if (eventId) whereClause.eventId = eventId
-    if (templateId) whereClause.templateId = templateId
+    if (userId) query = query.eq('userId', userId)
+    if (eventId) query = query.eq('eventId', eventId)
+    if (templateId) query = query.eq('templateId', templateId)
 
-    const certificates = await db.certificate.findMany({
-      where: whereClause,
-      include: {
-        template: {
-          select: {
-            id: true,
-            title: true,
-            description: true
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        event: {
-          select: {
-            id: true,
-            title: true,
-            startDate: true,
-            endDate: true
-          }
-        }
-      },
-      orderBy: {
-        issuedAt: 'desc'
-      }
-    })
+    const { data, error } = await query
 
-    return NextResponse.json(certificates)
+    if (error) throw error
+
+    return NextResponse.json(data)
   } catch (error) {
     console.error('Error fetching certificates:', error)
     return NextResponse.json(
@@ -207,3 +156,4 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
