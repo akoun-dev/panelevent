@@ -1,10 +1,12 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ SUPABASE_URL ou SUPABASE_KEY non configurée')
+  console.error('❌ NEXT_PUBLIC_SUPABASE_URL ou clé Supabase non configurée')
   process.exit(1)
 }
 

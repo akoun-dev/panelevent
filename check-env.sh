@@ -18,16 +18,22 @@ fi
 
 echo ""
 echo "🔑 Variables d'environnement:"
-if [ -n "$SUPABASE_URL" ]; then
-    echo "✅ SUPABASE_URL configurée"
+if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ]; then
+    echo "✅ NEXT_PUBLIC_SUPABASE_URL configurée"
 else
-    echo "❌ SUPABASE_URL non configurée"
+    echo "❌ NEXT_PUBLIC_SUPABASE_URL non configurée"
 fi
 
-if [ -n "$SUPABASE_KEY" ]; then
-    echo "✅ SUPABASE_KEY configurée"
+if [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+    echo "✅ NEXT_PUBLIC_SUPABASE_ANON_KEY configurée"
 else
-    echo "❌ SUPABASE_KEY non configurée"
+    echo "❌ NEXT_PUBLIC_SUPABASE_ANON_KEY non configurée"
+fi
+
+if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+    echo "✅ SUPABASE_SERVICE_ROLE_KEY configurée (optionnelle)"
+else
+    echo "ℹ️ SUPABASE_SERVICE_ROLE_KEY non configurée (optionnelle)"
 fi
 
 echo ""
