@@ -33,6 +33,14 @@ export async function GET() {
       })
     )
 
+    const { data: events, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('organizerId', session.user.id)
+
+    if (error) {
+      throw error
+    }
     return NextResponse.json(events)
   } catch {
     return NextResponse.json(
@@ -70,6 +78,15 @@ export async function POST(request: Request) {
       isPublic: data.is_public,
       isActive: data.is_active,
       maxAttendees: data.max_attendees
+
+    const { data: event, error } = await supabase
+      .from('events')
+      .insert({ ...body, organizerId: session.user.id })
+      .select()
+      .single()
+
+    if (error) {
+      throw error
     }
 
     return NextResponse.json(event)

@@ -32,6 +32,7 @@ export async function DELETE(
       )
     }
 
+
     const { count: regCount } = await supabase
       .from('event_registrations')
       .select('id', { count: 'exact', head: true })
@@ -48,6 +49,21 @@ export async function DELETE(
       .eq('event_id', id)
 
     if ((regCount ?? 0) > 0 || (feedbackCount ?? 0) > 0 || (certCount ?? 0) > 0) {
+
+    // Vérifier les dépendances avant suppression
+    const { count: registrationCount } = await supabase
+      .from('event_registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', id)
+
+    const [feedbackCount, certificateCount] = await Promise.all([
+      db.feedback.count({ where: { eventId: id } }),
+      db.certificate.count({ where: { eventId: id } })
+    ])
+
+    const dependencies = [registrationCount ?? 0, feedbackCount, certificateCount]
+
+    if (dependencies.some(count => count > 0)) {
       return NextResponse.json(
         { error: 'Event has dependencies and cannot be deleted' },
         { status: 400 }

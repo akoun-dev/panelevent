@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import CreateEventDialog from '@/components/organizer/CreateEventDialog'
 import { EventsTable } from '@/components/organizer/EventsTable'
-import { Event } from '@prisma/client'
+import type { Database } from '@/types/supabase'
 
 export default function OrganizerEventsPage() {
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<Database['public']['Tables']['events']['Row'][]>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   const fetchEvents = async () => {

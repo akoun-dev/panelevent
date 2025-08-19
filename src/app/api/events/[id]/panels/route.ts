@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -15,10 +16,16 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const panels = await db.panel.findMany({
-      where: { eventId: id },
-      orderBy: { order: 'asc' }
-    })
+    const { data: panels, error } = await supabase
+      .from('panels')
+      .select('*')
+      .eq('eventId', id)
+      .order('order', { ascending: true })
+
+    if (error) {
+      console.error('Failed to fetch panels:', error)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
 
     return NextResponse.json({ panels })
   } catch (error) {
@@ -60,19 +67,26 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const panel = await db.panel.create({
-      data: {
+    const { data: panel, error: insertError } = await supabase
+      .from('panels')
+      .insert({
         title,
         description,
-        startTime: new Date(startTime),
-        endTime: endTime ? new Date(endTime) : null,
+        startTime: new Date(startTime).toISOString(),
+        endTime: endTime ? new Date(endTime).toISOString() : null,
         speaker,
         location,
         order: order || 0,
         isActive: isActive ?? false,
         eventId: id
-      }
-    })
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('Failed to create panel:', insertError)
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
 
     return NextResponse.json({ panel }, { status: 201 })
   } catch (error) {

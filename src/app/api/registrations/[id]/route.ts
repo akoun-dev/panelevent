@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -8,22 +9,14 @@ export async function GET(
   const resolvedParams = await params
   const { id } = resolvedParams
   try {
-    const registration = await db.eventRegistration.findFirst({
-      where: {
-        id: id,
-        isPublic: true
-      },
-      include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            program: true
-          }
-        }
-      }
-    })
+    const { data: registration } = await supabase
+      .from('event_registrations')
+      .select(
+        `id, first_name, last_name, email, created_at, event:events(id, title, slug, program)`
+      )
+      .eq('id', id)
+      .eq('is_public', true)
+      .maybeSingle()
 
     if (!registration) {
       return NextResponse.json(
@@ -35,10 +28,10 @@ export async function GET(
     return NextResponse.json({
       registration: {
         id: registration.id,
-        firstName: registration.firstName,
-        lastName: registration.lastName,
+        firstName: registration.first_name,
+        lastName: registration.last_name,
         email: registration.email,
-        registeredAt: registration.createdAt,
+        registeredAt: registration.created_at,
         event: registration.event
       }
     })

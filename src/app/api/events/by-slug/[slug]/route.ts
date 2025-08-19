@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -10,42 +10,30 @@ export async function GET(
     const { slug } = resolvedParams
 
     // Récupérer l'événement par son slug
-    const event = await db.event.findUnique({
-      where: { slug },
-      include: {
-        organizer: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        _count: {
-          select: {
-            registrations: {
-              where: {
-                isPublic: true
-              }
-            }
-          }
-        }
-      }
-    })
+    const { data: event, error } = await supabase
+      .from('events')
+      .select('*, registrations(*), organizer(id,name,email)')
+      .eq('slug', slug)
+      .maybeSingle()
+
+    if (error) {
+      throw error
+    }
 
     if (!event) {
       return NextResponse.json(
-        { error: 'Événement non trouvé' },
+        { error: "Événement non trouvé" },
         { status: 404 }
       )
     }
 
-    // Vérifier si l'événement est public
-    if (!event.isPublic) {
-      return NextResponse.json(
-        { error: 'Événement non public' },
-        { status: 403 }
-      )
-    }
+      // Vérifier si l'événement est public
+      if (!event.isPublic) {
+        return NextResponse.json(
+          { error: 'Événement non public' },
+          { status: 403 }
+        )
+      }
 
     // Formater la réponse
     const eventResponse = {
@@ -60,7 +48,7 @@ export async function GET(
       program: event.program,
       qrCode: event.qrCode,
       maxAttendees: event.maxAttendees,
-      registeredCount: event._count.registrations,
+      registeredCount: event.registrations.filter(r => r.isPublic).length,
       organizer: event.organizer,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt

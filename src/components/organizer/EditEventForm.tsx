@@ -1,6 +1,6 @@
 'use client'
 
-import { Event } from '@prisma/client'
+import type { Database } from '@/types/supabase'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,7 @@ export default function EditEventForm({
   event,
   onSuccess,
 }: {
-  event: Event
+  event: Database['public']['Tables']['events']['Row']
   onSuccess: () => void
 }) {
   const { register, handleSubmit, setValue, watch } = useForm({

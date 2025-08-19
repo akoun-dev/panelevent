@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -17,7 +18,6 @@ export async function GET(
         { status: 401 }
       )
     }
-
     const { data: event, error: eventError } = await supabase
       .from('events')
       .select('organizer_id')
@@ -26,6 +26,13 @@ export async function GET(
       .single()
 
     if (eventError || !event) {
+    const { data: event, error: findError } = await supabase
+      .from('events')
+      .select('organizerId')
+      .eq('id', id)
+      .single()
+
+    if (findError || !event) {
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
@@ -45,7 +52,22 @@ export async function GET(
       )
     }
 
+
     const formattedRegistrations = data.map(reg => ({
+    const { data: registrations, error } = await supabase
+      .from('event_registrations')
+      .select(
+        `id, email, firstName, lastName, phone, company, position, attended, createdAt,
+         user:users(email,name)`
+      )
+      .eq('eventId', id)
+      .order('createdAt', { ascending: false })
+
+    if (error) {
+      throw error
+    }
+
+    const formattedRegistrations = (registrations || []).map((reg) => ({
       id: reg.id,
       email: reg.email || reg.user?.email || '',
       firstName: reg.first_name || reg.user?.name?.split(' ')[0] || '',
@@ -54,12 +76,12 @@ export async function GET(
       company: reg.company || '',
       position: reg.position || '',
       attended: reg.attended,
-      createdAt: reg.created_at
+      createdAt: reg.createdAt,
     }))
 
     return NextResponse.json({
       registrations: formattedRegistrations,
-      total: formattedRegistrations.length
+      total: formattedRegistrations.length,
     })
   } catch (error) {
     console.error('Failed to fetch registrations:', error)
