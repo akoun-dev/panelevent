@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-
 import { supabase } from '@/lib/supabase'
-
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -20,18 +18,6 @@ interface ProgramData {
   hasProgram?: boolean;
   programText?: string;
   programItems?: ProgramItem[];
-}
-
-interface EventUpdateData {
-  title?: string;
-  description?: string;
-  slug?: string;
-  startDate?: Date;
-  endDate?: Date | null;
-  location?: string;
-  isPublic?: boolean;
-  isActive?: boolean;
-  maxAttendees?: number;
 }
 
 const eventSchema = z.object({
@@ -63,17 +49,9 @@ export async function GET(
 
     const { data, error } = await supabase
       .from('events')
-      .select('id,title,description,slug,start_date,end_date,location,is_public,is_active,program,organizer_id, registrations(count), questions(count), polls(count)')
+      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive",program,"organizerId", event_registrations(count), questions(count), polls(count)')
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
-
-      .select(
-        `id, title, description, slug, startDate, endDate, location, isPublic, isActive, program, organizerId,
-         registrations:event_registrations(id),
-         questions:questions(id),
-         polls:polls(id)`
-      )
-      .eq('id', id)
+      .eq('"organizerId"', session.user.id)
       .single()
 
     if (error || !data) {
@@ -82,8 +60,9 @@ export async function GET(
         { status: 404 }
       )
     }
+
     const counts = {
-      registrations: data.registrations?.[0]?.count ?? 0,
+      registrations: data.event_registrations?.[0]?.count ?? 0,
       questions: data.questions?.[0]?.count ?? 0,
       polls: data.polls?.[0]?.count ?? 0
     }
@@ -106,46 +85,15 @@ export async function GET(
       title: data.title,
       description: data.description,
       slug: data.slug,
-      startDate: data.start_date,
-      endDate: data.end_date,
+      startDate: data.startDate,
+      endDate: data.endDate,
       location: data.location,
-      isPublic: data.is_public,
-      isActive: data.is_active,
+      isPublic: data.isPublic,
+      isActive: data.isActive,
       program: parsedProgram,
-      organizerId: data.organizer_id,
+      organizerId: data.organizerId,
       _count: counts
     })
-    if (data.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
-      )
-    }
-
-    let parsedProgram: ProgramData | null = null
-    if (data?.program) {
-      try {
-        parsedProgram = JSON.parse(data.program)
-      } catch {
-        parsedProgram = {
-          hasProgram: true,
-          programText: data.program,
-          programItems: [],
-        }
-      }
-    }
-
-    const event = {
-      ...data,
-      _count: {
-        registrations: data.registrations?.length || 0,
-        questions: data.questions?.length || 0,
-        polls: data.polls?.length || 0,
-      },
-      program: parsedProgram,
-    }
-
-    return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to fetch event:', error)
     return NextResponse.json(
@@ -183,70 +131,38 @@ export async function PUT(
       title: body.title,
       description: body.description,
       slug: body.slug,
-      start_date: body.startDate,
-      end_date: body.endDate ?? null,
+      "startDate": body.startDate,
+      "endDate": body.endDate ?? null,
       location: body.location,
-      is_public: body.isPublic,
-      is_active: body.isActive,
-      max_attendees: body.maxAttendees
+      "isPublic": body.isPublic,
+      "isActive": body.isActive,
+      "maxAttendees": body.maxAttendees
     }
 
     const { data, error } = await supabase
       .from('events')
       .update(updateData)
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
-      .select()
+      .eq('"organizerId"', session.user.id)
+      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive","maxAttendees","organizerId"')
       .single()
 
     if (error || !data) {
-
-    const { data: existingEvent, error: findError } = await supabase
-      .from('events')
-      .select('organizerId')
-      .eq('id', id)
-      .single()
-
-    if (findError || !existingEvent) {
-
       return NextResponse.json(
-        { error: 'Event not found' },
+        { error: 'Event not found or unauthorized' },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       ...data,
-      startDate: data.start_date,
-      endDate: data.end_date,
-      isPublic: data.is_public,
-      isActive: data.is_active,
-      maxAttendees: data.max_attendees,
-      organizerId: data.organizer_id
+      startDate: data.startDate,
+      endDate: data.endDate,
+      isPublic: data.isPublic,
+      isActive: data.isActive,
+      maxAttendees: data.maxAttendees,
+      organizerId: data.organizerId
     })
-    if (existingEvent.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
-      )
-    }
-
-    const { data: event, error: updateError } = await supabase
-      .from('events')
-      .update({
-        ...body,
-        startDate: new Date(body.startDate),
-        endDate: body.endDate ? new Date(body.endDate) : null,
-      })
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (updateError) {
-      throw updateError
-    }
-
-    return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to update event:', error)
     return NextResponse.json(
@@ -284,32 +200,24 @@ export async function PATCH(
     if (body.title !== undefined) updateData.title = body.title
     if (body.description !== undefined) updateData.description = body.description
     if (body.slug !== undefined) updateData.slug = body.slug
-    if (body.startDate !== undefined) updateData.start_date = body.startDate
-    if (body.endDate !== undefined) updateData.end_date = body.endDate ?? null
+    if (body.startDate !== undefined) updateData["startDate"] = body.startDate
+    if (body.endDate !== undefined) updateData["endDate"] = body.endDate ?? null
     if (body.location !== undefined) updateData.location = body.location
-    if (body.isPublic !== undefined) updateData.is_public = body.isPublic
-    if (body.isActive !== undefined) updateData.is_active = body.isActive
-    if (body.maxAttendees !== undefined) updateData.max_attendees = body.maxAttendees
+    if (body.isPublic !== undefined) updateData["isPublic"] = body.isPublic
+    if (body.isActive !== undefined) updateData["isActive"] = body.isActive
+    if (body.maxAttendees !== undefined) updateData["maxAttendees"] = body.maxAttendees
 
     const { data, error } = await supabase
       .from('events')
       .update(updateData)
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
-      .select('id,title,description,slug,start_date,end_date,location,is_public,is_active,max_attendees,organizer_id,created_at,updated_at, registrations(count), questions(count), polls(count)')
+      .eq('"organizerId"', session.user.id)
+      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive","maxAttendees","organizerId","createdAt","updatedAt", event_registrations(count), questions(count), polls(count)')
       .single()
 
     if (error || !data) {
-    const { data: existingEvent, error: findError } = await supabase
-      .from('events')
-      .select('organizerId')
-      .eq('id', id)
-      .single()
-
-    if (findError || !existingEvent) {
-
       return NextResponse.json(
-        { error: 'Event not found' },
+        { error: 'Event not found or unauthorized' },
         { status: 404 }
       )
     }
@@ -319,63 +227,21 @@ export async function PATCH(
       title: data.title,
       description: data.description,
       slug: data.slug,
-      startDate: data.start_date,
-      endDate: data.end_date,
+      startDate: data.startDate,
+      endDate: data.endDate,
       location: data.location,
-      isPublic: data.is_public,
-      isActive: data.is_active,
-      maxAttendees: data.max_attendees,
-      organizerId: data.organizer_id,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
+      isPublic: data.isPublic,
+      isActive: data.isActive,
+      maxAttendees: data.maxAttendees,
+      organizerId: data.organizerId,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
       _count: {
-        registrations: data.registrations?.[0]?.count ?? 0,
+        registrations: data.event_registrations?.[0]?.count ?? 0,
         questions: data.questions?.[0]?.count ?? 0,
         polls: data.polls?.[0]?.count ?? 0
       }
     })
-    if (existingEvent.organizerId !== session.user.id && session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized - Not event owner' },
-        { status: 403 }
-      )
-    }
-
-    const updateData: EventUpdateData = { ...body }
-
-    if (body.startDate) {
-      updateData.startDate = new Date(body.startDate)
-    }
-    if (body.endDate) {
-      updateData.endDate = body.endDate ? new Date(body.endDate) : null
-    }
-
-    const { data, error: updateError } = await supabase
-      .from('events')
-      .update(updateData)
-      .eq('id', id)
-      .select(
-        `id, title, description, slug, startDate, endDate, location, isPublic, isActive, maxAttendees, organizerId, createdAt, updatedAt,
-         registrations:event_registrations(id),
-         questions:questions(id),
-         polls:polls(id)`
-      )
-      .single()
-
-    if (updateError || !data) {
-      throw updateError
-    }
-
-    const event = {
-      ...data,
-      _count: {
-        registrations: data.registrations?.length || 0,
-        questions: data.questions?.length || 0,
-        polls: data.polls?.length || 0,
-      },
-    }
-
-    return NextResponse.json(event)
   } catch (error) {
     console.error('Failed to update event:', error)
     return NextResponse.json(
@@ -404,19 +270,11 @@ export async function DELETE(
       .from('events')
       .delete()
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
+      .eq('"organizerId"', session.user.id)
       .select('id')
       .single()
 
     if (error && error.code !== 'PGRST116') {
-
-    const { data: existingEvent, error: findError } = await supabase
-      .from('events')
-      .select('organizerId')
-      .eq('id', id)
-      .single()
-
-    if (findError || !existingEvent) {
       return NextResponse.json(
         { error: 'Failed to delete event' },
         { status: 500 }
@@ -429,7 +287,6 @@ export async function DELETE(
         { status: 404 }
       )
     }
-    await supabase.from('events').delete().eq('id', id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

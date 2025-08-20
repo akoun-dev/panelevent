@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,7 +35,7 @@ export default function EventPage() {
     return 'registration'
   }
 
-  const fetchEvent = async () => {
+  const fetchEvent = useCallback(async () => {
     try {
       const response = await fetch(`/api/events/by-slug/${slug}`)
       if (response.ok) {
@@ -50,7 +50,7 @@ export default function EventPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [slug, router])
 
   const handleRegistration = async (
     data: {
@@ -74,9 +74,16 @@ export default function EventPage() {
       })
 
       if (response.ok) {
+        const result = await response.json()
         setIsRegistered(true)
+        
+        // Stocker l'ID d'inscription dans localStorage pour la page programme
+        if (result.registrationId) {
+          localStorage.setItem('registrationId', result.registrationId)
+        }
+        
         if (determinePhase(event) === 'live') {
-          router.push(`/events/${event.id}/qa`)
+          router.push('/program')
           return
         }
         fetchEvent()
@@ -90,7 +97,7 @@ export default function EventPage() {
 
   useEffect(() => {
     fetchEvent()
-  }, [])
+  }, [fetchEvent])
 
   useEffect(() => {
     if (!event) return
@@ -98,7 +105,7 @@ export default function EventPage() {
     if (currentPhase === 'post') {
       router.replace(`/events/${event.id}/feedback`)
     } else if (currentPhase === 'live' && isRegistered) {
-      router.replace(`/events/${event.id}/qa`)
+      router.replace('/program')
     }
   }, [event, isRegistered, router])
 

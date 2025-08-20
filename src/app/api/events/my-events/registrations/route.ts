@@ -16,25 +16,12 @@ export async function GET(_request: NextRequest) {
     }
 
 
-    const { data: registrationsData = [], error } = await supabase
-      .from('event_registrations')
-      .select(
-        'id, consent, createdAt, user(id,name,email), event!inner(id,title,slug,startDate,organizerId)'
-      )
-      .eq('event.organizerId', session.user.id)
-      .order('createdAt', { ascending: false })
-
-    if (error) {
-      throw error
-    }
-
-    const registrations = registrationsData.map(reg => ({
     const { data: registrations, error } = await supabase
       .from('event_registrations')
       .select(
-        `id, consent, created_at, user:users(id, name, email), event:events(id, title, slug, start_date, organizer_id)`
+        `id, consent, "createdAt", user:users(id, name, email), event:events(id, title, slug, "startDate", "organizerId")`
       )
-      .eq('event.organizer_id', session.user.id)
+      .eq('event."organizerId"', session.user.id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -50,11 +37,11 @@ export async function GET(_request: NextRequest) {
       id: reg.id,
       user: reg.user,
       event: reg.event,
-      registeredAt: reg.created_at,
+      registeredAt: reg.createdAt,
       status: reg.consent ? 'confirmed' : 'pending'
     }))
 
-    return NextResponse.json({ registrations })
+    return NextResponse.json({ registrations: transformedRegistrations })
   } catch (error) {
     console.error('Failed to fetch organizer registrations:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

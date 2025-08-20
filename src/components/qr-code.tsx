@@ -17,6 +17,7 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
   const [qrDataUrl, setQrDataUrl] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const [eventSlug, setEventSlug] = useState<string>('')
 
   useEffect(() => {
     const generateQRCode = async () => {
@@ -24,9 +25,20 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
         setLoading(true)
         setError('')
         
-        // Générer l'URL complète pour le QR code
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-        const checkinUrl = `${baseUrl}/checkin/${eventId}`
+        // Récupérer le slug de l'événement
+        const response = await fetch(`/api/events/${eventId}`)
+        let checkinUrl = ''
+        
+        if (response.ok) {
+          const event = await response.json()
+          setEventSlug(event.slug || '')
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+          checkinUrl = `${baseUrl}/e/${event.slug}`
+        } else {
+          // Fallback vers l'URL par ID si le slug n'est pas disponible
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+          checkinUrl = `${baseUrl}/events/${eventId}`
+        }
         
         // Générer le QR code
         const dataUrl = await QRCode.toDataURL(checkinUrl, {
@@ -53,7 +65,7 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
   const handleCopy = async () => {
     try {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-      const checkinUrl = `${baseUrl}/checkin/${eventId}`
+      const checkinUrl = eventSlug ? `${baseUrl}/e/${eventSlug}` : `${baseUrl}/events/${eventId}`
       
       await navigator.clipboard.writeText(checkinUrl)
       setCopied(true)
@@ -137,9 +149,11 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
       </div>
       
       <div className="text-xs text-muted-foreground text-center max-w-xs">
-        <p>Scannez ce QR code pour accéder à la page de check-in</p>
+        <p>Scannez ce QR code pour accéder à la page de l'événement</p>
         <p className="text-[10px] opacity-70 mt-1 break-all">
-          {typeof window !== 'undefined' ? `${window.location.origin}/checkin/${eventId}` : ''}
+          {typeof window !== 'undefined' ? 
+            (eventSlug ? `${window.location.origin}/e/${eventSlug}` : `${window.location.origin}/events/${eventId}`) 
+            : ''}
         </p>
       </div>
     </div>

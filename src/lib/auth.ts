@@ -76,17 +76,17 @@ const authOptions: NextAuthOptions = {
 
         const { data: user, error } = await supabase
           .from('users')
-          .select('id, email, name, role, password_hash')
+          .select('id, email, name, role, "passwordHash"')
           .eq('email', credentials.email)
           .single()
-        if (error || !user || !user.password_hash) {
+        if (error || !user || !user.passwordHash) {
           logger.warn(`Invalid user or password hash for: ${credentials.email}`)
           return null
         }
 
         const passwordValid = await bcrypt.compare(
           credentials.password,
-          user.password_hash
+          user.passwordHash
         )
         if (!passwordValid) {
           logger.warn(`Invalid password attempt for: ${credentials.email}`)

@@ -29,16 +29,6 @@ export async function GET(
             role: true
           }
         },
-        panels: {
-          orderBy: { order: 'asc' },
-          include: {
-            _count: {
-              select: {
-                questions: true
-              }
-            }
-          }
-        },
         registrations: {
           include: {
             user: {
@@ -155,22 +145,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Delete related panels using Supabase
-    const { error: panelError } = await supabase
-      .from('panels')
-      .delete()
-      .eq('eventId', resolvedParams.id)
-
-    if (panelError) {
-      console.error('Failed to delete panels:', panelError)
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-    }
-
     // Delete related data first due to foreign key constraints
     await supabase
       .from('event_registrations')
       .delete()
-      .eq('event_id', resolvedParams.id)
+      .eq('"eventId"', resolvedParams.id)
 
     await db.$transaction([
       db.question.deleteMany({

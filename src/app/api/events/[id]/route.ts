@@ -3,17 +3,17 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const resolvedParams = await params
-    const { slug } = resolvedParams
+    const { id } = resolvedParams
 
-    // Récupérer l'événement par son slug
+    // Récupérer l'événement par son ID
     const { data: event, error } = await supabase
       .from('events')
-      .select('*, event_registrations(*)')
-      .eq('slug', slug)
+      .select('*')
+      .eq('id', id)
       .maybeSingle()
 
     if (error) {
@@ -26,14 +26,6 @@ export async function GET(
         { status: 404 }
       )
     }
-
-      // Vérifier si l'événement est public
-      if (!event.isPublic) {
-        return NextResponse.json(
-          { error: 'Événement non public' },
-          { status: 403 }
-        )
-      }
 
     // Récupérer l'organisateur séparément
     const { data: organizer } = await supabase
@@ -52,10 +44,10 @@ export async function GET(
       endDate: event.endDate,
       location: event.location,
       isActive: event.isActive,
+      isPublic: event.isPublic,
       program: event.program,
       qrCode: event.qrCode,
       maxAttendees: event.maxAttendees,
-      registeredCount: event.event_registrations.filter(r => r.isPublic).length,
       organizer,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt

@@ -14,22 +14,29 @@ export async function GET(_request: NextRequest) {
     const { data: eventsData = [], error } = await supabase
       .from('events')
       .select(
-        'id,title,description,slug,startDate,endDate,location,isPublic,isActive,program,panels(*),registrations(*),questions(*),polls(*)'
+        'id,title,description,slug,"startDate","endDate",location,"isPublic","isActive",program,"organizerId", event_registrations(count), questions(count), polls(count)'
       )
-      .eq('organizerId', session.user.id)
-      .order('startDate', { ascending: false })
+      .eq('"organizerId"', session.user.id)
+      .order('"startDate"', { ascending: false })
 
     if (error) {
       throw error
     }
 
-    const events = eventsData.map(event => ({
-      ...event,
-      panels: (event.panels || []).sort((a: any, b: any) => a.order - b.order),
+    const events = (eventsData || []).map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      slug: event.slug,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      location: event.location,
+      isPublic: event.isPublic,
+      isActive: event.isActive,
       _count: {
-        registrations: event.registrations?.length || 0,
-        questions: event.questions?.length || 0,
-        polls: event.polls?.length || 0
+        registrations: event.event_registrations?.[0]?.count ?? 0,
+        questions: event.questions?.[0]?.count ?? 0,
+        polls: event.polls?.[0]?.count ?? 0
       }
     }))
 

@@ -15,26 +15,14 @@ export async function GET(
     const resolvedParams = await params
     const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
-    const panelId = searchParams.get('panelId')
 
-
-    const whereClause: any = {
-      panel: {
-        eventId: id
-      }
-    }
-
-    let query = supabase
+    const query = supabase
       .from('polls')
       .select(
-        `*, panel:panels!inner(id,title,start_time,end_time), options:poll_options(*, responses:poll_responses(id))`
+        `*, options:poll_options(*, responses:poll_responses(id))`
       )
-      .eq('panel.event_id', id)
+      .eq('"eventId"', id)
       .order('created_at', { ascending: false })
-
-    if (panelId) {
-      query = query.eq('panel_id', panelId)
-    }
 
     const { data: polls, error } = await query
     if (error) throw error
@@ -81,27 +69,12 @@ export async function POST(
     const resolvedParams = await params
     const { id } = resolvedParams
     const body = await request.json()
-    const { question, description, panelId, isAnonymous, allowMultipleVotes, options } = body
+    const { question, description, isAnonymous, allowMultipleVotes, options } = body
 
-    if (!question || !panelId || !options || options.length < 2) {
+    if (!question || !options || options.length < 2) {
       return NextResponse.json(
         { error: 'Missing required fields or insufficient options' },
         { status: 400 }
-      )
-    }
-
-    // Vérifier que le panel appartient à l'événement
-    const { data: panel, error: panelError } = await supabase
-      .from('panels')
-      .select('id')
-      .eq('id', panelId)
-      .eq('event_id', id)
-      .single()
-
-    if (panelError || !panel) {
-      return NextResponse.json(
-        { error: 'Panel not found or does not belong to this event' },
-        { status: 404 }
       )
     }
 
@@ -110,10 +83,9 @@ export async function POST(
       .insert({
         question,
         description,
-        panel_id: panelId,
-        event_id: id,
-        is_anonymous: isAnonymous || false,
-        allow_multiple_votes: allowMultipleVotes || false
+        "eventId": id,
+        "isAnonymous": isAnonymous || false,
+        "allowMultipleVotes": allowMultipleVotes || false
       })
       .select('id')
       .single()
@@ -122,7 +94,7 @@ export async function POST(
 
     const { error: optionsError } = await supabase.from('poll_options').insert(
       options.map((optionText: string, index: number) => ({
-        poll_id: createdPoll.id,
+        "pollId": createdPoll.id,
         text: optionText,
         order: index
       }))
@@ -133,7 +105,7 @@ export async function POST(
     const { data: poll, error: fetchError } = await supabase
       .from('polls')
       .select(
-        `*, panel:panels(id,title,start_time,end_time), options:poll_options(*, responses:poll_responses(id))`
+        `*, options:poll_options(*, responses:poll_responses(id))`
       )
       .eq('id', createdPoll.id)
       .single()

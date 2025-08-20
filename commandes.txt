@@ -1,3 +1,4 @@
 npx supabase db push
 npx supabase db reset
 npx supabase migration list
+npx supabase db reset --db-url="postgresql://postgres:PanelEvent@db.kjprigldhepbqhwqehrq.supabase.co:5432/postgres" --debug

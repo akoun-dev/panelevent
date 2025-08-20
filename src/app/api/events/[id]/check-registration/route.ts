@@ -36,16 +36,10 @@ export async function GET(
     // Vérifier l'inscription
     const { data: registration } = await supabase
       .from('event_registrations')
-
-      .select('id, firstName, lastName, email, createdAt')
-      .eq('eventId', eventId)
+      .select('id, "firstName", "lastName", email, "createdAt"')
+      .eq('"eventId"', eventId)
       .eq('email', email)
-      .eq('isPublic', true)
-
-      .select('id, first_name, last_name, email, created_at')
-      .eq('event_id', eventId)
-      .eq('email', email)
-      .eq('is_public', true)
+      .eq('"isPublic"', true)
       .maybeSingle()
 
     if (!registration) {
@@ -59,10 +53,10 @@ export async function GET(
       isRegistered: true,
       registration: {
         id: registration.id,
-        firstName: registration.first_name,
-        lastName: registration.last_name,
+        firstName: registration.firstName,
+        lastName: registration.lastName,
         email: registration.email,
-        registeredAt: registration.created_at
+        registeredAt: registration.createdAt
       },
       event: {
         id: event.id,

@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Registration request body:', body)
 
     const {
       eventId,
@@ -82,10 +83,12 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (eventError) {
+      console.error('Event lookup error:', eventError)
       throw eventError
     }
 
     if (!event) {
+      console.log('Event not found:', eventId)
       return NextResponse.json(
         { error: 'Événement non trouvé' },
         { status: 404 }
@@ -106,15 +109,11 @@ export async function POST(request: NextRequest) {
       .select('id')
       .eq('eventId', eventId)
       .eq('email', email)
-      .eq('isPublic', true)
-
-      .eq('event_id', eventId)
-      .eq('email', email)
-      .eq('is_public', true)
-
+      .eq('"isPublic"', true)
       .maybeSingle()
 
     if (existingRegistration) {
+      console.log('Email already registered:', email)
       return NextResponse.json(
         { error: 'Cet email est déjà inscrit à cet événement' },
         { status: 409 }
@@ -126,12 +125,8 @@ export async function POST(request: NextRequest) {
       const { count: registrationCount } = await supabase
         .from('event_registrations')
         .select('*', { count: 'exact', head: true })
-
         .eq('eventId', eventId)
         .eq('isPublic', true)
-        .eq('event_id', eventId)
-        .eq('is_public', true)
-
 
       if ((registrationCount || 0) >= event.maxAttendees) {
         return NextResponse.json(
@@ -142,16 +137,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Créer l'inscription
-    const { data: registration, error: registrationError } = await supabase
-      .from('event_registrations')
-      .insert({
-        eventId,
-
     const { data: registration, error: insertError } = await supabase
       .from('event_registrations')
       .insert({
-        event_id: eventId,
-
+        "eventId": eventId,
         email,
         first_name: firstName,
         last_name: lastName,
@@ -160,21 +149,19 @@ export async function POST(request: NextRequest) {
         position,
         experience,
         expectations,
-        dietary_restrictions: dietaryRestrictions,
-        is_public: true,
+        dietaryRestrictions: dietaryRestrictions,
+        isPublic: true,
         consent
       })
       .select('id')
       .single()
 
-    if (registrationError) {
-      throw registrationError
     if (insertError) {
+      console.error('Registration insert error:', insertError)
       return NextResponse.json(
         { error: "Une erreur est survenue lors de l'inscription" },
         { status: 500 }
       )
-
     }
 
     // Retourner une réponse de succès
@@ -188,7 +175,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  } catch {
+  } catch (error) {
+    console.error('Unexpected error in registration:', error)
     return NextResponse.json(
       { error: 'Une erreur est survenue lors de l\'inscription' },
       { status: 500 }

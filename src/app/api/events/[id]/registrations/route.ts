@@ -33,9 +33,9 @@ export async function GET(
     const { data: registrations, error } = await supabase
       .from('event_registrations')
       .select(
-        `id, consent, created_at, user:users(id, name, email)`
+        `id, consent, "createdAt", user:users(id, name, email)`
       )
-      .eq('event_id', id)
+      .eq('"eventId"', id)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -129,8 +129,8 @@ export async function POST(
     const { data: existingRegistration } = await supabase
       .from('event_registrations')
       .select('id')
-      .eq('user_id', user.id)
-      .eq('event_id', id)
+      .eq('"userId"', user.id)
+      .eq('"eventId"', id)
       .maybeSingle()
 
     if (existingRegistration) {
@@ -141,11 +141,11 @@ export async function POST(
     const { data: registration, error: insertError } = await supabase
       .from('event_registrations')
       .insert({
-        user_id: user.id,
-        event_id: id,
+        "userId": user.id,
+        "eventId": id,
         consent
       })
-      .select('id, consent, created_at, user:users(id, name, email)')
+      .select('id, consent, "createdAt", user:users(id, name, email)')
       .single()
 
     if (insertError) {

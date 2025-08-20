@@ -22,10 +22,10 @@ export async function GET(
     let query = supabase
       .from('feedbacks')
       .select(
-        `*, user:users(id,name,email), helpfulVotes:helpful_votes(user_id)`
+        `*, user:users!feedbacks_userId_fkey(id,name,email), helpfulVotes:helpful_votes("userId")`
       )
-      .eq('event_id', id)
-      .order('created_at', { ascending: false })
+      .eq('"eventId"', id)
+      .order('"createdAt"', { ascending: false })
 
     if (category) {
       query = query.eq('category', category)
@@ -87,9 +87,9 @@ export async function POST(
     const { data: registration } = await supabase
       .from('event_registrations')
       .select('id')
-      .eq('user_id', userId)
-      .eq('event_id', id)
-      .eq('attended', true)
+      .eq('"userId"', userId)
+      .eq('"eventId"', id)
+      .eq('"attended"', true)
       .maybeSingle()
 
     if (!registration) {
@@ -103,8 +103,8 @@ export async function POST(
     const { data: existingFeedback } = await supabase
       .from('feedbacks')
       .select('id')
-      .eq('user_id', userId)
-      .eq('event_id', id)
+      .eq('"userId"', userId)
+      .eq('"eventId"', id)
       .maybeSingle()
 
     if (existingFeedback) {
@@ -116,15 +116,15 @@ export async function POST(
     const { data: feedback, error: feedbackError } = await supabase
       .from('feedbacks')
       .insert({
-        user_id: userId,
-        event_id: id,
+       "userId": userId,
+       "eventId": id,
         rating,
         comment: comment || null,
         category,
         resolved: false
       })
       .select(
-        `*, user:users(id,name,email), helpfulVotes:helpful_votes(user_id)`
+        `*, user:users!feedbacks_userId_fkey(id,name,email), helpfulVotes:helpful_votes("userId")`
       )
       .single()
 

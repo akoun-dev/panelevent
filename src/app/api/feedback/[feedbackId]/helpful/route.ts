@@ -22,7 +22,7 @@ export async function POST(
       .from('helpful_votes')
       .select('feedbackId')
       .eq('feedbackId', resolvedParams.feedbackId)
-      .eq('userId', userId)
+      .eq('"userId"', userId)
       .maybeSingle()
 
     if (existingVote) {
@@ -30,7 +30,7 @@ export async function POST(
         .from('helpful_votes')
         .delete()
         .eq('feedbackId', resolvedParams.feedbackId)
-        .eq('userId', userId)
+        .eq('"userId"', userId)
         .select()
         .single()
       return NextResponse.json(deleted)
@@ -38,7 +38,7 @@ export async function POST(
 
     const { data: vote } = await supabase
       .from('helpful_votes')
-      .insert({ feedbackId: resolvedParams.feedbackId, userId })
+      .insert({ "feedbackId": resolvedParams.feedbackId, "userId": userId })
       .select()
       .single()
 
@@ -61,7 +61,7 @@ export async function GET(
     const resolvedParams = await params
     const { data: votes, error } = await supabase
       .from('helpful_votes')
-      .select('user:users(id,name,email)')
+      .select('user:users!helpful_votes_userId_fkey(id,name,email)')
       .eq('feedbackId', resolvedParams.feedbackId)
 
     if (error) {

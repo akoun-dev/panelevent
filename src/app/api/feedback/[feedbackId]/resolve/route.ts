@@ -22,7 +22,7 @@ export async function POST(
       .from('feedbacks')
       .update({ resolved })
       .eq('id', resolvedParams.feedbackId)
-      .select('id, rating, comment, category, resolved, user:users(id,name,email), helpfulVotes:helpful_votes(userId)')
+      .select('id, rating, comment, category, resolved, user:users!feedbacks_userId_fkey(id,name,email), helpfulVotes:helpful_votes(userId)')
       .single()
 
     if (error || !feedback) {

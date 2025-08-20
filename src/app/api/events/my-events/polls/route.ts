@@ -19,10 +19,10 @@ export async function GET(_request: NextRequest) {
       .from('polls')
       .select(
         `id, question, is_active, created_at,
-         event:events!inner(id,title,slug,organizer_id),
+         event:events!inner(id,title,slug,"organizerId"),
          options:poll_options(id,text,responses:poll_responses(id))`
       )
-      .eq('event.organizer_id', session.user.id)
+      .eq('event."organizerId"', session.user.id)
       .order('created_at', { ascending: false })
 
     if (error) {

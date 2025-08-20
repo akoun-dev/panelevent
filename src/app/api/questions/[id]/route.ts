@@ -37,7 +37,7 @@ export async function PATCH(
       .from('questions')
       .update(updateData)
       .eq('id', resolvedParams.id)
-      .select(`*, panel:panels(id,title,start_time,end_time)`)
+      .select('*')
       .single()
 
     if (error) throw error

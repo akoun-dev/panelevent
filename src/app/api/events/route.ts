@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
 import { authOptions } from '@/lib/auth'
 import QRCode from 'qrcode'
+import { randomUUID } from 'crypto'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const { data: events = [], count, error } = await supabase
       .from('events')
-      .select('*, registrations(*), organizer(id,name,email)', { count: 'exact' })
+      .select('*, event_registrations(*)', { count: 'exact' })
       .eq('isPublic', true)
       .order('startDate', { ascending: true })
       .range(offset, offset + limit - 1)
@@ -25,8 +26,24 @@ export async function GET(request: NextRequest) {
 
     const total = count || 0
 
+    // Récupérer les organisateurs pour chaque événement
+    const eventsWithOrganizers = events ? await Promise.all(
+      events.map(async (event) => {
+        const { data: organizer } = await supabase
+          .from('users')
+          .select('id, name, email')
+          .eq('id', event.organizerId)
+          .single()
+        
+        return {
+          ...event,
+          organizer
+        }
+      })
+    ) : []
+
     return NextResponse.json({
-      events,
+      events: eventsWithOrganizers,
       pagination: {
         page,
         limit,
@@ -126,9 +143,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    const eventId = randomUUID()
     const { data: event, error } = await supabase
       .from('events')
       .insert({
+        id: eventId,
         title,
         description,
         slug: eventSlug,
@@ -142,14 +161,21 @@ export async function POST(request: NextRequest) {
         qrCode,
         branding: { qrCode }
       })
-      .select('*, organizer(id,name,email)')
+      .select('*')
       .single()
 
     if (error) {
       throw error
     }
 
-    return NextResponse.json(event, { status: 201 })
+    // Récupérer l'organisateur séparément
+    const { data: organizer } = await supabase
+      .from('users')
+      .select('id, name, email')
+      .eq('id', session.user.id)
+      .single()
+
+    return NextResponse.json({ ...event, organizer }, { status: 201 })
   } catch (error) {
     console.error('Error creating event:', error)
     return NextResponse.json(

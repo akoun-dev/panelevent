@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db: any = supabase
-
 // GET /api/polls/[pollId] - Récupérer un sondage spécifique
 export async function GET(
   request: NextRequest,
@@ -13,27 +10,15 @@ export async function GET(
     const resolvedParams = await params
     const { id: pollId } = resolvedParams
 
-    const poll = await db.poll.findUnique({
-      where: { id: pollId },
-      include: {
-        panel: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            endTime: true,
-            eventId: true
-          }
-        },
-        options: {
-          include: {
-            responses: true
-          }
-        }
-      }
-    })
+    const { data: poll, error } = await supabase
+      .from('polls')
+      .select(
+        `*, options:poll_options(*, responses:poll_responses(id))`
+      )
+      .eq('id', pollId)
+      .single()
 
-    if (!poll) {
+    if (error || !poll) {
       return NextResponse.json(
         { error: 'Poll not found' },
         { status: 404 }
@@ -41,11 +26,13 @@ export async function GET(
     }
 
     // Calculer les stats
-    const totalVotes = poll.options.reduce((sum, option) => sum + option.responses.length, 0)
-    const optionsWithStats = poll.options.map(option => ({
+    const totalVotes = poll.options?.reduce((sum: number, option: any) => 
+      sum + (option.responses?.length || 0), 0) || 0
+    
+    const optionsWithStats = (poll.options || []).map((option: any) => ({
       ...option,
-      votes: option.responses.length,
-      percentage: totalVotes > 0 ? Math.round((option.responses.length / totalVotes) * 100) : 0
+      votes: option.responses?.length || 0,
+      percentage: totalVotes > 0 ? Math.round(((option.responses?.length || 0) / totalVotes) * 100) : 0
     }))
 
     const pollWithStats = {
@@ -75,49 +62,37 @@ export async function PATCH(
     const body = await request.json()
     const { isActive, question, description, isAnonymous, allowMultipleVotes } = body
 
-    const poll = await db.poll.findUnique({
-      where: { id: pollId }
-    })
+    const updateData: Record<string, any> = {}
+    if (isActive !== undefined) updateData.is_active = isActive
+    if (question !== undefined) updateData.question = question
+    if (description !== undefined) updateData.description = description
+    if (isAnonymous !== undefined) updateData.is_anonymous = isAnonymous
+    if (allowMultipleVotes !== undefined) updateData.allow_multiple_votes = allowMultipleVotes
 
-    if (!poll) {
+    const { data: updatedPoll, error: updateError } = await supabase
+      .from('polls')
+      .update(updateData)
+      .eq('id', pollId)
+      .select(
+        `*, options:poll_options(*, responses:poll_responses(id))`
+      )
+      .single()
+
+    if (updateError || !updatedPoll) {
       return NextResponse.json(
         { error: 'Poll not found' },
         { status: 404 }
       )
     }
 
-    const updatedPoll = await db.poll.update({
-      where: { id: pollId },
-      data: {
-        ...(isActive !== undefined && { isActive }),
-        ...(question !== undefined && { question }),
-        ...(description !== undefined && { description }),
-        ...(isAnonymous !== undefined && { isAnonymous }),
-        ...(allowMultipleVotes !== undefined && { allowMultipleVotes })
-      },
-      include: {
-        panel: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            endTime: true
-          }
-        },
-        options: {
-          include: {
-            responses: true
-          }
-        }
-      }
-    })
-
     // Calculer les stats
-    const totalVotes = updatedPoll.options.reduce((sum, option) => sum + option.responses.length, 0)
-    const optionsWithStats = updatedPoll.options.map(option => ({
+    const totalVotes = updatedPoll.options?.reduce((sum: number, option: any) => 
+      sum + (option.responses?.length || 0), 0) || 0
+    
+    const optionsWithStats = (updatedPoll.options || []).map((option: any) => ({
       ...option,
-      votes: option.responses.length,
-      percentage: totalVotes > 0 ? Math.round((option.responses.length / totalVotes) * 100) : 0
+      votes: option.responses?.length || 0,
+      percentage: totalVotes > 0 ? Math.round(((option.responses?.length || 0) / totalVotes) * 100) : 0
     }))
 
     const pollWithStats = {
@@ -145,26 +120,33 @@ export async function DELETE(
     const resolvedParams = await params
     const { id: pollId } = resolvedParams
 
-    const poll = await db.poll.findUnique({
-      where: { id: pollId }
-    })
+    // Supprimer d'abord les options et réponses associées
+    const { error: optionsError } = await supabase
+      .from('poll_options')
+      .delete()
+      .eq('"pollId"', pollId)
 
-    if (!poll) {
+    if (optionsError) {
+      console.error('Error deleting poll options:', optionsError)
       return NextResponse.json(
-        { error: 'Poll not found' },
-        { status: 404 }
+        { error: 'Failed to delete poll options' },
+        { status: 500 }
       )
     }
 
-    // Supprimer d'abord les options et réponses associées
-    await db.pollOption.deleteMany({
-      where: { pollId }
-    })
-
     // Puis supprimer le sondage
-    await db.poll.delete({
-      where: { id: pollId }
-    })
+    const { error: pollError } = await supabase
+      .from('polls')
+      .delete()
+      .eq('id', pollId)
+
+    if (pollError) {
+      console.error('Error deleting poll:', pollError)
+      return NextResponse.json(
+        { error: 'Failed to delete poll' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({ message: 'Poll deleted successfully' })
   } catch (error) {

@@ -9,7 +9,7 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      // Events organized by users; each event can include many panels
+      // Events organized by users
       events: {
         Row: {
           id: string;
@@ -70,62 +70,6 @@ export interface Database {
             foreignKeyName: "events_organizerId_fkey",
             columns: ["organizerId"],
             referencedRelation: "users",
-            referencedColumns: ["id"],
-          },
-        ];
-      };
-      // Panels belong to events
-      panels: {
-        Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          startTime: string;
-          endTime: string | null;
-          speaker: string | null;
-          location: string | null;
-          order: number;
-          isActive: boolean;
-          allowQuestions: boolean;
-          createdAt: string;
-          updatedAt: string;
-          eventId: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          startTime: string;
-          endTime?: string | null;
-          speaker?: string | null;
-          location?: string | null;
-          order?: number;
-          isActive?: boolean;
-          allowQuestions?: boolean;
-          createdAt?: string;
-          updatedAt?: string;
-          eventId: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          startTime?: string;
-          endTime?: string | null;
-          speaker?: string | null;
-          location?: string | null;
-          order?: number;
-          isActive?: boolean;
-          allowQuestions?: boolean;
-          createdAt?: string;
-          updatedAt?: string;
-          eventId?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "panels_eventId_fkey",
-            columns: ["eventId"],
-            referencedRelation: "events",
             referencedColumns: ["id"],
           },
         ];

@@ -31,9 +31,8 @@ export async function POST(request: NextRequest) {
     const { data: registration } = await supabase
       .from('event_registrations')
       .select('id')
-      .eq('user_id', userId)
-      .eq('event_id', eventId)
-
+      .eq('"userId"', userId)
+      .eq('"eventId"', eventId)
       .eq('attended', true)
       .maybeSingle()
 

@@ -20,9 +20,9 @@ export async function DELETE(
   try {
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('organizer_id')
+      .select('"organizerId"')
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
+      .eq('"organizerId"', session.user.id)
       .single()
 
     if (eventError || !event) {
@@ -33,35 +33,23 @@ export async function DELETE(
     }
 
 
-    const { count: regCount } = await supabase
-      .from('event_registrations')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_id', id)
-
-    const { count: feedbackCount } = await supabase
-      .from('feedbacks')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_id', id)
-
-    const { count: certCount } = await supabase
-      .from('certificates')
-      .select('id', { count: 'exact', head: true })
-      .eq('event_id', id)
-
-    if ((regCount ?? 0) > 0 || (feedbackCount ?? 0) > 0 || (certCount ?? 0) > 0) {
-
     // Vérifier les dépendances avant suppression
     const { count: registrationCount } = await supabase
       .from('event_registrations')
       .select('*', { count: 'exact', head: true })
-      .eq('event_id', id)
+      .eq('"eventId"', id)
 
-    const [feedbackCount, certificateCount] = await Promise.all([
-      db.feedback.count({ where: { eventId: id } }),
-      db.certificate.count({ where: { eventId: id } })
-    ])
+    const { count: feedbackCount } = await supabase
+      .from('feedbacks')
+      .select('*', { count: 'exact', head: true })
+      .eq('"eventId"', id)
 
-    const dependencies = [registrationCount ?? 0, feedbackCount, certificateCount]
+    const { count: certificateCount } = await supabase
+      .from('certificates')
+      .select('*', { count: 'exact', head: true })
+      .eq('"eventId"', id)
+
+    const dependencies = [registrationCount ?? 0, feedbackCount ?? 0, certificateCount ?? 0]
 
     if (dependencies.some(count => count > 0)) {
       return NextResponse.json(
@@ -74,7 +62,7 @@ export async function DELETE(
       .from('events')
       .delete()
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
+      .eq('"organizerId"', session.user.id)
 
     if (error) {
       return NextResponse.json(

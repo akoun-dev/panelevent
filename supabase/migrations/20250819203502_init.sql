@@ -35,20 +35,18 @@ CREATE TABLE events (
   CONSTRAINT events_slug_key UNIQUE (slug),
   CONSTRAINT events_organizerId_fkey FOREIGN KEY ("organizerId") REFERENCES users(id) ON DELETE RESTRICT
 );
--- Panels belong to events
+
+-- Panels are sessions within events
 CREATE TABLE panels (
   id text PRIMARY KEY,
   title text NOT NULL,
   description text,
-  "startTime" timestamptz NOT NULL,
+  "startTime" timestamptz,
   "endTime" timestamptz,
-  speaker text,
-  location text,
-  "order" integer NOT NULL DEFAULT 0,
-  "isActive" boolean NOT NULL DEFAULT false,
+  "eventId" text NOT NULL,
+  "allowQuestions" boolean NOT NULL DEFAULT false,
   "createdAt" timestamptz NOT NULL DEFAULT now(),
   "updatedAt" timestamptz NOT NULL DEFAULT now(),
-  "eventId" text NOT NULL,
   CONSTRAINT panels_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
 
@@ -60,10 +58,10 @@ CREATE TABLE questions (
   "authorEmail" text NOT NULL,
   "createdAt" timestamptz NOT NULL DEFAULT now(),
   "updatedAt" timestamptz NOT NULL DEFAULT now(),
-  "eventId" text,
-  "panelId" text NOT NULL,
+  "eventId" text NOT NULL,
+  "panelId" text,
   CONSTRAINT questions_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE,
-  CONSTRAINT questions_panelId_fkey FOREIGN KEY ("panelId") REFERENCES panels(id) ON DELETE CASCADE
+  CONSTRAINT questions_panelId_fkey FOREIGN KEY ("panelId") REFERENCES panels(id) ON DELETE SET NULL
 );
 
 CREATE TABLE question_votes (
@@ -85,10 +83,8 @@ CREATE TABLE polls (
   "allowMultipleVotes" boolean NOT NULL DEFAULT false,
   "createdAt" timestamptz NOT NULL DEFAULT now(),
   "updatedAt" timestamptz NOT NULL DEFAULT now(),
-  "eventId" text,
-  "panelId" text NOT NULL,
-  CONSTRAINT polls_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE,
-  CONSTRAINT polls_panelId_fkey FOREIGN KEY ("panelId") REFERENCES panels(id) ON DELETE CASCADE
+  "eventId" text NOT NULL,
+  CONSTRAINT polls_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
 
 CREATE TABLE poll_options (

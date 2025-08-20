@@ -47,8 +47,8 @@ export default function SignIn() {
           console.log('Session data after login:', sessionData)
 
           if (sessionData?.user) {
-            // La redirection sera gérée par le middleware
-            window.location.href = '/auth/signin'
+            // Redirection vers le dashboard après connexion réussie
+            window.location.href = '/dashboard'
           } else {
             console.error('No user in session after login')
             setError('Erreur lors de la connexion')

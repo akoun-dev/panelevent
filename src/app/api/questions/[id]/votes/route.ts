@@ -30,8 +30,8 @@ export async function POST(
     const { data: existingVote } = await supabase
       .from('question_votes')
       .select('*')
-      .eq('question_id', id)
-      .eq('user_id', userId)
+      .eq('"questionId"', id)
+      .eq('"userId"', userId)
       .single()
 
     let vote
@@ -42,8 +42,8 @@ export async function POST(
         const { data } = await supabase
           .from('question_votes')
           .delete()
-          .eq('question_id', id)
-          .eq('user_id', userId)
+          .eq('"questionId"', id)
+          .eq('"userId"', userId)
           .select()
           .single()
         vote = data
@@ -52,8 +52,8 @@ export async function POST(
         const { data } = await supabase
           .from('question_votes')
           .update({ type })
-          .eq('question_id', id)
-          .eq('user_id', userId)
+          .eq('"questionId"', id)
+          .eq('"userId"', userId)
           .select()
           .single()
         vote = data
@@ -63,8 +63,8 @@ export async function POST(
       const { data } = await supabase
         .from('question_votes')
         .insert({
-          question_id: id,
-          user_id: userId,
+          "questionId": id,
+          "userId": userId,
           type
         })
         .select()
@@ -93,7 +93,7 @@ export async function GET(
     const { data: votes, error } = await supabase
       .from('question_votes')
       .select('*, user:users(id,name,email)')
-      .eq('question_id', id)
+      .eq('"questionId"', id)
 
     if (error) throw error
 

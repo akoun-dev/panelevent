@@ -20,64 +20,49 @@ export async function GET(
     }
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('organizer_id')
+      .select('"organizerId"')
       .eq('id', id)
-      .eq('organizer_id', session.user.id)
+      .eq('"organizerId"', session.user.id)
       .single()
 
     if (eventError || !event) {
-    const { data: event, error: findError } = await supabase
-      .from('events')
-      .select('organizerId')
-      .eq('id', id)
-      .single()
-
-    if (findError || !event) {
       return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
+        { error: 'Unauthorized - Not event owner' },
+        { status: 403 }
       )
     }
 
-    const { data, error } = await supabase
+    const { data: registrations, error } = await supabase
       .from('event_registrations')
-      .select('id,email,first_name,last_name,phone,company,position,attended,created_at, user:users(email,name)')
-      .eq('event_id', id)
+      .select(
+        `id, email, "firstName", "lastName", phone, company, position, attended, "createdAt",
+         user:users(email,name)`
+      )
+      .eq('"eventId"', id)
       .order('created_at', { ascending: false })
 
-    if (error || !data) {
+    if (error) {
+      console.error('Failed to fetch registrations:', error)
       return NextResponse.json(
         { error: 'Failed to fetch registrations' },
         { status: 500 }
       )
     }
 
-
-    const formattedRegistrations = data.map(reg => ({
-    const { data: registrations, error } = await supabase
-      .from('event_registrations')
-      .select(
-        `id, email, firstName, lastName, phone, company, position, attended, createdAt,
-         user:users(email,name)`
-      )
-      .eq('eventId', id)
-      .order('createdAt', { ascending: false })
-
-    if (error) {
-      throw error
-    }
-
-    const formattedRegistrations = (registrations || []).map((reg) => ({
-      id: reg.id,
-      email: reg.email || reg.user?.email || '',
-      firstName: reg.first_name || reg.user?.name?.split(' ')[0] || '',
-      lastName: reg.last_name || reg.user?.name?.split(' ').slice(1).join(' ') || '',
-      phone: reg.phone || '',
-      company: reg.company || '',
-      position: reg.position || '',
-      attended: reg.attended,
-      createdAt: reg.createdAt,
-    }))
+    const formattedRegistrations = (registrations || []).map((reg) => {
+      const user = Array.isArray(reg.user) ? reg.user[0] : reg.user
+      return {
+        id: reg.id,
+        email: reg.email || user?.email || '',
+        firstName: reg.firstName || user?.name?.split(' ')[0] || '',
+        lastName: reg.lastName || user?.name?.split(' ').slice(1).join(' ') || '',
+        phone: reg.phone || '',
+        company: reg.company || '',
+        position: reg.position || '',
+        attended: reg.attended,
+        createdAt: reg.createdAt,
+      }
+    })
 
     return NextResponse.json({
       registrations: formattedRegistrations,

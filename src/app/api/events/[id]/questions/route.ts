@@ -13,21 +13,14 @@ export async function GET(
     const resolvedParams = await params
     const { id } = resolvedParams
     const { searchParams } = new URL(request.url)
-    const panelId = searchParams.get('panelId')
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
     let query = supabase
       .from('questions')
-      .select(
-        `*, panel:panels!inner(id,title,start_time,end_time)`
-      )
-      .eq('panel.event_id', id)
+      .select('*')
+      .eq('"eventId"', id)
       .order('created_at', { ascending: false })
-
-    if (panelId) {
-      query = query.eq('panel_id', panelId)
-    }
 
     if (status && status !== 'all') {
       query = query.eq('status', status.toUpperCase())
@@ -78,48 +71,25 @@ export async function POST(
     const resolvedParams = await params
     const { id } = resolvedParams
     const body = await request.json()
-    const { content, panelId, authorName, authorEmail } = body
+    const { content, authorName, authorEmail } = body
 
-    if (!content || !panelId || !authorName || !authorEmail) {
+    if (!content || !authorName || !authorEmail) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Vérifier que le panel appartient à l'événement
-
-    const { data: panel, error: panelError } = await supabase
-      .from('panels')
-      .select('id, allowQuestions')
-      .eq('id', panelId)
-      .eq('event_id', id)
-      .single()
-
-    if (panelError || !panel) {
-      return NextResponse.json(
-        { error: 'Panel not found or does not belong to this event' },
-        { status: 404 }
-      )
-    }
-
-    if (!panel.allowQuestions) {
-      return NextResponse.json(
-        { error: 'Questions are not allowed for this activity' },
-        { status: 403 }
-      )
-    }
 
     const { data: question, error } = await supabase
       .from('questions')
       .insert({
         content,
-        panel_id: panelId,
-        author_name: authorName,
-        author_email: authorEmail,
+        "authorName": authorName,
+        "authorEmail": authorEmail,
         status: 'PENDING' as QuestionStatus
       })
-      .select(`*, panel:panels(id,title,start_time,end_time)`)
+      .select('*')
       .single()
 
     if (error) throw error
