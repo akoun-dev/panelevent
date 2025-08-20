@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import QRCode from 'qrcode';
+import bcrypt from 'bcryptjs';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -17,10 +18,34 @@ async function main() {
     .from('users')
     .upsert(
       [
-        { id: 'admin-user-id', email: 'admin@panelevent.com', name: 'Administrateur', role: 'ADMIN' },
-        { id: 'organizer-user-id', email: 'organizer@example.com', name: 'Organisateur Demo', role: 'ORGANIZER' },
-        { id: 'attendee1-user-id', email: 'attendee@example.com', name: 'Participant Demo', role: 'ATTENDEE' },
-        { id: 'attendee2-user-id', email: 'attendee2@example.com', name: 'Sophie Bernard', role: 'ATTENDEE' }
+        {
+          id: 'admin-user-id',
+          email: 'admin@panelevent.com',
+          name: 'Administrateur',
+          role: 'ADMIN',
+          "passwordHash": bcrypt.hashSync('admin123', 10)
+        },
+        {
+          id: 'organizer-user-id',
+          email: 'organizer@example.com',
+          name: 'Organisateur Demo',
+          role: 'ORGANIZER',
+          "passwordHash": bcrypt.hashSync('demo123', 10)
+        },
+        {
+          id: 'attendee1-user-id',
+          email: 'attendee@example.com',
+          name: 'Participant Demo',
+          role: 'ATTENDEE',
+          "passwordHash": bcrypt.hashSync('demo123', 10)
+        },
+        {
+          id: 'attendee2-user-id',
+          email: 'attendee2@example.com',
+          name: 'Sophie Bernard',
+          role: 'ATTENDEE',
+          "passwordHash": bcrypt.hashSync('demo123', 10)
+        }
       ],
       { onConflict: 'email' }
     )
