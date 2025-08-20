@@ -4,7 +4,7 @@
 set -e
 
 echo -e "\033[1;33m🚀 Application des migrations...\033[0m"
-if ! supabase migration apply; then
+if ! npx supabase migration apply; then
   echo -e "\033[1;31m❌ Échec de l'application des migrations\033[0m"
   exit 1
 fi

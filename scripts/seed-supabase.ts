@@ -17,10 +17,10 @@ async function main() {
     .from('users')
     .upsert(
       [
-        { email: 'admin@panelevent.com', name: 'Administrateur', role: 'ADMIN' },
-        { email: 'organizer@example.com', name: 'Organisateur Demo', role: 'ORGANIZER' },
-        { email: 'attendee@example.com', name: 'Participant Demo', role: 'ATTENDEE' },
-        { email: 'attendee2@example.com', name: 'Sophie Bernard', role: 'ATTENDEE' }
+        { id: 'admin-user-id', email: 'admin@panelevent.com', name: 'Administrateur', role: 'ADMIN' },
+        { id: 'organizer-user-id', email: 'organizer@example.com', name: 'Organisateur Demo', role: 'ORGANIZER' },
+        { id: 'attendee1-user-id', email: 'attendee@example.com', name: 'Participant Demo', role: 'ATTENDEE' },
+        { id: 'attendee2-user-id', email: 'attendee2@example.com', name: 'Sophie Bernard', role: 'ATTENDEE' }
       ],
       { onConflict: 'email' }
     )
@@ -36,6 +36,7 @@ async function main() {
     .from('events')
     .upsert(
       {
+        id: 'demo-event-id',
         title: 'Conférence Tech 2024',
         description: "La plus grande conférence technologique de l'année",
         slug: 'conference-tech-2024',
@@ -66,6 +67,7 @@ async function main() {
       .from('panels')
       .insert([
         {
+          id: 'panel-1-id',
           title: "Keynote: L'avenir de l'IA",
           description: "Présentation sur les dernières avancées en intelligence artificielle",
           startTime: '2024-06-15T10:00:00.000Z',
@@ -78,6 +80,7 @@ async function main() {
           eventId: event.id
         },
         {
+          id: 'panel-2-id',
           title: 'Atelier: Développement Web Moderne',
           description: 'Techniques et meilleures pratiques pour le développement web moderne',
           startTime: '2024-06-15T11:00:00.000Z',
@@ -109,6 +112,7 @@ async function main() {
     const { data, error } = await supabase
       .from('polls')
       .insert({
+        id: 'poll-1-id',
         question: 'Quel framework préférez-vous ?',
         description: 'Votez pour votre framework de développement web préféré',
         isActive: true,
@@ -133,9 +137,9 @@ async function main() {
     const { error } = await supabase
       .from('poll_options')
       .insert([
-        { pollId: poll.id, text: 'React', order: 1 },
-        { pollId: poll.id, text: 'Vue.js', order: 2 },
-        { pollId: poll.id, text: 'Angular', order: 3 }
+        { id: 'option-1-id', pollId: poll.id, text: 'React', order: 1 },
+        { id: 'option-2-id', pollId: poll.id, text: 'Vue.js', order: 2 },
+        { id: 'option-3-id', pollId: poll.id, text: 'Angular', order: 3 }
       ]);
     if (error) throw error;
   }
@@ -145,6 +149,7 @@ async function main() {
     .from('certificate_templates')
     .upsert(
       {
+        id: 'template-1-id',
         title: 'Certificat de Participation',
         description: 'Certificat standard pour les participants',
         content: '<h1>Certificat de Participation</h1><p>Félicitations pour votre participation !</p>',
@@ -152,7 +157,7 @@ async function main() {
         eventId: event.id,
         userId: organizer?.id
       },
-      { onConflict: 'eventId' }
+      { onConflict: 'id' }
     )
     .select()
     .single();
@@ -172,6 +177,7 @@ async function main() {
 
     const { error } = await supabase.from('certificates').insert([
       {
+        id: 'cert-1-id',
         content: template.content,
         certificateUrl: `https://example.com/certificates/${cert1}`,
         qrCodeUrl: qr1,
@@ -180,6 +186,7 @@ async function main() {
         templateId: template.id
       },
       {
+        id: 'cert-2-id',
         content: template.content,
         certificateUrl: `https://example.com/certificates/${cert2}`,
         qrCodeUrl: qr2,

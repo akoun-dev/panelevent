@@ -1,0 +1,3 @@
+npx supabase db push
+npx supabase db reset
+npx supabase migration list

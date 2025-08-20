@@ -138,12 +138,12 @@ ALTER TABLE event_registrations ENABLE ROW LEVEL SECURITY;
 
 -- Users can manage their own registrations
 CREATE POLICY "Users manage own registrations" ON event_registrations
-  FOR ALL USING (auth.uid() = "userId") WITH CHECK (auth.uid() = "userId");
+  FOR ALL USING (auth.uid()::text = "userId") WITH CHECK (auth.uid()::text = "userId");
 
 -- Event organizers can manage registrations for their events
 CREATE POLICY "Organizers manage event registrations" ON event_registrations
   FOR ALL USING (
-    auth.uid() = (
+    auth.uid()::text = (
       SELECT "organizerId" FROM events WHERE events.id = event_registrations."eventId"
     )
   );
