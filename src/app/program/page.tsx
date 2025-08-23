@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar, Clock, MapPin, User, Coffee, Network, Trophy, ArrowLeft, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { translations, Language } from '@/lib/translations'
+import { getProgramForLanguage, getTranslatedField } from '@/lib/program-translations'
 
 interface ProgramItem {
   id: string
@@ -81,10 +82,13 @@ export default function ProgramPage() {
           try {
             const programData = JSON.parse(data.registration.event.program)
             console.log('Données du programme récupérées:', programData)
-            // Le programme est stocké comme {hasProgram: boolean, programItems: [...]}
-            if (programData && programData.hasProgram && Array.isArray(programData.programItems)) {
-              console.log('Programme valide trouvé, nombre d\'items:', programData.programItems.length)
-              setProgramItems(programData.programItems)
+            
+            // Convertir le programme dans la langue sélectionnée
+            const translatedProgram = getProgramForLanguage(programData, language)
+            
+            if (translatedProgram && translatedProgram.hasProgram && Array.isArray(translatedProgram.programItems)) {
+              console.log('Programme valide trouvé, nombre d\'items:', translatedProgram.programItems.length)
+              setProgramItems(translatedProgram.programItems)
             } else {
               console.log('Aucun programme valide trouvé ou programme vide')
             }
@@ -118,10 +122,41 @@ export default function ProgramPage() {
     return () => clearInterval(interval)
   }, [language])
 
-  // Forcer le re-rendu lorsque la langue change pour mettre à jour les traductions
+  // Forcer le re-rendu lorsque la langue change pour mettre à jour les traductions et le programme
   useEffect(() => {
     console.log('Langue changée, mise à jour des traductions:', language)
-  }, [language])
+    
+    // Recharger le programme avec la nouvelle langue
+    const registrationId = localStorage.getItem('registrationId')
+    if (registrationId && registration) {
+      const fetchProgramWithLanguage = async () => {
+        try {
+          const response = await fetch(`/api/registrations/${registrationId}`)
+          if (response.ok) {
+            const data = await response.json()
+            
+            if (data.registration.event?.program) {
+              try {
+                const programData = JSON.parse(data.registration.event.program)
+                const translatedProgram = getProgramForLanguage(programData, language)
+                
+                if (translatedProgram && translatedProgram.hasProgram && Array.isArray(translatedProgram.programItems)) {
+                  console.log('Programme retraduit pour la langue:', language)
+                  setProgramItems(translatedProgram.programItems)
+                }
+              } catch (e) {
+                console.error('Erreur lors du parsing du programme:', e)
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération du programme traduit:', error)
+        }
+      }
+      
+      fetchProgramWithLanguage()
+    }
+  }, [language, registration])
 
   const handleLogout = () => {
     localStorage.removeItem('registrationId')

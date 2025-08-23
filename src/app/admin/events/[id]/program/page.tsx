@@ -7,20 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, FileText, List, Clock } from 'lucide-react'
 import Link from 'next/link'
-import { ProgramForm } from '@/components/shared/program-form'
+import { MultilingualProgramForm } from '@/components/shared/multilingual-program-form'
 
-interface ProgramData {
-  hasProgram: boolean
-  programText?: string
-  programItems?: Array<{
-    id: string
-    time: string
-    title: string
-    description?: string
-    speaker?: string
-    location?: string
-  }>
-}
+import { ProgramData } from '@/lib/program-translations'
 
 interface Event {
   id: string
@@ -163,7 +152,7 @@ export default function AdminEventProgramPage() {
       </Card>
 
       {/* Program Form */}
-      <ProgramForm
+      <MultilingualProgramForm
         initialData={programData || undefined}
         onSave={handleSaveProgram}
         loading={saving}

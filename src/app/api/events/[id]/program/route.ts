@@ -3,16 +3,21 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 
-interface ProgramData {
+import { ProgramData, convertToMultilingualProgram } from '@/lib/program-translations'
+
+// Interface pour la compatibilité avec l'ancien format
+interface LegacyProgramItem {
+  id: string
+  time: string
+  title: string
+  description?: string
+  speaker?: string
+  location?: string
+}
+
+interface LegacyProgramData {
   hasProgram: boolean
-  programItems?: Array<{
-    id: string
-    time: string
-    title: string
-    description?: string
-    speaker?: string
-    location?: string
-  }>
+  programItems?: LegacyProgramItem[]
   updatedAt?: string
 }
 
@@ -46,20 +51,34 @@ export async function GET(
     let programData: ProgramData | null = null
     if (event.program) {
       try {
-        programData = JSON.parse(event.program) as ProgramData
-        // Ensure old data structure is converted to new structure
-        // Remove any legacy programText field if it exists
+        const parsedData = JSON.parse(event.program)
+        
+        // Vérifier si c'est l'ancien format (LegacyProgramData)
+        if (parsedData.programItems && parsedData.programItems.length > 0 && typeof parsedData.programItems[0].title === 'string') {
+          // Convertir l'ancien format au nouveau format multilingue
+          console.log('Conversion du programme legacy vers le format multilingue')
+          programData = {
+            hasProgram: parsedData.hasProgram,
+            programItems: convertToMultilingualProgram(parsedData.programItems),
+            updatedAt: parsedData.updatedAt
+          }
+        } else {
+          // C'est déjà le nouveau format
+          programData = parsedData as ProgramData
+        }
+        
+        // Nettoyer les anciens champs
         if (programData && 'programText' in programData) {
-          // Convert old format to new structure
           programData = {
             hasProgram: programData.hasProgram,
-            programItems: programData.programItems || []
+            programItems: programData.programItems || [],
+            updatedAt: programData.updatedAt
           }
         }
       } catch {
-        // If it's not JSON, treat it as legacy plain text that needs conversion
+        // Si ce n'est pas du JSON valide
         programData = {
-          hasProgram: true,
+          hasProgram: false,
           programItems: []
         }
       }
@@ -106,6 +125,15 @@ export async function PUT(
 
     const body = await request.json()
     const { hasProgram, programItems } = body
+    
+    // Convertir les données d'entrée au format multilingue si nécessaire
+    let multilingualProgramItems = programItems
+    
+    // Vérifier si les items sont dans l'ancien format (chaînes simples)
+    if (programItems && programItems.length > 0 && typeof programItems[0].title === 'string') {
+      console.log('Conversion des nouvelles données au format multilingue')
+      multilingualProgramItems = convertToMultilingualProgram(programItems)
+    }
 
     // Validate program items time format
     if (programItems) {
@@ -124,7 +152,7 @@ export async function PUT(
     if (hasProgram) {
       programValue = JSON.stringify({
         hasProgram: true,
-        programItems: programItems || [],
+        programItems: multilingualProgramItems || [],
         updatedAt: new Date().toISOString()
       })
     }
