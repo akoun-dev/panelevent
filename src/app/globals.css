@@ -112,6 +112,111 @@
   --sidebar-ring: #a8be6c;
 }
 
+/* Thème Vert Forêt (fern) */
+.fern {
+  --background: #f0f7ee;
+  --foreground: #1e3a28;
+  --card: #ffffff;
+  --card-foreground: #1e3a28;
+  --popover: #ffffff;
+  --popover-foreground: #1e3a28;
+  --primary: #4a7c59;
+  --primary-foreground: #ffffff;
+  --secondary: #8fbc8f;
+  --secondary-foreground: #1e3a28;
+  --muted: #e8f5e8;
+  --muted-foreground: #5a7d5a;
+  --accent: #a2c5ac;
+  --accent-foreground: #1e3a28;
+  --destructive: #dc3545;
+  --border: #d1e7d1;
+  --input: #d1e7d1;
+  --ring: #6b8e6b;
+  --chart-1: #4a7c59;
+  --chart-2: #8fbc8f;
+  --chart-3: #6b8e6b;
+  --chart-4: #3d5a40;
+  --chart-5: #a2c5ac;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1e3a28;
+  --sidebar-primary: #4a7c59;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #8fbc8f;
+  --sidebar-accent-foreground: #1e3a28;
+  --sidebar-border: #d1e7d1;
+  --sidebar-ring: #6b8e6b;
+}
+
+/* Thème Or Luxueux (luxor) */
+.luxor {
+  --background: #fef9e7;
+  --foreground: #2c1810;
+  --card: #ffffff;
+  --card-foreground: #2c1810;
+  --popover: #ffffff;
+  --popover-foreground: #2c1810;
+  --primary: #d4af37;
+  --primary-foreground: #ffffff;
+  --secondary: #f1c40f;
+  --secondary-foreground: #2c1810;
+  --muted: #fef3cd;
+  --muted-foreground: #8b6b3c;
+  --accent: #f9e79f;
+  --accent-foreground: #2c1810;
+  --destructive: #dc3545;
+  --border: #f8e0a1;
+  --input: #f8e0a1;
+  --ring: #d4af37;
+  --chart-1: #d4af37;
+  --chart-2: #f1c40f;
+  --chart-3: #e67e22;
+  --chart-4: #b7950b;
+  --chart-5: #f9e79f;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #2c1810;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1c40f;
+  --sidebar-accent-foreground: #2c1810;
+  --sidebar-border: #f8e0a1;
+  --sidebar-ring: #d4af37;
+}
+
+/* Thème Doré Classique (gold) */
+.gold {
+  --background: #fffaf0;
+  --foreground: #2c1810;
+  --card: #ffffff;
+  --card-foreground: #2c1810;
+  --popover: #ffffff;
+  --popover-foreground: #2c1810;
+  --primary: #c0a080;
+  --primary-foreground: #ffffff;
+  --secondary: #d6c6a6;
+  --secondary-foreground: #2c1810;
+  --muted: #f5f0e6;
+  --muted-foreground: #8b7d6b;
+  --accent: #e8d9c0;
+  --accent-foreground: #2c1810;
+  --destructive: #dc3545;
+  --border: #e8d9c0;
+  --input: #e8d9c0;
+  --ring: #c0a080;
+  --chart-1: #c0a080;
+  --chart-2: #d6c6a6;
+  --chart-3: #a89068;
+  --chart-4: #8b7d6b;
+  --chart-5: #e8d9c0;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #2c1810;
+  --sidebar-primary: #c0a080;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d6c6a6;
+  --sidebar-accent-foreground: #2c1810;
+  --sidebar-border: #e8d9c0;
+  --sidebar-ring: #c0a080;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -7,17 +7,18 @@ import { useSession } from 'next-auth/react'
 import { signOut } from 'next-auth/react'
 import { toast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
-import { 
-  Home, 
-  Users, 
-  Calendar, 
-  MessageSquare, 
-  BarChart, 
-  Star, 
-  Mic, 
-  FileText, 
-  LogOut 
+import {
+  Home,
+  Users,
+  Calendar,
+  MessageSquare,
+  BarChart,
+  Star,
+  Mic,
+  FileText,
+  LogOut
 } from 'lucide-react'
+import { ThemeSelector, ThemeSelectorCompact } from '@/components/theme-selector'
 
 const organizerNavItems = [
   {
@@ -187,17 +188,20 @@ export default function DashboardLayout({
           {/* User Section */}
           <div className="border-t p-3">
             <div className={cn(
-              "flex items-center gap-3",
-              isSidebarCollapsed && "flex-col gap-2"
+              "flex items-center transition-all duration-300",
+              isSidebarCollapsed ? "flex-col gap-2" : "gap-3"
             )}>
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+              {/* Avatar */}
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center transition-all duration-300 hover:bg-primary/90">
                 <span className="text-primary-foreground text-sm font-medium">
                   {session.user?.name?.charAt(0).toUpperCase() || 'O'}
                 </span>
               </div>
+              
+              {/* Informations utilisateur */}
               {!isSidebarCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">
+                <div className="flex-1 min-w-0 space-y-0.5">
+                  <p className="font-medium text-sm truncate text-foreground">
                     {session.user?.name || 'Organisateur'}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
@@ -205,16 +209,31 @@ export default function DashboardLayout({
                   </p>
                 </div>
               )}
-              <button
-                onClick={handleSignOut}
-                title="Déconnexion"
-                className={cn(
-                  "p-2 hover:bg-muted rounded-md",
-                  isSidebarCollapsed && "w-full"
+              
+              {/* Actions - Alignement vertical amélioré */}
+              <div className={cn(
+                "flex transition-all duration-300",
+                isSidebarCollapsed ? "flex-col gap-1" : "gap-2"
+              )}>
+                {/* Sélecteur de thème */}
+                {isSidebarCollapsed ? (
+                  <ThemeSelectorCompact />
+                ) : (
+                  <ThemeSelector />
                 )}
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
+                
+                {/* Bouton de déconnexion */}
+                <button
+                  onClick={handleSignOut}
+                  title="Déconnexion"
+                  className={cn(
+                    "p-2 hover:bg-muted rounded-md transition-all duration-300 hover:bg-destructive/10 hover:text-destructive",
+                    isSidebarCollapsed && "w-full"
+                  )}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -25,6 +25,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { ThemeSelector, ThemeSelectorCompact } from "@/components/theme-selector";
 
 type NavItem = {
   title: string;
@@ -167,33 +168,67 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </nav>
             </ScrollArea>
 
-            {/* User Section */}
+            {/* User Section - Version améliorée avec alignement vertical */}
             <div className="border-t p-3">
-              <div className={cn("flex items-center gap-3", collapsed && "flex-col gap-2")}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                  <span className="text-xs font-medium text-primary-foreground">{initials}</span>
+              <div className={cn(
+                "flex items-center transition-all duration-300",
+                collapsed ? "flex-col gap-2" : "gap-3"
+              )}>
+                {/* Avatar avec effet de survol */}
+                <div className="relative group">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary transition-all duration-300 group-hover:bg-primary/90">
+                    <span className="text-sm font-medium text-primary-foreground">{initials}</span>
+                  </div>
+                  {collapsed && (
+                    <div className="absolute inset-0 bg-primary/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
                 </div>
+                
+                {/* Informations utilisateur */}
                 {!collapsed && (
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{session?.user?.name || "Admin"}</p>
-                    <p className="truncate text-xs text-muted-foreground">{session?.user?.email}</p>
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {session?.user?.name || "Administrateur"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {session?.user?.email || "admin@panelevent.com"}
+                    </p>
                   </div>
                 )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleSignOut}
-                      className={cn(collapsed && "w-full")}
-                      aria-label="Déconnexion"
-                      title="Déconnexion"
-                    >
-                      <LogOut className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  {collapsed && <TooltipContent side="right">Déconnexion</TooltipContent>}
-                </Tooltip>
+                
+                {/* Actions utilisateur - Alignement vertical */}
+                <div className={cn(
+                  "flex transition-all duration-300",
+                  collapsed ? "flex-col gap-1" : "gap-2"
+                )}>
+                  {/* Sélecteur de thème */}
+                  {collapsed ? (
+                    <ThemeSelectorCompact />
+                  ) : (
+                    <ThemeSelector />
+                  )}
+                  
+                  {/* Bouton de déconnexion */}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size={collapsed ? "icon" : "sm"}
+                        onClick={handleSignOut}
+                        className={cn(
+                          "transition-all duration-300 hover:bg-destructive/10 hover:text-destructive",
+                          collapsed ? "h-8 w-8" : "h-8 px-2"
+                        )}
+                        aria-label="Déconnexion"
+                        title="Déconnexion"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {!collapsed && <span className="ml-1 text-xs">Déconnexion</span>}
+                      </Button>
+                    </TooltipTrigger>
+                    {collapsed && <TooltipContent side="right">Déconnexion</TooltipContent>}
+                  </Tooltip>
+                </div>
               </div>
             </div>
           </div>
