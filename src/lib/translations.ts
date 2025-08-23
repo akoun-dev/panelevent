@@ -1,5 +1,22 @@
 export type Language = 'fr' | 'en' | 'pt' | 'es' | 'ar';
 
+export function getLanguageName(language: Language): string {
+  switch (language) {
+    case 'fr':
+      return 'Français'
+    case 'en':
+      return 'English'
+    case 'pt':
+      return 'Português'
+    case 'es':
+      return 'Español'
+    case 'ar':
+      return 'العربية'
+    default:
+      return language
+  }
+}
+
 export interface Translations {
   consent: {
     title: string;
@@ -52,6 +69,23 @@ export interface Translations {
     portuguese: string;
     spanish: string;
   };
+  program: {
+    title: string;
+    welcome: string;
+    currentTime: string;
+    eventTitle: string;
+    activity: string;
+    speaker: string;
+    location: string;
+    conference: string;
+    workshop: string;
+    networking: string;
+    break: string;
+    ceremony: string;
+    other: string;
+    logout: string;
+    copyright: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -65,47 +99,64 @@ export const translations: Record<Language, Translations> = {
       dataStorage: 'La conservation sécurisée de vos données conformément à la politique de protection de l\'ANSUT',
       detailsTitle: 'Détails Complémentaires',
       collectionDetails: 'Vos données sont collectées électroniquement à travers la plateforme d\'inscription par QR code.',
-      usageDetails: 'Les données collectées servent exclusivement à : Gérer votre inscription et votre participation à l\'atelier, Faciliter vos interactions avec les autres participants, Produire des rapports anonymisés à des fins d\'évaluation',
+      usageDetails: 'Les données collectées servent exclusivement à : Gérer votre inscription et votre participation à l\'atelier, Faciliter vos interactions avec les autres participantes, Produire des rapports anonymisés à des fins d\'évaluation',
       securityDetails: 'L\'ANSUT s\'engage à conserver vos données dans des conditions de sécurité optimales et à limiter l\'accès aux seules personnes habilitées.',
       rightsDetails: 'Vous disposez d\'un droit d\'accès, de rectification et de suppression de vos données. Pour exercer ces droits, vous pouvez contacter l\'ANSUT.',
       transferDetails: 'Aucun transfert de vos données vers un pays tiers n\'est effectué sans garanties appropriées. Tout transfert nécessite votre consentement explicite.',
       withdrawalDetails: 'Vous pouvez retirer votre consentement à tout moment en contactant l\'ANSUT ou l\'Autorité de Régulation des Télécommunications/TIC de Côte d\'Ivoire (ARTCI).',
       lastUpdated: 'Dernière mise à jour :',
       acceptLabel: 'J\'ai lu et j\'accepte la politique de confidentialité *',
-      acceptHint: 'Vous devez accepter pour continuer votre inscription',
+      acceptHint: 'Vous devez accepter la politique de confidentialité pour continuer',
       continueButton: 'Continuer vers l\'inscription'
     },
     registration: {
       title: 'Inscription',
-      subtitle: 'Inscrivez-vous pour participer à l\'événement',
-      alreadyRegistered: 'Déjà inscrit',
-      alreadyRegisteredDesc: 'Vous êtes déjà inscrit à cet événement',
-      accessProgram: 'Accéder au programme de l\'événement',
-      inactiveEvent: 'Événement inactif',
-      inactiveEventDesc: 'Cet événement n\'est pas encore actif pour les inscriptions',
-      inactive: 'Inactif',
+      subtitle: 'Remplissez le formulaire ci-dessous pour vous inscrire à l\'événement',
+      alreadyRegistered: 'Déjà inscrit ?',
+      alreadyRegisteredDesc: 'Vous avez déjà rempli le formulaire d\'inscription pour cet événement',
+      accessProgram: 'Accéder au programme',
+      inactiveEvent: 'Événement inactive',
+      inactiveEventDesc: 'Cet événement n\'est pas actif pour le moment',
+      inactive: 'Inactive',
       registered: 'Inscrit',
       firstName: 'Prénom *',
-      firstNamePlaceholder: 'Jean',
+      firstNamePlaceholder: 'Votre prénom',
       lastName: 'Nom *',
-      lastNamePlaceholder: 'Dupont',
+      lastNamePlaceholder: 'Votre nom',
       email: 'Email *',
       emailPlaceholder: 'votre@email.com',
-      position: 'Fonction *',
-      positionPlaceholder: 'Directeur',
-      company: 'Structure *',
-      companyPlaceholder: 'Entreprise',
-      consentLabel: 'J\'accepte de recevoir des communications concernant cet événement *',
+      position: 'Poste',
+      positionPlaceholder: 'Votre poste',
+      company: 'Organisation',
+      companyPlaceholder: 'Votre organisation',
+      consentLabel: 'J\'accepte de recevoir des communications liées à cet événement',
       consentHint: 'Vous pouvez vous désinscrire à tout moment',
-      registerButton: 'S\'inscrire à l\'événement',
-      registering: 'Inscription...'
+      registerButton: 'S\'inscrire',
+      registering: 'Inscription en cours...'
     },
     language: {
-      select: 'Choisissez votre langue',
+      select: 'Sélectionnez votre langue',
       french: 'Français',
       english: 'Anglais',
       portuguese: 'Portugais',
       spanish: 'Espagnol'
+    },
+    program: {
+      title: 'Programme',
+      welcome: 'Bienvenue au programme de l\'événement',
+      currentTime: 'Heure actuelle',
+      eventTitle: 'Titre de l\'événement',
+      activity: 'Activité',
+      speaker: 'Intervenant',
+      location: 'Lieu',
+      conference: 'Conférence',
+      workshop: 'Atelier',
+      networking: 'Networking',
+      break: 'Pause',
+      ceremony: 'Cérémonie',
+      other: 'Autre',
+      logout: 'Se déconnecter',
+      copyright: '© 2024 ANSUT. Tous droits réservés.'
     }
   },
   en: {
@@ -118,153 +169,204 @@ export const translations: Record<Language, Translations> = {
       dataStorage: 'Secure storage of your data in accordance with ANSUT\'s protection policy',
       detailsTitle: 'Additional Details',
       collectionDetails: 'Your data is collected electronically through the QR code registration platform.',
-      usageDetails: 'The collected data is used exclusively to: Manage your registration and participation in the workshop, Facilitate your interactions with other participants, Produce anonymized reports for evaluation purposes',
+      usageDetails: 'Collected data is used exclusively for: Managing your registration and participation in the workshop, Facilitating your interactions with other participants, Producing anonymized reports for evaluation purposes',
       securityDetails: 'ANSUT is committed to storing your data under optimal security conditions and limiting access to authorized personnel only.',
       rightsDetails: 'You have the right to access, rectify, and delete your data. To exercise these rights, you can contact ANSUT.',
       transferDetails: 'No transfer of your data to third countries is carried out without appropriate guarantees. Any transfer requires your explicit consent.',
       withdrawalDetails: 'You can withdraw your consent at any time by contacting ANSUT or the Telecommunications/ICT Regulatory Authority of Côte d\'Ivoire (ARTCI).',
       lastUpdated: 'Last updated:',
       acceptLabel: 'I have read and accept the privacy policy *',
-      acceptHint: 'You must accept to continue your registration',
+      acceptHint: 'You must accept the privacy policy to continue',
       continueButton: 'Continue to registration'
     },
     registration: {
       title: 'Registration',
-      subtitle: 'Register to participate in the event',
-      alreadyRegistered: 'Already registered',
-      alreadyRegisteredDesc: 'You are already registered for this event',
-      accessProgram: 'Access event program',
+      subtitle: 'Fill out the form below to register for the event',
+      alreadyRegistered: 'Already registered?',
+      alreadyRegisteredDesc: 'You have already completed the registration form for this event',
+      accessProgram: 'Access program',
       inactiveEvent: 'Inactive event',
-      inactiveEventDesc: 'This event is not yet active for registrations',
+      inactiveEventDesc: 'This event is not active at the moment',
       inactive: 'Inactive',
       registered: 'Registered',
-      firstName: 'First name *',
-      firstNamePlaceholder: 'John',
-      lastName: 'Last name *',
-      lastNamePlaceholder: 'Doe',
+      firstName: 'First Name *',
+      firstNamePlaceholder: 'Your first name',
+      lastName: 'Last Name *',
+      lastNamePlaceholder: 'Your last name',
       email: 'Email *',
       emailPlaceholder: 'your@email.com',
-      position: 'Position *',
-      positionPlaceholder: 'Director',
-      company: 'Organization *',
-      companyPlaceholder: 'Company',
-      consentLabel: 'I agree to receive communications about this event *',
+      position: 'Position',
+      positionPlaceholder: 'Your position',
+      company: 'Organization',
+      companyPlaceholder: 'Your organization',
+      consentLabel: 'I agree to receive communications related to this event',
       consentHint: 'You can unsubscribe at any time',
-      registerButton: 'Register for the event',
+      registerButton: 'Register',
       registering: 'Registering...'
     },
     language: {
-      select: 'Choose your language',
+      select: 'Select your language',
       french: 'French',
       english: 'English',
       portuguese: 'Portuguese',
       spanish: 'Spanish'
+    },
+    program: {
+      title: 'Program',
+      welcome: 'Welcome to the event program',
+      currentTime: 'Current time',
+      eventTitle: 'Event title',
+      activity: 'Activity',
+      speaker: 'Speaker',
+      location: 'Location',
+      conference: 'Conference',
+      workshop: 'Workshop',
+      networking: 'Networking',
+      break: 'Break',
+      ceremony: 'Ceremony',
+      other: 'Other',
+      logout: 'Logout',
+      copyright: '© 2024 ANSUT. All rights reserved.'
     }
   },
   pt: {
     consent: {
-      title: 'DETALHES DO CONSENTIMENTO',
+      title: 'DETALHES DE CONSENTIMENTO',
       subtitle: 'Antes de se registrar, por favor revise nossa política de privacidade',
       policyTitle: 'Política de Privacidade',
-      dataCollection: 'Coleta de suas informações pessoais (nome, organização, dados de contato, dados de participação) através da plataforma de Código QR;',
-      dataUsage: 'Uso desses dados para gerenciar seu registro e participação no evento, facilitar interações e produzir relatórios anonimizados;',
+      dataCollection: 'Coleta de suas informações pessoais (nome, organização, dados de contato, dados de participação) através da plataforma QR Code;',
+      dataUsage: 'Uso desses dados para gerenciar sua inscrição e participação no evento, facilitar interações e produzir relatórios anonimizados;',
       dataStorage: 'Armazenamento seguro de seus dados de acordo com a política de proteção da ANSUT',
       detailsTitle: 'Detalhes Adicionais',
-      collectionDetails: 'Seus dados são coletados eletronicamente através da plataforma de registro por código QR.',
-      usageDetails: 'Os dados coletados são usados exclusivamente para: Gerenciar seu registro e participação no workshop, Facilitar suas interações com outros participantes, Produzir relatórios anonimizados para fins de avaliação',
-      securityDetails: 'A ANSUT se compromete a armazenar seus dados em condições de segurança ideais e limitar o acesso apenas a pessoal autorizado.',
-      rightsDetails: 'Você tem o direito de acessar, retificar e excluir seus dados. Para exercer esses direitos, você pode entrar em contato com a ANSUT.',
+      collectionDetails: 'Seus dados são coletados eletronicamente através da plataforma de registro por QR code.',
+      usageDetails: 'Os dados coletados são usados exclusivamente para: Gerenciar sua inscrição e participação no workshop, Facilitar suas interações com outros participantes, Produzir relatórios anonimizados para fins de avaliação',
+      securityDetails: 'A ANSUT se compromete a armazenar seus dados em condições de segurança ideais e limitar o acesso apenas ao pessoal autorizado.',
+      rightsDetails: 'Você tem o direito de acessor, retificar e excluir seus dados. Para exercer esses direitos, você pode entrar em contato com a ANSUT.',
       transferDetails: 'Nenhuma transferência de seus dados para países terceiros é realizada sem garantias apropriadas. Qualquer transferência requer seu consentimento explícito.',
       withdrawalDetails: 'Você pode retirar seu consentimento a qualquer momento entrando em contato com a ANSUT ou a Autoridade Reguladora de Telecomunicações/TIC da Costa do Marfim (ARTCI).',
       lastUpdated: 'Última atualização:',
       acceptLabel: 'Li e aceito a política de privacidade *',
-      acceptHint: 'Você deve aceitar para continuar seu registro',
-      continueButton: 'Continuar para o registro'
+      acceptHint: 'Você deve aceitar a política de privacidade para continuar',
+      continueButton: 'Continuar para inscrição'
     },
     registration: {
-      title: 'Registro',
-      subtitle: 'Registre-se para participar do evento',
-      alreadyRegistered: 'Já registrado',
-      alreadyRegisteredDesc: 'Você já está registrado para este evento',
-      accessProgram: 'Acessar programa do evento',
+      title: 'Inscrição',
+      subtitle: 'Preencha o formulário abaixo para se inscrever no evento',
+      alreadyRegistered: 'Já está inscrito?',
+      alreadyRegisteredDesc: 'Você já preencheu o formulário de inscrição para este evento',
+      accessProgram: 'Acessar programa',
       inactiveEvent: 'Evento inativo',
-      inactiveEventDesc: 'Este evento ainda não está ativo para registros',
+      inactiveEventDesc: 'Este evento não está ativo no momento',
       inactive: 'Inativo',
-      registered: 'Registrado',
+      registered: 'Inscrito',
       firstName: 'Nome *',
-      firstNamePlaceholder: 'João',
+      firstNamePlaceholder: 'Seu nome',
       lastName: 'Sobrenome *',
-      lastNamePlaceholder: 'Silva',
+      lastNamePlaceholder: 'Seu sobrenome',
       email: 'Email *',
       emailPlaceholder: 'seu@email.com',
-      position: 'Cargo *',
-      positionPlaceholder: 'Diretor',
-      company: 'Organização *',
-      companyPlaceholder: 'Empresa',
-      consentLabel: 'Concordo em receber comunicações sobre este evento *',
+      position: 'Cargo',
+      positionPlaceholder: 'Seu cargo',
+      company: 'Organização',
+      companyPlaceholder: 'Sua organização',
+      consentLabel: 'Concordo em receber comunicações relacionadas a este evento',
       consentHint: 'Você pode cancelar a inscrição a qualquer momento',
-      registerButton: 'Registrar para o evento',
-      registering: 'Registrando...'
+      registerButton: 'Inscrever-se',
+      registering: 'Inscrevendo...'
     },
     language: {
-      select: 'Escolha seu idioma',
+      select: 'Selecione seu idioma',
       french: 'Francês',
       english: 'Inglês',
       portuguese: 'Português',
       spanish: 'Espanhol'
+    },
+    program: {
+      title: 'Programa',
+      welcome: 'Bem-vindo ao programa do evento',
+      currentTime: 'Hora atual',
+      eventTitle: 'Título do evento',
+      activity: 'Atividade',
+      speaker: 'Palestrante',
+      location: 'Local',
+      conference: 'Conferência',
+      workshop: 'Workshop',
+      networking: 'Networking',
+      break: 'Intervalo',
+      ceremony: 'Cerimônia',
+      other: 'Outro',
+      logout: 'Sair',
+      copyright: '© 2024 ANSUT. Todos os direitos reservados.'
     }
   },
   es: {
     consent: {
-      title: 'DETALLES DEL CONSENTIMIENTO',
+      title: 'DETALLES DE CONSENTIMIENTO',
       subtitle: 'Antes de registrarse, por favor revise nuestra política de privacidad',
       policyTitle: 'Política de Privacidad',
-      dataCollection: 'Recopilación de su información personal (nombre, organización, datos de contacto, datos de participación) a través de la plataforma de Código QR;',
-      dataUsage: 'Uso de estos datos para gestionar su registro y participación en el evento, facilitar interacciones y producir informes anónimos;',
+      dataCollection: 'Recopilación de su información personal (nombre, organización, datos de contacto, datos de participación) a través de la plataforma QR Code;',
+      dataUsage: 'Uso de estos datos para gestionar su registro y participación en el evento, facilitar interacciones y producir informes anonimizados;',
       dataStorage: 'Almacenamiento seguro de sus datos de acuerdo con la política de protección de ANSUT',
       detailsTitle: 'Detalles Adicionales',
       collectionDetails: 'Sus datos se recopilan electrónicamente a través de la plataforma de registro por código QR.',
-      usageDetails: 'Los datos recopilados se utilizan exclusivamente para: Gestionar su registro y participación en el taller, Facilitar sus interacciones con otros participantes, Producir informes anónimos con fines de evaluación',
-      securityDetails: 'ANSUT se compromete a almacenar sus datos en condiciones de seguridad óptimas y limitar el acceso solo al personal autorizado.',
+      usageDetails: 'Los datos recopilados se utilizan exclusivamente para: Gestionar su registro y participación en el taller, Facilitar sus interacciones con otros participantes, Producir informes anonimizados con fines de evaluación',
+      securityDetails: 'ANSUT se compromete a almacenar sus datos en condiciones de seguridad óptimas y limitar el acceso únicamente al personal autorizado.',
       rightsDetails: 'Tiene derecho a acceder, rectificar y eliminar sus datos. Para ejercer estos derechos, puede contactar a ANSUT.',
-      transferDetails: 'No se realiza ninguna transferencia de sus datos a países terceros sin garantías apropiadas. Cualquier transferencia requiere su consentimiento explícito.',
+      transferDetails: 'No se realiza ninguna transferencia de sus datos a países terceros sin garantías apropriadas. Cualquier transferencia requiere su consentimiento explícito.',
       withdrawalDetails: 'Puede retirar su consentimiento en cualquier momento contactando a ANSUT o a la Autoridad Reguladora de Telecomunicaciones/TIC de Costa de Marfil (ARTCI).',
       lastUpdated: 'Última actualización:',
       acceptLabel: 'He leído y acepto la política de privacidad *',
-      acceptHint: 'Debe aceptar para continuar con su registro',
+      acceptHint: 'Debe aceptar la política de privacidad para continuar',
       continueButton: 'Continuar al registro'
     },
     registration: {
       title: 'Registro',
-      subtitle: 'Regístrese para participar en el evento',
-      alreadyRegistered: 'Ya registrado',
-      alreadyRegisteredDesc: 'Ya está registrado para este evento',
-      accessProgram: 'Acceder al programa del evento',
+      subtitle: 'Complete el formulario a continuación para registrarse en el evento',
+      alreadyRegistered: '¿Ya está registrado?',
+      alreadyRegisteredDesc: 'Ya ha completado el formulario de registro para este evento',
+      accessProgram: 'Acceder al programa',
       inactiveEvent: 'Evento inactivo',
-      inactiveEventDesc: 'Este evento aún no está activo para registros',
+      inactiveEventDesc: 'Este evento no está activo en este momento',
       inactive: 'Inactivo',
       registered: 'Registrado',
       firstName: 'Nombre *',
-      firstNamePlaceholder: 'Juan',
+      firstNamePlaceholder: 'Su nombre',
       lastName: 'Apellido *',
-      lastNamePlaceholder: 'García',
+      lastNamePlaceholder: 'Su apellido',
       email: 'Email *',
       emailPlaceholder: 'su@email.com',
-      position: 'Cargo *',
-      positionPlaceholder: 'Director',
-      company: 'Organización *',
-      companyPlaceholder: 'Empresa',
-      consentLabel: 'Acepto recibir comunicaciones sobre este evento *',
+      position: 'Cargo',
+      positionPlaceholder: 'Su cargo',
+      company: 'Organización',
+      companyPlaceholder: 'Su organización',
+      consentLabel: 'Acepto recibir comunicaciones relacionadas con este evento',
       consentHint: 'Puede darse de baja en cualquier momento',
-      registerButton: 'Registrarse para el evento',
+      registerButton: 'Registrarse',
       registering: 'Registrando...'
     },
     language: {
-      select: 'Elija su idioma',
+      select: 'Seleccione su idioma',
       french: 'Francés',
       english: 'Inglés',
       portuguese: 'Portugués',
       spanish: 'Español'
+    },
+    program: {
+      title: 'Programa',
+      welcome: 'Bienvenido al programa del evento',
+      currentTime: 'Hora actual',
+      eventTitle: 'Título del evento',
+      activity: 'Actividad',
+      speaker: 'Ponente',
+      location: 'Ubicación',
+      conference: 'Conferencia',
+      workshop: 'Taller',
+      networking: 'Networking',
+      break: 'Descanso',
+      ceremony: 'Ceremonia',
+      other: 'Otro',
+      logout: 'Cerrar sesión',
+      copyright: '© 2024 ANSUT. Todos los derechos reservados.'
     }
   },
   ar: {
@@ -272,44 +374,44 @@ export const translations: Record<Language, Translations> = {
       title: 'تفاصيل الموافقة',
       subtitle: 'قبل التسجيل، يرجى مراجعة سياسة الخصوصية الخاصة بنا',
       policyTitle: 'سياسة الخصوصية',
-      dataCollection: 'جمع معلوماتك الشخصية (الاسم، المؤسسة، بيانات الاتصال، بيانات المشاركة) من خلال منصة رمز الاستجابة السريعة؛',
-      dataUsage: 'استخدام هذه البيانات لإدارة تسجيلك ومشاركتك في الحدث، وتسهيل التفاعلات، وإنتاج تقارير مجهولة المصدر؛',
-      dataStorage: 'تخزين بياناتك بشكل آمن وفقًا لسياسة حماية ANSUT',
+      dataCollection: 'جمع معلوماتك الشخصية (الاسم، المنظمة، بيانات الاتصال، بيانات المشاركة) من خلال منصة رمز الاستجابة السريعة؛',
+      dataUsage: 'استخدام هذه البيانات لإدارة تسجيلك ومشاركتك في الحدث، وتسهيل التفاعلات وإنتاج تقارير مجهولة المصدر؛',
+      dataStorage: 'التخزين الآمن لبياناتك وفقًا لسياسة حماية ANSUT',
       detailsTitle: 'تفاصيل إضافية',
       collectionDetails: 'يتم جمع بياناتك إلكترونيًا من خلال منصة التسجيل برمز الاستجابة السريعة.',
-      usageDetails: 'يتم استخدام البيانات المجمعة حصريًا لـ: إدارة تسجيلك ومشاركتك في الورشة، تسهيل تفاعلاتك مع المشاركين الآخرين، إنتاج تقارير مجهولة المصدر لأغراض التقييم',
-      securityDetails: 'تلتزم ANSUT بتخزين بياناتك في ظروف أمنية مثالية والحد من الوصول إلى الأشخاص المصرح لهم فقط.',
+      usageDetails: 'يتم استخدام البيانات التي تم جمعها حصريًا لـ: إدارة تسجيلك ومشاركتك في الورشة، تسهيل تفاعلاتك مع المشاركين الآخرين، إنتاج تقارير مجهولة المصدر لأغراض التقييم',
+      securityDetails: 'تلتزم ANSUT بتخزين بياناتك في ظل ظروف أمنية مثالية والحد من الوصول إلى الموظفين المعتمدين فقط.',
       rightsDetails: 'لديك الحق في الوصول إلى بياناتك وتصحيحها وحذفها. لممارسة هذه الحقوق، يمكنك الاتصال بـ ANSUT.',
       transferDetails: 'لا يتم نقل بياناتك إلى دول ثالثة دون ضمانات مناسبة. أي نقل يتطلب موافقتك الصريحة.',
       withdrawalDetails: 'يمكنك سحب موافقتك في أي وقت عن طريق الاتصال بـ ANSUT أو الهيئة التنظيمية للاتصالات/تكنولوجيا المعلومات والمعلومات في ساحل العاج (ARTCI).',
       lastUpdated: 'آخر تحديث:',
       acceptLabel: 'لقد قرأت وأوافق على سياسة الخصوصية *',
-      acceptHint: 'يجب أن توافق للمتابعة في التسجيل',
+      acceptHint: 'يجب عليك قبول سياسة الخصوصية للمتابعة',
       continueButton: 'المتابعة إلى التسجيل'
     },
     registration: {
       title: 'التسجيل',
-      subtitle: 'سجل للاشتراك في الحدث',
-      alreadyRegistered: 'مسجل بالفعل',
-      alreadyRegisteredDesc: 'أنت مسجل بالفعل في هذا الحدث',
-      accessProgram: 'الوصول إلى برنامج الحدث',
+      subtitle: 'املأ النموذج أدناه للتسجيل في الحدث',
+      alreadyRegistered: 'مسجل بالفعل؟',
+      alreadyRegisteredDesc: 'لقد أكملت بالفعل نموذج التسجيل لهذا الحدث',
+      accessProgram: 'الوصول إلى البرنامج',
       inactiveEvent: 'حدث غير نشط',
-      inactiveEventDesc: 'هذا الحدث غير نشط بعد للتسجيلات',
+      inactiveEventDesc: 'هذا الحدث غير نشط في الوقت الحالي',
       inactive: 'غير نشط',
       registered: 'مسجل',
       firstName: 'الاسم الأول *',
-      firstNamePlaceholder: 'محمد',
+      firstNamePlaceholder: 'اسمك الأول',
       lastName: 'اسم العائلة *',
-      lastNamePlaceholder: 'أحمد',
+      lastNamePlaceholder: 'اسم عائلتك',
       email: 'البريد الإلكتروني *',
       emailPlaceholder: 'بريدك@الإلكتروني.com',
-      position: 'المنصب *',
-      positionPlaceholder: 'مدير',
-      company: 'المؤسسة *',
-      companyPlaceholder: 'شركة',
-      consentLabel: 'أوافق على تلقي اتصالات حول هذا الحدث *',
+      position: 'المنصب',
+      positionPlaceholder: 'منصبك',
+      company: 'المنظمة',
+      companyPlaceholder: 'منظمتك',
+      consentLabel: 'أوافق على تلقي اتصالات متعلقة بهذا الحدث',
       consentHint: 'يمكنك إلغاء الاشتراك في أي وقت',
-      registerButton: 'التسجيل في الحدث',
+      registerButton: 'تسجيل',
       registering: 'جاري التسجيل...'
     },
     language: {
@@ -318,17 +420,23 @@ export const translations: Record<Language, Translations> = {
       english: 'الإنجليزية',
       portuguese: 'البرتغالية',
       spanish: 'الإسبانية'
+    },
+    program: {
+      title: 'البرنامج',
+      welcome: 'مرحبًا بك في برنامج الحدث',
+      currentTime: 'الوقت الحالي',
+      eventTitle: 'عنوان الحدث',
+      activity: 'النشاط',
+      speaker: 'المتحدث',
+      location: 'الموقع',
+      conference: 'مؤتمر',
+      workshop: 'ورشة عمل',
+      networking: 'التواصل',
+      break: 'استراحة',
+      ceremony: 'حفل',
+      other: 'أخرى',
+      logout: 'تسجيل الخروج',
+      copyright: '© 2024 ANSUT. جميع الحقوق محفوظة.'
     }
   }
-};
-
-export const getLanguageName = (code: Language): string => {
-  const names = {
-    fr: 'Français',
-    en: 'English',
-    pt: 'Português',
-    es: 'Español',
-    ar: 'العربية'
-  };
-  return names[code];
 };

@@ -80,6 +80,13 @@ export default function RegisterPage() {
         }
         
         console.log('Registration successful, redirecting to /program')
+        // Stocker la langue sélectionnée dans localStorage pour la page programme
+        if (selectedLanguage) {
+          localStorage.setItem('selectedLanguage', selectedLanguage)
+          console.log('Langue stockée dans localStorage:', selectedLanguage)
+        } else {
+          console.log('Aucune langue sélectionnée à stocker')
+        }
         router.push('/program')
       } else {
         // Gérer les erreurs spécifiques
@@ -94,6 +101,13 @@ export default function RegisterPage() {
             if (checkData.registrationId) {
               localStorage.setItem('registrationId', checkData.registrationId)
             }
+          }
+          // Stocker la langue sélectionnée dans localStorage pour la page programme
+          if (selectedLanguage) {
+            localStorage.setItem('selectedLanguage', selectedLanguage)
+            console.log('Langue stockée dans localStorage (utilisateur déjà inscrit):', selectedLanguage)
+          } else {
+            console.log('Aucune langue sélectionnée à stocker (utilisateur déjà inscrit)')
           }
         } else {
           // Afficher un message d'erreur spécifique

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Clock, MapPin, User, Coffee, Network, Trophy, ArrowLeft, LogOut } from 'lucide-react'
 import Link from 'next/link'
+import { translations, Language } from '@/lib/translations'
 
 interface ProgramItem {
   id: string
@@ -32,8 +33,25 @@ export default function ProgramPage() {
   const [registration, setRegistration] = useState<RegistrationData | null>(null)
   const [currentTime, setCurrentTime] = useState('')
   const [programItems, setProgramItems] = useState<ProgramItem[]>([])
+  const [language, setLanguage] = useState<Language>('fr')
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
+    
+    // Récupérer la langue depuis le localStorage (uniquement côté client)
+    const savedLanguage = localStorage.getItem('selectedLanguage') as Language
+    console.log('Langue récupérée depuis localStorage:', savedLanguage)
+    console.log('Toutes les clés localStorage:', Object.keys(localStorage))
+    
+    if (savedLanguage && ['fr', 'en', 'pt', 'es', 'ar'].includes(savedLanguage)) {
+      setLanguage(savedLanguage)
+      console.log('Langue définie:', savedLanguage)
+    } else {
+      console.log('Aucune langue valide trouvée, utilisation du français par défaut')
+      setLanguage('fr')
+    }
+
     const registrationId = localStorage.getItem('registrationId')
     if (!registrationId) {
       // Rediriger vers la page d'accueil si non inscrit
@@ -62,13 +80,19 @@ export default function ProgramPage() {
         if (data.registration.event?.program) {
           try {
             const programData = JSON.parse(data.registration.event.program)
+            console.log('Données du programme récupérées:', programData)
             // Le programme est stocké comme {hasProgram: boolean, programItems: [...]}
             if (programData && programData.hasProgram && Array.isArray(programData.programItems)) {
+              console.log('Programme valide trouvé, nombre d\'items:', programData.programItems.length)
               setProgramItems(programData.programItems)
+            } else {
+              console.log('Aucun programme valide trouvé ou programme vide')
             }
           } catch (e) {
             console.error('Erreur lors du parsing du programme:', e)
           }
+        } else {
+          console.log('Aucun programme trouvé dans l\'événement')
         }
       } catch (error) {
         console.error('Erreur lors de la récupération de l\'inscription:', error)
@@ -82,7 +106,7 @@ export default function ProgramPage() {
     // Mettre à jour l'heure actuelle
     const updateTime = () => {
       const now = new Date()
-      setCurrentTime(now.toLocaleTimeString('fr-FR', {
+      setCurrentTime(now.toLocaleTimeString(language === 'ar' ? 'ar-SA' : `${language}-${language.toUpperCase()}`, {
         hour: '2-digit',
         minute: '2-digit'
       }))
@@ -92,10 +116,16 @@ export default function ProgramPage() {
     const interval = setInterval(updateTime, 60000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [language])
+
+  // Forcer le re-rendu lorsque la langue change pour mettre à jour les traductions
+  useEffect(() => {
+    console.log('Langue changée, mise à jour des traductions:', language)
+  }, [language])
 
   const handleLogout = () => {
     localStorage.removeItem('registrationId')
+    localStorage.removeItem('selectedLanguage')
     window.location.href = '/'
   }
 
@@ -134,19 +164,20 @@ export default function ProgramPage() {
   }
 
   const getTypeLabel = (type: ProgramItem['type']) => {
+    const t = translations[language].program
     switch (type) {
       case 'conference':
-        return 'Conférence'
+        return t.conference
       case 'workshop':
-        return 'Atelier'
+        return t.workshop
       case 'networking':
-        return 'Networking'
+        return t.networking
       case 'break':
-        return 'Pause'
+        return t.break
       case 'ceremony':
-        return 'Cérémonie'
+        return t.ceremony
       default:
-        return 'Autre'
+        return t.other
     }
   }
 
@@ -154,37 +185,55 @@ export default function ProgramPage() {
     const title = item.title.toLowerCase()
     const description = item.description?.toLowerCase() || ''
     
-    if (title.includes('conférence') || title.includes('présentation') ||
-        description.includes('conférence') || description.includes('présentation')) {
-      return 'conference'
+    // Récupérer les traductions pour toutes les langues
+    const allTranslations = {
+      conference: ['conférence', 'conference', 'présentation', 'presentation', 'keynote', 'talk'],
+      workshop: ['atelier', 'workshop', 'session pratique', 'practical session'],
+      break: ['pause', 'break', 'café', 'coffee', 'déjeuner', 'lunch', 'repas', 'meal', 'restaurant'],
+      networking: ['réseautage', 'networking', 'rencontre', 'meeting', 'échanges', 'exchanges'],
+      ceremony: ['cérémonie', 'ceremony', 'clôture', 'closing', 'ouverture', 'opening', 'inauguration']
     }
-    if (title.includes('atelier') || title.includes('workshop') ||
-        description.includes('atelier') || description.includes('workshop')) {
-      return 'workshop'
+    
+    // Vérifier chaque type avec les mots-clés dans toutes les langues
+    for (const keyword of allTranslations.conference) {
+      if (title.includes(keyword) || description.includes(keyword)) {
+        return 'conference'
+      }
     }
-    if (title.includes('pause') || title.includes('café') || title.includes('déjeuner') ||
-        description.includes('pause') || description.includes('café') || description.includes('déjeuner')) {
-      return 'break'
+    for (const keyword of allTranslations.workshop) {
+      if (title.includes(keyword) || description.includes(keyword)) {
+        return 'workshop'
+      }
     }
-    if (title.includes('réseautage') || title.includes('networking') ||
-        description.includes('réseautage') || description.includes('networking')) {
-      return 'networking'
+    for (const keyword of allTranslations.break) {
+      if (title.includes(keyword) || description.includes(keyword)) {
+        return 'break'
+      }
     }
-    if (title.includes('cérémonie') || title.includes('clôture') || title.includes('ouverture') ||
-        description.includes('cérémonie') || description.includes('clôture') || description.includes('ouverture')) {
-      return 'ceremony'
+    for (const keyword of allTranslations.networking) {
+      if (title.includes(keyword) || description.includes(keyword)) {
+        return 'networking'
+      }
+    }
+    for (const keyword of allTranslations.ceremony) {
+      if (title.includes(keyword) || description.includes(keyword)) {
+        return 'ceremony'
+      }
     }
     
     return 'conference' // Par défaut
   }
 
-  if (!registration) {
+  if (!isClient || !registration) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     )
   }
+
+  const t = translations[language].program
+  console.log('Langue actuelle:', language, 'Traductions:', t)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -195,12 +244,14 @@ export default function ProgramPage() {
            <span className="text-primary">{registration.eventTitle}</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-4">
-            Bienvenue {registration.firstName} ! Voici le programme complet de la journée
+            {t.welcome} {registration.firstName} ! {t.title}
           </p>
+          
+          
           <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground">
             <div className="flex items-center space-x-1">
               <Calendar className="w-4 h-4" />
-              <span>{new Date().toLocaleDateString('fr-FR', {
+              <span>{new Date().toLocaleDateString(language === 'ar' ? 'ar-SA' : `${language}-${language.toUpperCase()}`, {
                 day: '2-digit',
                 month: 'long',
                 year: 'numeric'
@@ -208,7 +259,7 @@ export default function ProgramPage() {
             </div>
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>Heure actuelle: {currentTime}</span>
+              <span>{t.currentTime}: {currentTime}</span>
             </div>
           </div>
         </div>
@@ -269,7 +320,7 @@ export default function ProgramPage() {
       <footer className="border-t py-8 px-4">
         <div className="container mx-auto text-center">
           <p className="text-muted-foreground">
-            © 2024 Événement. Tous droits réservés.
+            {t.copyright}
           </p>
         </div>
       </footer>

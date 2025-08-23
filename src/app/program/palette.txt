@@ -1,0 +1,35 @@
+/* CSS HEX */
+--fern-frond: #517324;
+--old-gold: #d1b63a;
+--luxor-gold: #999525;
+--parsley: #1c5320;
+--wild-willow: #a8be6c;
+--madras: #2f4104;
+--hippie-green: #5e884d;
+--chelsea-cucumber: #809d4c;
+--lemon-ginger: #b49422;
+--green-smoke: #a0b474;
+
+/* SCSS HEX */
+$fern-frond: #517324;
+$old-gold: #d1b63a;
+$luxor-gold: #999525;
+$parsley: #1c5320;
+$wild-willow: #a8be6c;
+$madras: #2f4104;
+$hippie-green: #5e884d;
+$chelsea-cucumber: #809d4c;
+$lemon-ginger: #b49422;
+$green-smoke: #a0b474;
+
+/* SCSS RGB */
+$fern-frond: rgba(81,115,36,1);
+$old-gold: rgba(209,182,58,1);
+$luxor-gold: rgba(153,149,37,1);
+$parsley: rgba(28,83,32,1);
+$wild-willow: rgba(168,190,108,1);
+$madras: rgba(47,65,4,1);
+$hippie-green: rgba(94,136,77,1);
+$chelsea-cucumber: rgba(128,157,76,1);
+$lemon-ginger: rgba(180,148,34,1);
+$green-smoke: rgba(160,180,116,1);
