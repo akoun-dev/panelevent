@@ -103,13 +103,13 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
 
   if (isRegistered) {
     return (
-      <Card className="max-w-md">
+      <Card className="max-w-md border-border bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-primary">
             <CheckCircle className="w-5 h-5 text-green-600" />
             {getTranslation('alreadyRegistered')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {getTranslation('alreadyRegisteredDesc')}
           </CardDescription>
         </CardHeader>
@@ -117,19 +117,19 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">{formatDate(event.startDate)}</span>
+              <span className="text-sm text-foreground">{formatDate(event.startDate)}</span>
             </div>
             {event.location && (
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm">{event.location}</span>
+                <span className="text-sm text-foreground">{event.location}</span>
               </div>
             )}
-            <Badge variant="secondary" className="w-fit">
+            <Badge variant="secondary" className="w-fit bg-primary/20 text-primary border-primary/30">
               Inscrit
             </Badge>
           </div>
-          <Button asChild className="w-full">
+          <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
             <a href="/program">
               {getTranslation('accessProgram')}
             </a>
@@ -141,13 +141,13 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
 
   if (!event.isActive) {
     return (
-      <Card className="max-w-md">
+      <Card className="max-w-md border-border bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             {getTranslation('inactiveEvent')}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             {getTranslation('inactiveEventDesc')}
           </CardDescription>
         </CardHeader>
@@ -155,15 +155,15 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm">{formatDate(event.startDate)}</span>
+              <span className="text-sm text-foreground">{formatDate(event.startDate)}</span>
             </div>
             {event.location && (
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm">{event.location}</span>
+                <span className="text-sm text-foreground">{event.location}</span>
               </div>
             )}
-            <Badge variant="outline" className="w-fit">
+            <Badge variant="outline" className="w-fit border-muted-foreground text-muted-foreground">
               {getTranslation('inactive')}
             </Badge>
           </div>
@@ -173,20 +173,20 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
   }
 
   return (
-    <Card className="max-w-md">
+    <Card className="max-w-md border-border bg-card">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-primary">
           <User className="w-5 h-5" />
           {getTranslation('title')}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-muted-foreground">
           {getTranslation('subtitle')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4 mb-6">
           <div>
-            <h3 className="font-semibold">{event.title}</h3>
+            <h3 className="font-semibold text-foreground">{event.title}</h3>
             {event.description && (
               <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
             )}
@@ -195,12 +195,12 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span>{formatDate(event.startDate)}</span>
+              <span className="text-foreground">{formatDate(event.startDate)}</span>
             </div>
             {event.location && (
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span>{event.location}</span>
+                <span className="text-foreground">{event.location}</span>
               </div>
             )}
           </div>
@@ -209,7 +209,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="firstName">{getTranslation('firstName')}</Label>
+              <Label htmlFor="firstName" className="text-foreground">{getTranslation('firstName')}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -217,13 +217,13 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
                   placeholder={getTranslation('firstNamePlaceholder')}
-                  className="pl-10"
+                  className="pl-10 border-border"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lastName">{getTranslation('lastName')}</Label>
+              <Label htmlFor="lastName" className="text-foreground">{getTranslation('lastName')}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -231,7 +231,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
                   placeholder={getTranslation('lastNamePlaceholder')}
-                  className="pl-10"
+                  className="pl-10 border-border"
                   required
                 />
               </div>
@@ -239,7 +239,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">{getTranslation('email')}</Label>
+            <Label htmlFor="email" className="text-foreground">{getTranslation('email')}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
@@ -248,7 +248,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder={getTranslation('emailPlaceholder')}
-                className="pl-10"
+                className="pl-10 border-border"
                 required
               />
             </div>
@@ -256,7 +256,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="position">{getTranslation('position')}</Label>
+              <Label htmlFor="position" className="text-foreground">{getTranslation('position')}</Label>
               <div className="relative">
                 <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -264,13 +264,13 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
                   value={position}
                   onChange={e => setPosition(e.target.value)}
                   placeholder={getTranslation('positionPlaceholder')}
-                  className="pl-10"
+                  className="pl-10 border-border"
                   required
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="company">{getTranslation('company')}</Label>
+              <Label htmlFor="company" className="text-foreground">{getTranslation('company')}</Label>
               <div className="relative">
                 <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -278,7 +278,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
                   value={company}
                   onChange={e => setCompany(e.target.value)}
                   placeholder={getTranslation('companyPlaceholder')}
-                  className="pl-10"
+                  className="pl-10 border-border"
                   required
                 />
               </div>
@@ -291,11 +291,12 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
               checked={consent}
               onCheckedChange={checked => setConsent(checked as boolean)}
               required
+              className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-border"
             />
             <div className="grid gap-1.5 leading-none">
               <Label
                 htmlFor="consent"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {getTranslation('consentLabel')}
               </Label>
@@ -322,7 +323,7 @@ export function RegistrationForm({ event, onSubmit, loading = false, isRegistere
               !company ||
               !consent
             }
-            className="w-full"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {loading ? getTranslation('registering') : getTranslation('registerButton')}
           </Button>

@@ -115,18 +115,18 @@ export default function EventPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fern-frond"></div>
       </div>
     )
   }
 
   if (!event) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Événement non trouvé</h1>
-          <Button asChild>
+          <h1 className="text-2xl font-bold mb-4 text-fern-frond">Événement non trouvé</h1>
+          <Button asChild className="bg-fern-frond hover:bg-fern-frond/90 text-white">
             <Link href="/">Retour à l'accueil</Link>
           </Button>
         </div>
@@ -135,18 +135,18 @@ export default function EventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="border-b border-fern-frond/20 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">P</span>
+              <div className="w-8 h-8 bg-fern-frond rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">P</span>
               </div>
-              <h1 className="text-2xl font-bold">PanelEvent</h1>
+              <h1 className="text-2xl font-bold text-fern-frond">PanelEvent</h1>
             </div>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="text-fern-frond hover:bg-fern-frond/10">
               <Link href="/">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Retour
@@ -164,49 +164,49 @@ export default function EventPage() {
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
+                  <h1 className="text-3xl font-bold tracking-tight text-fern-frond">{event.title}</h1>
                   {event.description && (
-                    <p className="text-lg text-muted-foreground">{event.description}</p>
+                    <p className="text-lg text-luxor-gold">{event.description}</p>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {event.isActive && <Badge variant="default">Actif</Badge>}
-                  {event.isPublic && <Badge variant="secondary">Public</Badge>}
+                  {event.isActive && <Badge variant="default" className="bg-fern-frond text-white border-fern-frond">Actif</Badge>}
+                  {event.isPublic && <Badge variant="secondary" className="bg-luxor-gold/20 text-luxor-gold border-luxor-gold/30">Public</Badge>}
                 </div>
               </div>
 
               {/* Event Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span>{formatDate(event.startDate)}</span>
+                  <Calendar className="w-4 h-4 text-luxor-gold" />
+                  <span className="text-fern-frond">{formatDate(event.startDate)}</span>
                 </div>
                 {event.endDate && (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-luxor-gold">
                     au {format(new Date(event.endDate), 'HH:mm')}
                   </div>
                 )}
                 {event.location && (
                   <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span>{event.location}</span>
+                    <MapPin className="w-4 h-4 text-luxor-gold" />
+                    <span className="text-fern-frond">{event.location}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-sm">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span>{event.registeredCount || 0} participant{event.registeredCount !== 1 ? 's' : ''}</span>
+                  <Users className="w-4 h-4 text-luxor-gold" />
+                  <span className="text-fern-frond">{event.registeredCount || 0} participant{event.registeredCount !== 1 ? 's' : ''}</span>
                 </div>
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="border-fern-frond/20 text-fern-frond hover:bg-fern-frond/10">
                 <Share2 className="w-4 h-4 mr-2" />
                 Partager
               </Button>
               {event.branding?.qrCode && (
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-fern-frond/20 text-fern-frond hover:bg-fern-frond/10">
                   <QrCode className="w-4 h-4 mr-2" />
                   Code QR
                 </Button>
@@ -214,16 +214,16 @@ export default function EventPage() {
             </div>
 
             {/* Event Content */}
-            <Card>
+            <Card className="border-fern-frond/20 bg-white">
               <CardHeader>
-                <CardTitle>À propos de cet événement</CardTitle>
+                <CardTitle className="text-fern-frond">À propos de cet événement</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose prose-sm max-w-none">
                   {event.description ? (
-                    <p>{event.description}</p>
+                    <p className="text-fern-frond">{event.description}</p>
                   ) : (
-                    <p className="text-muted-foreground">Aucune description disponible pour cet événement.</p>
+                    <p className="text-luxor-gold">Aucune description disponible pour cet événement.</p>
                   )}
                 </div>
               </CardContent>

@@ -12,10 +12,10 @@ const languages: Language[] = ['fr', 'en', 'pt', 'es', 'ar']
 
 export function LanguageSelector({ onLanguageSelect }: LanguageSelectorProps) {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-border bg-card">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">🌐</CardTitle>
+          <CardTitle className="text-2xl text-primary">🌐</CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
             {translations.fr.language.select} / {translations.en.language.select} / {translations.es.language.select} / {translations.pt.language.select} / {translations.ar.language.select}
           </CardDescription>
@@ -25,7 +25,7 @@ export function LanguageSelector({ onLanguageSelect }: LanguageSelectorProps) {
             <Button
               key={language}
               variant="outline"
-              className="w-full h-16 justify-start text-lg"
+              className="w-full h-16 justify-start text-lg border-border text-foreground hover:bg-secondary/20 hover:text-foreground"
               onClick={() => onLanguageSelect(language)}
             >
               <span className="mr-3 text-2xl">

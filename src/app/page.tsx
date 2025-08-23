@@ -32,7 +32,7 @@ export default function Home() {
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-fern-frond"></div>
       </div>
     )
   }
@@ -44,8 +44,8 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">P</span>
+              <div className="w-8 h-8 bg-fern-frond rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold">P</span>
               </div>
               <h1 className="text-2xl font-bold">PanelEvent</h1>
             </div>
@@ -89,7 +89,7 @@ export default function Home() {
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
           <h2 className="text-4xl md:text-6xl font-bold mb-6">
-            Bienvenue sur <span className="text-primary">PanelEvent</span>
+            Bienvenue sur <span className="text-fern-frond">PanelEvent</span>
           </h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             La plateforme unifiée pour la gestion d'événements, sessions interactives, 
@@ -116,8 +116,8 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-6 h-6 text-primary" />
+              <div className="w-12 h-12 bg-fern-frond/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-6 h-6 text-fern-frond" />
               </div>
               <h4 className="text-lg font-semibold mb-2">Gestion d'événements</h4>
               <p className="text-muted-foreground">
@@ -125,7 +125,7 @@ export default function Home() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-fern-frond/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 text-primary" />
               </div>
               <h4 className="text-lg font-semibold mb-2">Questions en direct</h4>
@@ -134,7 +134,7 @@ export default function Home() {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-fern-frond/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-6 h-6 text-primary" />
               </div>
               <h4 className="text-lg font-semibold mb-2">Sondages interactifs</h4>

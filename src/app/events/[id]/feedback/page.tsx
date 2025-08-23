@@ -229,7 +229,7 @@ export default function EventFeedbackPage() {
           <Star
             key={star}
             className={`w-6 h-6 cursor-pointer transition-colors ${
-              star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 hover:text-yellow-300'
+              star <= rating ? 'fill-luxor-gold text-luxor-gold' : 'text-gray-300 hover:text-luxor-gold/60'
             } ${interactive ? 'cursor-pointer' : ''}`}
             onClick={interactive && onRate ? () => onRate(star) : undefined}
           />
@@ -242,7 +242,7 @@ export default function EventFeedbackPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fern-frond"></div>
         </div>
       </div>
     )
@@ -272,7 +272,7 @@ export default function EventFeedbackPage() {
             <p className="text-muted-foreground text-center mb-4">
               Vous devez avoir participé à l'événement pour laisser un feedback.
             </p>
-            <Badge variant="secondary">
+            <Badge variant="secondary" className="bg-fern-frond/10 text-fern-frond border-fern-frond/20">
               {event.userRegistered ? 'Inscrit mais non présent' : 'Non inscrit'}
             </Badge>
           </CardContent>
@@ -282,7 +282,7 @@ export default function EventFeedbackPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5 min-h-screen px-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Votre Feedback</h1>
@@ -392,7 +392,7 @@ export default function EventFeedbackPage() {
                 <Button 
                   onClick={handleSubmitFeedback}
                   disabled={newFeedback.rating === 0 || isSubmitting}
-                  className="w-full"
+                  className="w-full bg-fern-frond hover:bg-fern-frond/90"
                 >
                   {isSubmitting ? (
                     <>
@@ -416,6 +416,7 @@ export default function EventFeedbackPage() {
                 </p>
                 <Button 
                   variant="outline" 
+                  className="border-fern-frond text-fern-frond hover:bg-fern-frond hover:text-white"
                   onClick={() => {
                     setHasSubmitted(false)
                     setNewFeedback({
@@ -446,9 +447,9 @@ export default function EventFeedbackPage() {
                       <span className="text-sm">{item.rating}</span>
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                     </div>
-                    <div className="flex-1 bg-secondary rounded-full h-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        className="bg-fern-frond h-2 rounded-full transition-all duration-300"
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
@@ -492,7 +493,7 @@ export default function EventFeedbackPage() {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="outline">{feedback.category}</Badge>
+                      <Badge variant="outline" className="border-fern-frond/20 text-fern-frond">{feedback.category}</Badge>
                     </div>
                     
                     <div className="mb-2">

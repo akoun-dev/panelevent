@@ -236,7 +236,7 @@ export default function EventPollsPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fern-frond"></div>
         </div>
       </div>
     )
@@ -244,7 +244,7 @@ export default function EventPollsPage() {
 
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5 min-h-screen px-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Sondages Interactifs</h1>
@@ -264,7 +264,11 @@ export default function EventPollsPage() {
               <Button
                 key={panel.id}
                 variant={activePanel === panel.id ? "default" : "outline"}
-                className="h-auto p-4 flex flex-col items-start text-left"
+                className={`h-auto p-4 flex flex-col items-start text-left ${
+                  activePanel === panel.id 
+                    ? 'bg-fern-frond hover:bg-fern-frond/90' 
+                    : 'border-fern-frond/20 text-fern-frond hover:bg-fern-frond/10'
+                }`}
                 onClick={() => setActivePanel(panel.id)}
               >
                 <div className="font-medium">{panel.title}</div>
@@ -272,7 +276,7 @@ export default function EventPollsPage() {
                   {format(new Date(panel.startTime), 'HH:mm', { locale: fr })} - {format(new Date(panel.endTime), 'HH:mm', { locale: fr })}
                 </div>
                 {panel.isActive && (
-                  <Badge variant="secondary" className="mt-2 text-xs">
+                  <Badge variant="secondary" className="mt-2 text-xs bg-luxor-gold text-white border-luxor-gold">
                     En direct
                   </Badge>
                 )}
@@ -310,7 +314,7 @@ export default function EventPollsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="default">
+                    <Badge variant="default" className="bg-fern-frond text-white border-fern-frond">
                       <Vote className="w-3 h-3 mr-1" />
                       Actif
                     </Badge>
@@ -333,7 +337,7 @@ export default function EventPollsPage() {
                         <Button
                           key={option.id}
                           variant="outline"
-                          className="w-full justify-start text-left h-auto p-3"
+                          className="w-full justify-start text-left h-auto p-3 border-fern-frond/20 text-fern-frond hover:bg-fern-frond/10"
                           onClick={() => handleVote(poll.id, option.id)}
                         >
                           <span className="flex-1">{option.text}</span>
@@ -370,10 +374,10 @@ export default function EventPollsPage() {
                             </div>
                             <span className="font-medium">{option.percentage}%</span>
                           </div>
-                          <div className="w-full bg-secondary rounded-full h-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full transition-all duration-500 ${
-                                option.isSelected ? 'bg-green-500' : 'bg-primary'
+                                option.isSelected ? 'bg-luxor-gold' : 'bg-fern-frond'
                               }`}
                               style={{ width: `${option.percentage}%` }}
                             />

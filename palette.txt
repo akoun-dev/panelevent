@@ -1,0 +1,11 @@
+/* CSS HEX */
+--fern-frond: #517324;
+--old-gold: #d1b73a;
+--luxor-gold: #999425;
+--parsley: #1c5320;
+--wild-willow: #a8be6c;
+--madras: #2f4104;
+--asparagus: #6e9556;
+--sycamore: #809c46;
+--lemon-ginger: #b49421;
+--green-smoke: #a4b47c;

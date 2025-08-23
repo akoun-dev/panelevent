@@ -134,7 +134,7 @@ export default function EventCertificatesPage() {
     if (!selectedCertificate) return null
 
     return (
-      <div className="bg-white border-4 border-yellow-400 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+      <div className="bg-white border-4 border-fern-frond p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
         <div className="text-center space-y-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-800">{selectedCertificate.title}</h1>
@@ -189,7 +189,7 @@ export default function EventCertificatesPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fern-frond"></div>
         </div>
       </div>
     )
@@ -198,10 +198,10 @@ export default function EventCertificatesPage() {
   if (!event) {
     return (
       <div className="container mx-auto py-8">
-        <Card>
+        <Card className="bg-gradient-to-br from-fern-frond/10 to-luxor-gold/10 border-fern-frond/20">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Award className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Événement non trouvé</h3>
+            <Award className="h-12 w-12 text-fern-frond mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-fern-frond">Événement non trouvé</h3>
             <p className="text-muted-foreground">L&apos;événement demandé n&apos;existe pas.</p>
           </CardContent>
         </Card>
@@ -212,14 +212,14 @@ export default function EventCertificatesPage() {
   if (!event.userAttended) {
     return (
       <div className="container mx-auto py-8">
-        <Card>
+        <Card className="bg-gradient-to-br from-fern-frond/10 to-luxor-gold/10 border-fern-frond/20">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Certificats non disponibles</h3>
+            <Clock className="h-12 w-12 text-fern-frond mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-fern-frond">Certificats non disponibles</h3>
             <p className="text-muted-foreground text-center mb-4">
               Vous devez avoir participé à l&apos;événement pour recevoir des certificats.
             </p>
-            <Badge variant="secondary">
+            <Badge variant="secondary" className="bg-fern-frond/20 text-fern-frond">
               {event.userRegistered ? 'Inscrit mais non présent' : 'Non inscrit'}
             </Badge>
           </CardContent>
@@ -240,9 +240,9 @@ export default function EventCertificatesPage() {
       </div>
 
       {/* Informations sur l&apos;événement */}
-      <Card>
+      <Card className="bg-gradient-to-br from-fern-frond/10 to-luxor-gold/10 border-fern-frond/20">
         <CardHeader>
-          <CardTitle>Informations sur l&apos;événement</CardTitle>
+          <CardTitle className="text-fern-frond">Informations sur l&apos;événement</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -260,7 +260,7 @@ export default function EventCertificatesPage() {
             )}
             <div>
               <p className="text-sm font-medium text-muted-foreground">Statut</p>
-              <Badge variant="default">Participation confirmée</Badge>
+              <Badge variant="default" className="bg-fern-frond text-white">Participation confirmée</Badge>
             </div>
           </div>
         </CardContent>
@@ -268,9 +268,9 @@ export default function EventCertificatesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Liste des certificats */}
-        <Card>
+        <Card className="bg-gradient-to-br from-fern-frond/10 to-luxor-gold/10 border-fern-frond/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-fern-frond">
               <Award className="w-5 h-5" />
               Certificats disponibles ({certificates.length})
             </CardTitle>
@@ -281,15 +281,15 @@ export default function EventCertificatesPage() {
                 {certificates.map((certificate) => (
                   <Card 
                     key={certificate.id} 
-                    className={`cursor-pointer transition-colors ${
-                      selectedCertificate?.id === certificate.id ? 'ring-2 ring-primary' : ''
+                    className={`cursor-pointer transition-colors bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5 border-fern-frond/10 ${
+                      selectedCertificate?.id === certificate.id ? 'ring-2 ring-fern-frond' : ''
                     }`}
                     onClick={() => setSelectedCertificate(certificate)}
                   >
                     <CardContent className="pt-4">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <Badge variant="default">
+                          <Badge variant="default" className="bg-fern-frond text-white">
                             <CheckCircle className="w-3 h-3 mr-1" />
                             Disponible
                           </Badge>
@@ -348,9 +348,9 @@ export default function EventCertificatesPage() {
         </Card>
 
         {/* Aperçu du certificat */}
-        <Card>
+        <Card className="bg-gradient-to-br from-fern-frond/10 to-luxor-gold/10 border-fern-frond/20">
           <CardHeader>
-            <CardTitle>Aperçu du certificat</CardTitle>
+            <CardTitle className="text-fern-frond">Aperçu du certificat</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[600px]">
@@ -371,7 +371,7 @@ export default function EventCertificatesPage() {
                     <h4 className="font-medium">Actions disponibles</h4>
                     <div className="grid grid-cols-1 gap-2">
                       <Button 
-                        className="w-full" 
+                        className="w-full bg-fern-frond hover:bg-luxor-gold" 
                         onClick={() => handleDownload(selectedCertificate)}
                       >
                         <Download className="w-4 h-4 mr-2" />
@@ -380,6 +380,7 @@ export default function EventCertificatesPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <Button 
                           variant="outline" 
+                          className="border-fern-frond text-fern-frond hover:bg-fern-frond hover:text-white"
                           onClick={() => handleShare(selectedCertificate)}
                         >
                           <Share2 className="w-4 h-4 mr-2" />
@@ -387,6 +388,7 @@ export default function EventCertificatesPage() {
                         </Button>
                         <Button 
                           variant="outline" 
+                          className="border-fern-frond text-fern-frond hover:bg-fern-frond hover:text-white"
                           onClick={() => handleSendByEmail(selectedCertificate)}
                         >
                           <Mail className="w-4 h-4 mr-2" />

@@ -261,8 +261,8 @@ export default function ProgramPage() {
 
   if (!isClient || !registration) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/10 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-fern-frond"></div>
       </div>
     )
   }
@@ -271,12 +271,12 @@ export default function ProgramPage() {
   console.log('Langue actuelle:', language, 'Traductions:', t)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/10">
       {/* Hero Section */}
-      <section className="py-8 px-4 bg-gradient-to-r from-primary/10 to-primary/5">
+      <section className="py-8 px-4 bg-gradient-to-r from-fern-frond/20 to-luxor-gold/20">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-           <span className="text-primary">{registration.eventTitle}</span>
+           <span className="text-fern-frond">{registration.eventTitle}</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-4">
             {t.welcome} {registration.firstName} ! {t.title}
@@ -305,14 +305,14 @@ export default function ProgramPage() {
         <div className="container mx-auto max-w-4xl">
           <div className="space-y-4">
             {programItems.map((item, index) => (
-              <Card key={index} className="hover:shadow-md transition-shadow">
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 border-border bg-card">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-start md:space-x-4">
                     {/* Time */}
                     <div className="flex-shrink-0 mb-4 md:mb-0 md:w-24">
-                      <div className="bg-primary/10 rounded-lg p-3 text-center">
-                        <Clock className="w-6 h-6 mx-auto mb-1 text-primary" />
-                        <p className="font-semibold text-primary">{item.time}</p>
+                      <div className="bg-fern-frond/20 rounded-lg p-3 text-center border border-fern-frond/30">
+                        <Clock className="w-6 h-6 mx-auto mb-1 text-fern-frond" />
+                        <p className="font-semibold text-fern-frond">{item.time}</p>
                       </div>
                     </div>
                     
@@ -320,7 +320,7 @@ export default function ProgramPage() {
                     <div className="flex-grow">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                          <h3 className="text-xl font-semibold mb-2 text-foreground">{item.title}</h3>
                           <p className="text-muted-foreground mb-3">{item.description}</p>
                           
                           {item.speaker && (
@@ -336,7 +336,7 @@ export default function ProgramPage() {
                           </div>
                         </div>
                         
-                        <Badge className={`ml-4 ${getTypeColor(getItemType(item))}`}>
+                        <Badge className={`ml-4 border-border ${getTypeColor(getItemType(item))}`}>
                           <div className="flex items-center space-x-1">
                             {getTypeIcon(getItemType(item))}
                             <span>{getTypeLabel(getItemType(item))}</span>
@@ -352,7 +352,7 @@ export default function ProgramPage() {
         </div>
       </section>
       {/* Footer */}
-      <footer className="border-t py-8 px-4">
+      <footer className="border-t border-border py-8 px-4 bg-card/50">
         <div className="container mx-auto text-center">
           <p className="text-muted-foreground">
             {t.copyright}

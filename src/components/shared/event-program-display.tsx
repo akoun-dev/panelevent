@@ -34,16 +34,16 @@ export function EventProgramDisplay({ program }: EventProgramDisplayProps) {
   } catch {
     // Si ce n'est pas du JSON, traiter comme texte simple
     return (
-      <Card>
+      <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <FileText className="w-5 h-5" />
             Programme de l'événement
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="prose prose-sm max-w-none">
-            <pre className="whitespace-pre-wrap font-sans text-sm">{program}</pre>
+            <pre className="whitespace-pre-wrap font-sans text-sm text-foreground">{program}</pre>
           </div>
         </CardContent>
       </Card>
@@ -55,9 +55,9 @@ export function EventProgramDisplay({ program }: EventProgramDisplayProps) {
   }
 
   return (
-    <Card>
+    <Card className="border-border bg-card">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-foreground">
           <FileText className="w-5 h-5" />
           Programme de l'événement
         </CardTitle>
@@ -66,7 +66,7 @@ export function EventProgramDisplay({ program }: EventProgramDisplayProps) {
 
         {programData.programItems && programData.programItems.length > 0 && (
           <div>
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
+            <h4 className="font-semibold mb-3 flex items-center gap-2 text-foreground">
               <List className="w-4 h-4" />
               Déroulement détaillé
             </h4>
@@ -77,11 +77,11 @@ export function EventProgramDisplay({ program }: EventProgramDisplayProps) {
                   <div key={item.id} className="border-l-2 border-primary/20 pl-4 py-2">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="flex items-center gap-1">
+                        <Badge variant="outline" className="flex items-center gap-1 border-primary/30 text-primary">
                           <Clock className="w-3 h-3" />
                           {item.time}
                         </Badge>
-                        <h5 className="font-semibold">{item.title}</h5>
+                        <h5 className="font-semibold text-foreground">{item.title}</h5>
                       </div>
                     </div>
                     
@@ -96,14 +96,14 @@ export function EventProgramDisplay({ program }: EventProgramDisplayProps) {
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           <span className="font-medium">Intervenant:</span>
-                          {item.speaker}
+                          <span className="text-foreground">{item.speaker}</span>
                         </div>
                       )}
                       {item.location && (
                         <div className="flex items-center gap-1">
                           <MapPin className="w-3 h-3" />
                           <span className="font-medium">Lieu:</span>
-                          {item.location}
+                          <span className="text-foreground">{item.location}</span>
                         </div>
                       )}
                     </div>

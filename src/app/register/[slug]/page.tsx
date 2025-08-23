@@ -129,18 +129,18 @@ export default function RegisterPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/10">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fern-frond"></div>
       </div>
     )
   }
 
   if (!event) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/10">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Événement non trouvé</h1>
-          <Button asChild>
+          <h1 className="text-2xl font-bold mb-4 text-fern-frond">Événement non trouvé</h1>
+          <Button asChild className="bg-fern-frond hover:bg-fern-frond/90 text-white">
             <Link href="/">Retour à l'accueil</Link>
           </Button>
         </div>
@@ -165,27 +165,27 @@ export default function RegisterPage() {
     const t = translations[selectedLanguage].consent
     
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/10 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold">{t.title}</h1>
+            <h1 className="text-2xl font-bold text-fern-frond">{t.title}</h1>
             <p className="text-muted-foreground mt-2">
               {t.subtitle}
             </p>
           </div>
 
-          <div className="bg-card border rounded-lg p-6 mb-6 max-h-96 overflow-y-auto">
-            <h2 className="text-lg font-semibold mb-4">{t.policyTitle}</h2>
+          <div className="bg-white border border-fern-frond/20 rounded-lg p-6 mb-6 max-h-96 overflow-y-auto shadow-sm">
+            <h2 className="text-lg font-semibold mb-4 text-fern-frond">{t.policyTitle}</h2>
 
-            <div className="space-y-4 text-sm">
+            <div className="space-y-4 text-sm text-fern-frond">
               <p>{t.dataCollection}</p>
               <p>{t.dataUsage}</p>
               <p>{t.dataStorage}</p>
 
-              <h3 className="font-semibold">{t.detailsTitle}</h3>
+              <h3 className="font-semibold text-fern-frond">{t.detailsTitle}</h3>
 
               <p>
-                <strong>{selectedLanguage === 'fr' ? 'Collecte des Données' :
+                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Collecte des Données' :
                          selectedLanguage === 'en' ? 'Data Collection' :
                          selectedLanguage === 'pt' ? 'Coleta de Dados' :
                          selectedLanguage === 'es' ? 'Recopilación de Datos' :
@@ -194,7 +194,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong>{selectedLanguage === 'fr' ? 'Utilisation des Données' :
+                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Utilisation des Données' :
                          selectedLanguage === 'en' ? 'Data Usage' :
                          selectedLanguage === 'pt' ? 'Uso de Dados' :
                          selectedLanguage === 'es' ? 'Uso de Datos' :
@@ -203,7 +203,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong>{selectedLanguage === 'fr' ? 'Conservation et Sécurité' :
+                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Conservation et Sécurité' :
                          selectedLanguage === 'en' ? 'Storage and Security' :
                          selectedLanguage === 'pt' ? 'Armazenamento e Segurança' :
                          selectedLanguage === 'es' ? 'Almacenamiento y Seguridad' :
@@ -212,7 +212,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong>{selectedLanguage === 'fr' ? 'Vos Droits' :
+                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Vos Droits' :
                          selectedLanguage === 'en' ? 'Your Rights' :
                          selectedLanguage === 'pt' ? 'Seus Direitos' :
                          selectedLanguage === 'es' ? 'Sus Derechos' :
@@ -221,7 +221,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong>{selectedLanguage === 'fr' ? 'Transferts de Données' :
+                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Transferts de Données' :
                          selectedLanguage === 'en' ? 'Data Transfers' :
                          selectedLanguage === 'pt' ? 'Transferências de Dados' :
                          selectedLanguage === 'es' ? 'Transferencias de Datos' :
@@ -230,7 +230,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong>{selectedLanguage === 'fr' ? 'Retrait du Consentement' :
+                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Retrait du Consentement' :
                          selectedLanguage === 'en' ? 'Withdrawal of Consent' :
                          selectedLanguage === 'pt' ? 'Retirada do Consentimento' :
                          selectedLanguage === 'es' ? 'Retiro del Consentimiento' :
@@ -254,11 +254,12 @@ export default function RegisterPage() {
               checked={consentAccepted}
               onCheckedChange={checked => setConsentAccepted(checked as boolean)}
               required
+              className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
             />
             <div className="grid gap-1.5 leading-none">
               <Label
                 htmlFor="rgpd-consent"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-sm font-medium leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {t.acceptLabel}
               </Label>
@@ -272,7 +273,7 @@ export default function RegisterPage() {
             <Button
               variant="outline"
               onClick={() => setShowLanguageSelector(true)}
-              className="flex-1"
+              className="flex-1 border-border text-foreground hover:bg-secondary/20"
             >
               ← {selectedLanguage === 'fr' ? 'Changer de langue' :
                  selectedLanguage === 'en' ? 'Change language' :
@@ -283,7 +284,7 @@ export default function RegisterPage() {
             <Button
               onClick={() => setShowConsent(true)}
               disabled={!consentAccepted}
-              className="flex-1"
+              className="flex-1 bg-fern-frond hover:bg-fern-frond/90 text-white"
             >
               {t.continueButton}
             </Button>
@@ -294,11 +295,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-fern-frond/5 to-luxor-gold/10 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header simple */}
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold text-fern-frond">
             {selectedLanguage ? translations[selectedLanguage].registration.title : 'Inscription'}
           </h1>
           <p className="text-muted-foreground mt-2">

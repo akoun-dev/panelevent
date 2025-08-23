@@ -286,7 +286,7 @@ export default function EventQAPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fern-frond"></div>
         </div>
       </div>
     )
@@ -295,7 +295,7 @@ export default function EventQAPage() {
   const currentPanel = panels.find(p => p.id === activePanel)
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 bg-gradient-to-br from-fern-frond/5 to-luxor-gold/5 min-h-screen">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Questions-Réponses</h1>
@@ -347,6 +347,7 @@ export default function EventQAPage() {
               <Button 
                 onClick={handleSubmitQuestion}
                 disabled={!newQuestion.trim() || isSubmitting}
+                className="bg-fern-frond hover:bg-fern-frond/90"
               >
                 <Send className="w-4 h-4" />
               </Button>
@@ -420,7 +421,7 @@ export default function EventQAPage() {
                                 {format(new Date(question.createdAt), 'HH:mm', { locale: fr })}
                               </span>
                             </div>
-                            <Badge variant="default" className="text-xs">
+                            <Badge variant="default" className="text-xs bg-luxor-gold text-white border-luxor-gold">
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Approuvée
                             </Badge>
@@ -434,7 +435,7 @@ export default function EventQAPage() {
                                 size="sm"
                                 variant="ghost"
                                 className={`h-8 px-2 ${
-                                  question.userVote === 'up' ? 'text-green-600' : 'text-muted-foreground'
+                                  question.userVote === 'up' ? 'text-fern-frond' : 'text-muted-foreground'
                                 }`}
                                 onClick={() => handleVote(question.id, 'up')}
                               >
@@ -445,7 +446,7 @@ export default function EventQAPage() {
                                 size="sm"
                                 variant="ghost"
                                 className={`h-8 px-2 ${
-                                  question.userVote === 'down' ? 'text-red-600' : 'text-muted-foreground'
+                                  question.userVote === 'down' ? 'text-luxor-gold' : 'text-muted-foreground'
                                 }`}
                                 onClick={() => handleVote(question.id, 'down')}
                               >
