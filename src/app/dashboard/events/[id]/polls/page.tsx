@@ -577,6 +577,8 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
                     size={200}
                     level="H"
                     includeMargin
+                    fgColor="#1c5320"
+                    bgColor="#a8be6c"
                   />
                 </div>
                 <p className="text-sm text-muted-foreground mt-3">

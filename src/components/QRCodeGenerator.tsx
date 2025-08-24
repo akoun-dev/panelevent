@@ -21,8 +21,8 @@ export function QRCodeGenerator({ url, eventName }: QRCodeGeneratorProps) {
           width: 300,
           margin: 2,
           color: {
-            dark: '#000000',
-            light: '#ffffff'
+            dark: '#1c5320',
+            light: '#a8be6c'
           }
         })
         setQrCodeDataUrl(dataUrl)
