@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Plus, Eye, FileText, QrCode, MessageSquare, BarChart, BarChart as Poll, Edit } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Eye, FileText, QrCode, MessageSquare, BarChart, BarChart as Poll, Edit, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import Link from 'next/link'
 import {
@@ -58,6 +59,29 @@ export default function EventsPage() {
       console.error('Failed to fetch events:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'événement "${eventTitle}" ? Cette action est irréversible.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Événement supprimé avec succès')
+        setEvents(prev => prev.filter(event => event.id !== eventId))
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erreur lors de la suppression')
+      }
+    } catch (error) {
+      console.error('Failed to delete event:', error)
+      toast.error(error instanceof Error ? error.message : 'Erreur lors de la suppression de l\'événement')
     }
   }
 
@@ -257,6 +281,22 @@ export default function EventsPage() {
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>QR Code d'inscription</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10"
+                          onClick={() => handleDeleteEvent(event.id, event.title)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Supprimer l'événement</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

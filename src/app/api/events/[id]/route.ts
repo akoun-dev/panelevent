@@ -63,3 +63,32 @@ export async function GET(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params
+    const { id } = resolvedParams
+
+    // Supprimer l'événement
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json({ success: true, message: 'Événement supprimé avec succès' })
+
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'événement:', error)
+    return NextResponse.json(
+      { error: 'Une erreur est survenue lors de la suppression de l\'événement' },
+      { status: 500 }
+    )
+  }
+}

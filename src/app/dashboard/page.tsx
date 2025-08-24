@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, Users, Plus, BarChart, MessageSquare, BarChart as Poll, Edit, QrCode } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, BarChart, MessageSquare, BarChart as Poll, Edit, QrCode, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import {
   Dialog,
@@ -74,6 +74,29 @@ export default function Dashboard() {
       console.error('Failed to fetch events:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'événement "${eventTitle}" ? Cette action est irréversible.`)) return
+    
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        // Mettre à jour l'état local
+        setEvents(prev => prev.filter(event => event.id !== eventId))
+        // Afficher un message de succès
+        alert('Événement supprimé avec succès')
+      } else {
+        const error = await response.json()
+        alert(`Erreur lors de la suppression: ${error.message || 'Erreur inconnue'}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete event:', error)
+      alert('Erreur lors de la suppression de l\'événement')
     }
   }
 
@@ -334,6 +357,20 @@ export default function Dashboard() {
                             <p>QR Code d'inscription</p>
                           </TooltipContent>
                         </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => handleDeleteEvent(event.id, event.title)}
+                              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Supprimer l'événement</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </TooltipProvider>
                     </div>
                   </CardContent>
@@ -390,6 +427,12 @@ export default function Dashboard() {
                         <BarChart className="w-4 h-4" />
                       </div>
                     </Link>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id, event.title)}
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </CardContent>
               </Card>
@@ -444,6 +487,12 @@ export default function Dashboard() {
                         <BarChart className="w-4 h-4" />
                       </div>
                     </Link>
+                    <button
+                      onClick={() => handleDeleteEvent(event.id, event.title)}
+                      className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </CardContent>
               </Card>
