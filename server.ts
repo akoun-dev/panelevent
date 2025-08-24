@@ -12,11 +12,11 @@ const hostname = '0.0.0.0';
 async function createCustomServer() {
   try {
     // Create Next.js app
-    const nextApp = next({ 
+    const nextApp = next({
       dev,
       dir: process.cwd(),
       // In production, use the current directory where .next is located
-      conf: dev ? undefined : { distDir: './.next' }
+      conf: dev ? undefined : { distDir: '.next' }
     });
 
     await nextApp.prepare();
@@ -28,6 +28,7 @@ async function createCustomServer() {
       if (req.url?.startsWith('/api/socketio')) {
         return;
       }
+      // Handle API routes through Next.js
       handle(req, res);
     });
 
@@ -57,3 +58,4 @@ async function createCustomServer() {
 
 // Start the server
 createCustomServer();
+

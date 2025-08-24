@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -17,10 +16,14 @@ import {
   Play,
   Pause,
   Users,
-  Vote
+  Vote,
+  QrCode,
+  Presentation,
+  Edit
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface PollOption {
   id: string
@@ -37,29 +40,17 @@ interface Poll {
   isAnonymous: boolean
   allowMultipleVotes: boolean
   createdAt: string
-  panelId: string
   totalVotes: number
   options: PollOption[]
 }
 
-interface Panel {
-  id: string
-  title: string
-  description: string
-  startTime: string
-  endTime: string
-  eventId: string
-  allowQuestions?: boolean
-}
-
 export default function EventPollsPage({ params }: { params: Promise<{ id: string }> }) {
   const [eventId, setEventId] = useState<string>('')
-  const [activePanel, setActivePanel] = useState<string>('')
-  const [panels, setPanels] = useState<Panel[]>([])
   const [polls, setPolls] = useState<Poll[]>([])
   const [filteredPolls, setFilteredPolls] = useState<Poll[]>([])
   const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [newPoll, setNewPoll] = useState({
     question: '',
     description: '',
@@ -67,7 +58,9 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
     allowMultipleVotes: false,
     options: ['', '']
   })
+  const [editPoll, setEditPoll] = useState<Poll | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [projectionView, setProjectionView] = useState<Poll | null>(null)
 
   // Charger les données
   useEffect(() => {
@@ -75,16 +68,6 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
       if (!eventId) return;
       
       try {
-        // Charger les panels
-        const panelsResponse = await fetch(`/api/events/${eventId}/panels`)
-        if (panelsResponse.ok) {
-          const panelsData = await panelsResponse.json()
-          setPanels(panelsData.panels || [])
-          if (panelsData.panels?.length > 0) {
-            setActivePanel(panelsData.panels[0].id)
-          }
-        }
-
         // Charger les sondages
         const pollsResponse = await fetch(`/api/events/${eventId}/polls`)
         if (pollsResponse.ok) {
@@ -113,15 +96,8 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
 
   // Filtrer les sondages
   useEffect(() => {
-    let filtered = polls
-
-    // Filtrer par panel actif
-    if (activePanel) {
-      filtered = filtered.filter(p => p.panelId === activePanel)
-    }
-
-    setFilteredPolls(filtered)
-  }, [polls, activePanel])
+    setFilteredPolls(polls)
+  }, [polls])
 
   const handleCreatePoll = async () => {
     if (!newPoll.question.trim() || newPoll.options.some(opt => !opt.trim())) {
@@ -137,7 +113,6 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
         body: JSON.stringify({
           question: newPoll.question,
           description: newPoll.description,
-          panelId: activePanel,
           isAnonymous: newPoll.isAnonymous,
           allowMultipleVotes: newPoll.allowMultipleVotes,
           options: newPoll.options.filter(opt => opt.trim())
@@ -158,6 +133,59 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
       }
     } catch (error) {
       console.error('Failed to create poll:', error)
+    }
+  }
+
+  const handleEditPoll = (poll: Poll) => {
+    setEditPoll(poll)
+    setIsEditing(true)
+    setNewPoll({
+      question: poll.question,
+      description: poll.description || '',
+      isAnonymous: poll.isAnonymous,
+      allowMultipleVotes: poll.allowMultipleVotes,
+      options: poll.options.map(opt => opt.text)
+    })
+  }
+
+  const handleUpdatePoll = async () => {
+    if (!editPoll || !newPoll.question.trim() || newPoll.options.some(opt => !opt.trim())) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/polls/${editPoll.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: newPoll.question,
+          description: newPoll.description,
+          isAnonymous: newPoll.isAnonymous,
+          allowMultipleVotes: newPoll.allowMultipleVotes,
+          options: newPoll.options.filter(opt => opt.trim())
+        })
+      })
+
+      if (response.ok) {
+        const updatedPoll = await response.json()
+        setPolls(prev => prev.map(p => p.id === editPoll.id ? updatedPoll : p))
+        if (selectedPoll?.id === editPoll.id) {
+          setSelectedPoll(updatedPoll)
+        }
+        setEditPoll(null)
+        setIsEditing(false)
+        setNewPoll({
+          question: '',
+          description: '',
+          isAnonymous: false,
+          allowMultipleVotes: false,
+          options: ['', '']
+        })
+      }
+    } catch (error) {
+      console.error('Failed to update poll:', error)
     }
   }
 
@@ -231,6 +259,18 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
     }
   }
 
+  const getPollUrl = (pollId: string) => {
+    return `${window.location.origin}/polls/${pollId}`
+  }
+
+  const openProjectionView = (poll: Poll) => {
+    setProjectionView(poll)
+  }
+
+  const closeProjectionView = () => {
+    setProjectionView(null)
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
@@ -253,34 +293,11 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
           Nouveau sondage
         </Button>
       </div>
-
-      {/* Sélection du panel */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Panel actif</CardTitle>
-          <CardDescription>Sélectionnez le panel pour gérer ses sondages</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select value={activePanel} onValueChange={setActivePanel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez un panel" />
-            </SelectTrigger>
-            <SelectContent>
-              {panels.map((panel) => (
-                <SelectItem key={panel.id} value={panel.id}>
-                  {panel.title} - {format(new Date(panel.startTime), 'HH:mm', { locale: fr })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      {/* Formulaire de création */}
-      {isCreating && (
+      {/* Formulaire de création/édition */}
+      {(isCreating || isEditing) && (
         <Card>
           <CardHeader>
-            <CardTitle>Créer un nouveau sondage</CardTitle>
+            <CardTitle>{isEditing ? 'Modifier le sondage' : 'Créer un nouveau sondage'}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -357,10 +374,24 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleCreatePoll} className="flex-1">
-                Créer le sondage
+              <Button
+                onClick={isEditing ? handleUpdatePoll : handleCreatePoll}
+                className="flex-1"
+              >
+                {isEditing ? 'Mettre à jour' : 'Créer le sondage'}
               </Button>
-              <Button variant="outline" onClick={() => setIsCreating(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsCreating(false)
+                setIsEditing(false)
+                setEditPoll(null)
+                setNewPoll({
+                  question: '',
+                  description: '',
+                  isAnonymous: false,
+                  allowMultipleVotes: false,
+                  options: ['', '']
+                })
+              }}>
                 Annuler
               </Button>
             </div>
@@ -449,9 +480,23 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => handleEditPoll(selectedPoll)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleTogglePoll(selectedPoll.id)}
                     >
                       {selectedPoll.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openProjectionView(selectedPoll)}
+                    >
+                      <Presentation className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
@@ -510,6 +555,98 @@ export default function EventPollsPage({ params }: { params: Promise<{ id: strin
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de projection */}
+      {projectionView && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Vue de projection - {projectionView.question}</h2>
+              <Button variant="outline" size="sm" onClick={closeProjectionView}>
+                Fermer
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* QR Code */}
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-4">QR Code de participation</h3>
+                <div className="bg-white p-4 rounded-lg border">
+                  <QRCodeSVG
+                    value={getPollUrl(projectionView.id)}
+                    size={200}
+                    level="H"
+                    includeMargin
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Scannez ce QR code pour participer au sondage
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  URL: {getPollUrl(projectionView.id)}
+                </div>
+              </div>
+
+              {/* Résultats en temps réel */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">Résultats en temps réel</h3>
+                <div className="space-y-4">
+                  {projectionView.options.map((option) => (
+                    <div key={option.id} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{option.text}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {option.votes} votes ({option.percentage}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                        <div
+                          className="bg-primary h-3 rounded-full transition-all duration-300"
+                          style={{ width: `${option.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">Total des votes:</span>
+                    <span className="text-2xl font-bold">{projectionView.totalVotes}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Informations supplémentaires */}
+            <div className="mt-8 pt-6 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Statut:</span>
+                  <Badge variant={projectionView.isActive ? "default" : "secondary"} className="ml-2">
+                    {projectionView.isActive ? 'Actif' : 'Inactif'}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="font-medium">Mode:</span>
+                  {projectionView.isAnonymous && (
+                    <Badge variant="outline" className="ml-2">Anonyme</Badge>
+                  )}
+                  {projectionView.allowMultipleVotes && (
+                    <Badge variant="outline" className="ml-2">Votes multiples</Badge>
+                  )}
+                </div>
+                <div>
+                  <span className="font-medium">Créé le:</span>
+                  <span className="ml-2">
+                    {format(new Date(projectionView.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

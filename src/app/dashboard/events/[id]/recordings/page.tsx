@@ -371,28 +371,6 @@ export default function EventRecordingsPage() {
         </div>
       </div>
 
-      {/* Sélection du panel */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Panel actif</CardTitle>
-          <CardDescription>Sélectionnez le panel pour gérer ses enregistrements</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select value={activePanel} onValueChange={setActivePanel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez un panel" />
-            </SelectTrigger>
-            <SelectContent>
-              {panels.map((panel) => (
-                <SelectItem key={panel.id} value={panel.id}>
-                  {panel.title} - {format(new Date(panel.startTime), 'HH:mm', { locale: fr })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
       {/* Enregistreur audio */}
       <Card>
         <CardHeader>

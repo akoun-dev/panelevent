@@ -7,8 +7,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, Users, Plus, BarChart, MessageSquare, BarChart as Poll } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, BarChart, MessageSquare, BarChart as Poll, Edit, QrCode } from 'lucide-react'
 import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { QRCodeGenerator } from '@/components/QRCodeGenerator'
+import EditEventForm from '@/components/events/EditEventForm'
 
 interface Event {
   id: string
@@ -223,27 +239,102 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Link href={`/dashboard/events/${event.id}`} className="flex-1">
-                        <Button className="w-full">
-                          Gérer
-                        </Button>
-                      </Link>
-                      <Link href={`/dashboard/events/${event.id}/qa`}>
-                        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
-                          <MessageSquare className="w-4 h-4" />
-                        </div>
-                      </Link>
-                      <Link href={`/dashboard/events/${event.id}/polls`}>
-                        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
-                          <Poll className="w-4 h-4" />
-                        </div>
-                      </Link>
-                      <Link href={`/e/${event.slug}`}>
-                        <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
-                          <BarChart className="w-4 h-4" />
-                        </div>
-                      </Link>
+                    <div className="flex gap-2 flex-wrap">
+                      <TooltipProvider>
+                        <Link href={`/dashboard/events/${event.id}`} className="flex-1">
+                          <Button className="w-full">
+                            Gérer
+                          </Button>
+                        </Link>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                                  <Edit className="w-4 h-4" />
+                                </div>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[600px]">
+                                <DialogHeader>
+                                  <DialogTitle>Modifier l'événement</DialogTitle>
+                                  <DialogDescription>
+                                    Modifiez les informations de votre événement
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <EditEventForm
+                                  event={event}
+                                  onSuccess={() => {
+                                    window.location.reload()
+                                  }}
+                                  onCancel={() => {
+                                    // Fermer le dialog
+                                    const dialog = document.querySelector('[data-state="open"]')
+                                    if (dialog) {
+                                      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+                                    }
+                                  }}
+                                />
+                              </DialogContent>
+                            </Dialog>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Modifier les informations</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link href={`/dashboard/events/${event.id}/qa`}>
+                              <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                                <MessageSquare className="w-4 h-4" />
+                              </div>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Questions & Réponses</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link href={`/dashboard/events/${event.id}/polls`}>
+                              <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                                <Poll className="w-4 h-4" />
+                              </div>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Sondages</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                                  <QrCode className="w-4 h-4" />
+                                </div>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>QR Code d'inscription</DialogTitle>
+                                  <DialogDescription>
+                                    Scannez ce code pour accéder à la page d'inscription
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <QRCodeGenerator
+                                  url={`${process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
+                                  eventName={event.title}
+                                />
+                              </DialogContent>
+                            </Dialog>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>QR Code d'inscription</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </CardContent>
                 </Card>

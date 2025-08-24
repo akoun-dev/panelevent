@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { v4 as uuidv4 } from 'uuid'
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,14 +79,17 @@ export async function POST(
       )
     }
 
+    const pollId = uuidv4()
     const { data: createdPoll, error: pollError } = await supabase
       .from('polls')
       .insert({
+        id: pollId,
         question,
         description,
         "eventId": id,
         "isAnonymous": isAnonymous || false,
-        "allowMultipleVotes": allowMultipleVotes || false
+        "allowMultipleVotes": allowMultipleVotes || false,
+        "isActive": true  // Les nouveaux sondages sont actifs par défaut
       })
       .select('id')
       .single()
@@ -94,6 +98,7 @@ export async function POST(
 
     const { error: optionsError } = await supabase.from('poll_options').insert(
       options.map((optionText: string, index: number) => ({
+        id: uuidv4(),
         "pollId": createdPoll.id,
         text: optionText,
         order: index

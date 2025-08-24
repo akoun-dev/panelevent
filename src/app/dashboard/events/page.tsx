@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Plus, Eye, FileText, QrCode } from 'lucide-react'
+import { Calendar, MapPin, Users, Plus, Eye, FileText, QrCode, MessageSquare, BarChart, BarChart as Poll, Edit } from 'lucide-react'
 import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 import Link from 'next/link'
 import {
@@ -15,7 +15,14 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+ Tooltip,
+ TooltipContent,
+ TooltipProvider,
+ TooltipTrigger,
+} from '@/components/ui/tooltip'
 import CreateEventForm from '@/components/events/CreateEventForm'
+import EditEventForm from '@/components/events/EditEventForm'
 
 interface Event {
   id: string
@@ -124,25 +131,23 @@ export default function EventsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((event) => (
-            <Card key={event.id}>
+            <Card key={event.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-xl">{event.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {event.description}
-                    </CardDescription>
-                  </div>
+                  <CardTitle className="text-xl">{event.title}</CardTitle>
                   <div className="flex gap-2">
                     {event.isActive && <Badge variant="default">Actif</Badge>}
                     {event.isPublic && <Badge variant="secondary">Public</Badge>}
                   </div>
                 </div>
+                <CardDescription className="line-clamp-2">
+                  {event.description}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="space-y-3 mb-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     <span>{formatDate(event.startDate)}</span>
@@ -160,58 +165,101 @@ export default function EventsPage() {
                 </div>
                 
                 <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/e/${event.slug}`}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Voir
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/events/${event.id}/program`}>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Programme
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/events/${event.id}/qa`}>
-                      Q&A
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/events/${event.id}/polls`}>
-                      Sondages
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/events/${event.id}/certificates`}>
-                      Certificats
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/events/${event.id}/feedback`}>
-                      Feedbacks
-                    </Link>
-                  </Button>
-                                    <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <QrCode className="w-4 h-4 mr-2" />
-                        QR Code
+                  <TooltipProvider>
+                    <Link href={`/dashboard/events/${event.id}`} className="flex-1">
+                      <Button className="w-full">
+                        Gérer
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>QR Code d'inscription</DialogTitle>
-                        <DialogDescription>
-                          Scannez ce code pour accéder à la page d'inscription
-                        </DialogDescription>
-                      </DialogHeader>
-                      <QRCodeGenerator
-                        url={`${process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
-                        eventName={event.title}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                    </Link>
+                    
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                              <Edit className="w-4 h-4" />
+                            </div>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                              <DialogTitle>Modifier l'événement</DialogTitle>
+                              <DialogDescription>
+                                Modifiez les informations de votre événement
+                              </DialogDescription>
+                            </DialogHeader>
+                            <EditEventForm
+                              event={event}
+                              onSuccess={() => {
+                                window.location.reload()
+                              }}
+                              onCancel={() => {
+                                // Fermer le dialog
+                                const dialog = document.querySelector('[data-state="open"]')
+                                if (dialog) {
+                                  dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+                                }
+                              }}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Modifier les informations</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link href={`/dashboard/events/${event.id}/qa`}>
+                          <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                            <MessageSquare className="w-4 h-4" />
+                          </div>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Questions & Réponses</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Link href={`/dashboard/events/${event.id}/polls`}>
+                          <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                            <Poll className="w-4 h-4" />
+                          </div>
+                        </Link>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Sondages</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 px-0">
+                              <QrCode className="w-4 h-4" />
+                            </div>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>QR Code d'inscription</DialogTitle>
+                              <DialogDescription>
+                                Scannez ce code pour accéder à la page d'inscription
+                              </DialogDescription>
+                            </DialogHeader>
+                            <QRCodeGenerator
+                              url={`${process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
+                              eventName={event.title}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>QR Code d'inscription</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </CardContent>
             </Card>

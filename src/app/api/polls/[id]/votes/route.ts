@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db: any = supabase
+import { v4 as uuidv4 } from 'uuid'
 
 // POST /api/polls/[pollId]/votes - Ajouter ou modifier un vote
 export async function POST(
@@ -15,22 +13,55 @@ export async function POST(
     const body = await request.json()
     const { userId, optionIds } = body
 
+    console.log('Received vote request:', { pollId, userId, optionIds })
+
     if (!userId || !optionIds || !Array.isArray(optionIds) || optionIds.length === 0) {
+      console.log('Missing required fields:', { userId, optionIds })
       return NextResponse.json(
         { error: 'Missing userId or optionIds' },
         { status: 400 }
       )
     }
 
-    // Récupérer le sondage pour vérifier s'il accepte les votes multiples
-    const poll = await db.poll.findUnique({
-      where: { id: pollId },
-      include: {
-        options: true
-      }
-    })
+    let finalUserId = userId
+    
+    // Pour les votes anonymes, créer un utilisateur temporaire si nécessaire
+    if (userId.startsWith('anonymous_')) {
+      // Vérifier si l'utilisateur anonyme existe déjà
+      const { data: existingUser, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single()
 
-    if (!poll) {
+      if (userError || !existingUser) {
+        // Créer un utilisateur temporaire pour les votes anonymes
+        const { error: createError } = await supabase
+          .from('users')
+          .insert({
+            id: userId,
+            name: 'Anonymous Voter',
+            email: `${userId}@anonymous.panelevent`,
+            role: 'ATTENDEE'
+          })
+
+        if (createError) {
+          console.error('Error creating anonymous user:', createError)
+          // Si la création échoue, utiliser un ID utilisateur par défaut
+          finalUserId = 'anonymous-default-user'
+        }
+      }
+    }
+
+    // Récupérer le sondage pour vérifier s'il accepte les votes multiples
+    const { data: poll, error: pollError } = await supabase
+      .from('polls')
+      .select('*, options:poll_options(*)')
+      .eq('id', pollId)
+      .single()
+
+    if (pollError || !poll) {
+      console.log('Poll not found error:', pollError)
       return NextResponse.json(
         { error: 'Poll not found' },
         { status: 404 }
@@ -38,7 +69,8 @@ export async function POST(
     }
 
     // Vérifier que le sondage est actif
-    if (!poll.isActive) {
+    if (!poll.isActive && !poll.is_active) {
+      console.log('Poll is not active:', poll.isActive, poll.is_active)
       return NextResponse.json(
         { error: 'Poll is not active' },
         { status: 400 }
@@ -46,7 +78,9 @@ export async function POST(
     }
 
     // Vérifier les contraintes de votes
-    if (!poll.allowMultipleVotes && optionIds.length > 1) {
+    const allowMultiple = poll.allowMultipleVotes || poll.allow_multiple_votes
+    if (!allowMultiple && optionIds.length > 1) {
+      console.log('Multiple votes not allowed:', allowMultiple, 'but received:', optionIds.length)
       return NextResponse.json(
         { error: 'This poll does not allow multiple votes' },
         { status: 400 }
@@ -54,8 +88,11 @@ export async function POST(
     }
 
     // Vérifier que toutes les options existent et appartiennent au sondage
-    const validOptions = poll.options.filter(option => optionIds.includes(option.id))
+    const validOptions = poll.options.filter((option: any) => optionIds.includes(option.id))
     if (validOptions.length !== optionIds.length) {
+      console.log('Invalid options detected. Valid options:', validOptions.length, 'Requested:', optionIds.length)
+      console.log('Poll options:', poll.options.map((o: any) => o.id))
+      console.log('Requested optionIds:', optionIds)
       return NextResponse.json(
         { error: 'One or more invalid options' },
         { status: 400 }
@@ -63,68 +100,93 @@ export async function POST(
     }
 
     // Récupérer les votes existants de l'utilisateur pour ce sondage
-    const existingVotes = await db.pollResponse.findMany({
-      where: {
-        pollId: pollId,
-        userId
-      }
-    })
+    const { data: existingVotes, error: votesError } = await supabase
+      .from('poll_responses')
+      .select('*')
+      .eq('pollId', pollId)
+      .eq('userId', userId)
+
+    if (votesError) {
+      console.error('Error fetching existing votes:', votesError)
+      return NextResponse.json(
+        { error: 'Failed to fetch existing votes' },
+        { status: 500 }
+      )
+    }
 
     // Pour les votes uniques, supprimer l'ancien vote s'il existe
-    if (!poll.allowMultipleVotes && existingVotes.length > 0) {
-      await db.pollResponse.deleteMany({
-        where: {
-          pollId: pollId,
-          userId
-        }
-      })
+    if (!poll.allow_multiple_votes && existingVotes && existingVotes.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('poll_responses')
+        .delete()
+        .eq('pollId', pollId)
+        .eq('userId', userId)
+
+      if (deleteError) {
+        console.error('Error deleting existing votes:', deleteError)
+        return NextResponse.json(
+          { error: 'Failed to delete existing votes' },
+          { status: 500 }
+        )
+      }
     }
 
     // Pour les votes multiples, supprimer seulement les votes pour les options désélectionnées
-    if (poll.allowMultipleVotes) {
-      const existingOptionIds = existingVotes.map(vote => vote.optionId)
-      const optionsToRemove = existingOptionIds.filter(id => !optionIds.includes(id))
+    if (poll.allow_multiple_votes && existingVotes) {
+      const existingOptionIds = existingVotes.map((vote: any) => vote.optionId)
+      const optionsToRemove = existingOptionIds.filter((id: string) => !optionIds.includes(id))
       
       if (optionsToRemove.length > 0) {
-        await db.pollResponse.deleteMany({
-          where: {
-            pollId: pollId,
-            userId,
-            optionId: {
-              in: optionsToRemove
-            }
-          }
-        })
+        const { error: deleteError } = await supabase
+          .from('poll_responses')
+          .delete()
+          .eq('pollId', pollId)
+          .eq('userId', userId)
+          .in('optionId', optionsToRemove)
+
+        if (deleteError) {
+          console.error('Error removing deselected votes:', deleteError)
+          return NextResponse.json(
+            { error: 'Failed to remove deselected votes' },
+            { status: 500 }
+          )
+        }
       }
     }
 
     // Créer les nouveaux votes (uniquement pour les options qui n'ont pas déjà été votées)
-    const existingOptionIds = existingVotes.map(vote => vote.optionId)
-    const newOptionIds = optionIds.filter(id => !existingOptionIds.includes(id))
+    const existingOptionIds = existingVotes ? existingVotes.map((vote: any) => vote.optionId) : []
+    const newOptionIds = optionIds.filter((id: string) => !existingOptionIds.includes(id))
 
     if (newOptionIds.length > 0) {
-      await db.pollResponse.createMany({
-        data: newOptionIds.map(optionId => ({
-          pollId: pollId,
-          optionId,
-          userId
-        }))
-      })
+      const votesToInsert = newOptionIds.map((optionId: string) => ({
+        id: uuidv4(),
+        pollId: pollId,
+        optionId: optionId,
+        userId: userId
+      }))
+
+      const { error: insertError } = await supabase
+        .from('poll_responses')
+        .insert(votesToInsert)
+
+      if (insertError) {
+        console.error('Error inserting new votes:', insertError)
+        return NextResponse.json(
+          { error: 'Failed to insert new votes' },
+          { status: 500 }
+        )
+      }
     }
 
     // Récupérer le sondage mis à jour avec les stats
-    const updatedPoll = await db.poll.findUnique({
-      where: { id: pollId },
-      include: {
-        options: {
-          include: {
-            responses: true
-          }
-        }
-      }
-    })
+    const { data: updatedPoll, error: updatedPollError } = await supabase
+      .from('polls')
+      .select('*, options:poll_options(*, responses:poll_responses(id))')
+      .eq('id', pollId)
+      .single()
 
-    if (!updatedPoll) {
+    if (updatedPollError || !updatedPoll) {
       return NextResponse.json(
         { error: 'Failed to fetch updated poll' },
         { status: 500 }
@@ -132,11 +194,13 @@ export async function POST(
     }
 
     // Calculer les stats
-    const totalVotes = updatedPoll.options.reduce((sum, option) => sum + option.responses.length, 0)
-    const optionsWithStats = updatedPoll.options.map(option => ({
+    const totalVotes = updatedPoll.options?.reduce((sum: number, option: any) => 
+      sum + (option.responses?.length || 0), 0) || 0
+    
+    const optionsWithStats = (updatedPoll.options || []).map((option: any) => ({
       ...option,
-      votes: option.responses.length,
-      percentage: totalVotes > 0 ? Math.round((option.responses.length / totalVotes) * 100) : 0
+      votes: option.responses?.length || 0,
+      percentage: totalVotes > 0 ? Math.round(((option.responses?.length || 0) / totalVotes) * 100) : 0
     }))
 
     const pollWithStats = {
@@ -166,26 +230,24 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 
-    const responses = await db.pollResponse.findMany({
-      where: { pollId: pollId },
-      include: {
-        user: userId ? {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        } : false,
-        option: {
-          select: {
-            id: true,
-            text: true
-          }
-        }
-      }
-    })
+    const { data: responses, error } = await supabase
+      .from('poll_responses')
+      .select(`
+        *,
+        user:users(id, name, email),
+        option:poll_options(id, text)
+      `)
+      .eq('pollId', pollId)
 
-    return NextResponse.json(responses)
+    if (error) {
+      console.error('Error fetching votes:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch votes' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(responses || [])
   } catch (error) {
     console.error('Error fetching votes:', error)
     return NextResponse.json(

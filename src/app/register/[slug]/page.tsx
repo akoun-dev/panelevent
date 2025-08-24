@@ -263,7 +263,7 @@ export default function RegisterPage() {
               >
                 {t.acceptLabel}
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground leading-none">
                 {t.acceptHint}
               </p>
             </div>
@@ -284,7 +284,7 @@ export default function RegisterPage() {
             <Button
               onClick={() => setShowConsent(true)}
               disabled={!consentAccepted}
-              className="flex-1 bg-fern-frond hover:bg-fern-frond/90 text-white"
+              className="flex-1 border-border text-amber-400 "
             >
               {t.continueButton}
             </Button>

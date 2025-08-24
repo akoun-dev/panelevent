@@ -60,7 +60,7 @@ export async function PATCH(
     const resolvedParams = await params
     const { id: pollId } = resolvedParams
     const body = await request.json()
-    const { isActive, question, description, isAnonymous, allowMultipleVotes } = body
+    const { isActive, question, description, isAnonymous, allowMultipleVotes, options } = body
 
     const updateData: Record<string, any> = {}
     if (isActive !== undefined) updateData.is_active = isActive
@@ -68,6 +68,46 @@ export async function PATCH(
     if (description !== undefined) updateData.description = description
     if (isAnonymous !== undefined) updateData.is_anonymous = isAnonymous
     if (allowMultipleVotes !== undefined) updateData.allow_multiple_votes = allowMultipleVotes
+
+    // Mise à jour des options si fournies
+    if (options && Array.isArray(options)) {
+      // Supprimer les options existantes
+      const { error: deleteOptionsError } = await supabase
+        .from('poll_options')
+        .delete()
+        .eq('pollId', pollId)
+
+      if (deleteOptionsError) {
+        console.error('Error deleting poll options:', deleteOptionsError)
+        return NextResponse.json(
+          { error: 'Failed to update poll options' },
+          { status: 500 }
+        )
+      }
+
+      // Ajouter les nouvelles options
+      const newOptions = options
+        .filter((opt: string) => opt.trim())
+        .map((text: string, index: number) => ({
+          pollId,
+          text: text.trim(),
+          order: index
+        }))
+
+      if (newOptions.length > 0) {
+        const { error: insertOptionsError } = await supabase
+          .from('poll_options')
+          .insert(newOptions)
+
+        if (insertOptionsError) {
+          console.error('Error inserting poll options:', insertOptionsError)
+          return NextResponse.json(
+            { error: 'Failed to create poll options' },
+            { status: 500 }
+          )
+        }
+      }
+    }
 
     const { data: updatedPoll, error: updateError } = await supabase
       .from('polls')

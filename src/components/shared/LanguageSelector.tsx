@@ -17,7 +17,7 @@ export function LanguageSelector({ onLanguageSelect }: LanguageSelectorProps) {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-primary">🌐</CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            {translations.fr.language.select} / {translations.en.language.select} / {translations.es.language.select} / {translations.pt.language.select} / {translations.ar.language.select}
+            Sélectionnez votre langue / Select your language / Seleccione su idioma / Selecione seu idioma / اختر لغتك
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
