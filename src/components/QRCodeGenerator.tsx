@@ -17,6 +17,7 @@ export function QRCodeGenerator({ url, eventName }: QRCodeGeneratorProps) {
   useEffect(() => {
     const generateQR = async () => {
       try {
+        // Générer le QR code normal d'abord
         const dataUrl = await QRCode.toDataURL(url, {
           width: 300,
           margin: 2,
@@ -25,7 +26,72 @@ export function QRCodeGenerator({ url, eventName }: QRCodeGeneratorProps) {
             light: '#a8be6c'
           }
         })
-        setQrCodeDataUrl(dataUrl)
+        
+        // Si nous sommes dans le navigateur, essayer d'ajouter le favicon
+        if (typeof window !== 'undefined') {
+          try {
+            // Charger le favicon
+            const faviconResponse = await fetch('/favicon.png')
+            const faviconBlob = await faviconResponse.blob()
+            const faviconUrl = URL.createObjectURL(faviconBlob)
+            
+            // Créer un canvas pour dessiner le QR code avec le favicon
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            if (!ctx) {
+              throw new Error('Could not get canvas context')
+            }
+            
+            canvas.width = 300
+            canvas.height = 300
+            
+            // Charger l'image du QR code
+            const qrImage = new window.Image()
+            qrImage.src = dataUrl
+            
+            await new Promise<void>((resolve) => {
+              qrImage.onload = () => resolve()
+            })
+            
+            // Dessiner le QR code sur le canvas
+            ctx.drawImage(qrImage, 0, 0, 300, 300)
+            
+            // Charger et dessiner le favicon au centre
+            const faviconImage = new window.Image()
+            faviconImage.src = faviconUrl
+            
+            await new Promise<void>((resolve) => {
+              faviconImage.onload = () => resolve()
+            })
+            
+            // Calculer la position et la taille du favicon (20% du QR code)
+            const faviconSize = 300 * 0.2
+            const centerX = (300 - faviconSize) / 2
+            const centerY = (300 - faviconSize) / 2
+            
+            // Dessiner un fond blanc pour le favicon
+            ctx.fillStyle = '#ffffff'
+            ctx.fillRect(centerX, centerY, faviconSize, faviconSize)
+            
+            // Dessiner le favicon
+            ctx.drawImage(faviconImage, centerX, centerY, faviconSize, faviconSize)
+            
+            // Convertir le canvas en data URL
+            const finalDataUrl = canvas.toDataURL('image/png')
+            setQrCodeDataUrl(finalDataUrl)
+            
+            // Nettoyer l'URL temporaire
+            URL.revokeObjectURL(faviconUrl)
+            
+          } catch (faviconErr) {
+            console.error('Failed to add favicon to QR code:', faviconErr)
+            // Fallback: utiliser le QR code sans favicon
+            setQrCodeDataUrl(dataUrl)
+          }
+        } else {
+          // Environnement serveur, utiliser le QR code normal
+          setQrCodeDataUrl(dataUrl)
+        }
       } catch (err) {
         console.error('Failed to generate QR code:', err)
       }
