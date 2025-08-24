@@ -20,22 +20,22 @@ ALTER TABLE password_reset_tokens ENABLE ROW LEVEL SECURITY;
 -- RLS Policies
 -- Users can only access their own reset tokens
 CREATE POLICY "Users can view their own reset tokens" ON password_reset_tokens
-  FOR SELECT USING (auth.uid() = "userId");
+  FOR SELECT USING (auth.uid()::text = "userId");
 
 -- Users can insert their own reset tokens
 CREATE POLICY "Users can create their own reset tokens" ON password_reset_tokens
-  FOR INSERT WITH CHECK (auth.uid() = "userId");
+  FOR INSERT WITH CHECK (auth.uid()::text = "userId");
 
 -- Users can delete their own reset tokens
 CREATE POLICY "Users can delete their own reset tokens" ON password_reset_tokens
-  FOR DELETE USING (auth.uid() = "userId");
+  FOR DELETE USING (auth.uid()::text = "userId");
 
 -- Admin can manage all reset tokens
 CREATE POLICY "Admins can manage all reset tokens" ON password_reset_tokens
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM users 
-      WHERE users.id = auth.uid() 
+      WHERE users.id = auth.uid()::text
       AND users.role = 'ADMIN'
     )
   );

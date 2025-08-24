@@ -1,9 +1,20 @@
 -- Initial Supabase schema
-CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'ORGANIZER', 'ATTENDEE');
-CREATE TYPE "QuestionStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
-CREATE TYPE "VoteType" AS ENUM ('UP', 'DOWN');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
+        CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'ORGANIZER', 'ATTENDEE');
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'QuestionStatus') THEN
+        CREATE TYPE "QuestionStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'VoteType') THEN
+        CREATE TYPE "VoteType" AS ENUM ('UP', 'DOWN');
+    END IF;
+END $$;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id text PRIMARY KEY,
   email text NOT NULL,
   name text,
@@ -15,7 +26,7 @@ CREATE TABLE users (
   CONSTRAINT users_email_key UNIQUE (email)
 );
 -- Events are organized by users; an event can have many panels and registrations
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
   id text PRIMARY KEY,
   title text NOT NULL,
   description text,
@@ -37,7 +48,7 @@ CREATE TABLE events (
 );
 
 -- Panels are sessions within events
-CREATE TABLE panels (
+CREATE TABLE IF NOT EXISTS panels (
   id text PRIMARY KEY,
   title text NOT NULL,
   description text,
@@ -50,7 +61,7 @@ CREATE TABLE panels (
   CONSTRAINT panels_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
 
-CREATE TABLE questions (
+CREATE TABLE IF NOT EXISTS questions (
   id text PRIMARY KEY,
   content text NOT NULL,
   status "QuestionStatus" NOT NULL DEFAULT 'PENDING',
@@ -64,7 +75,7 @@ CREATE TABLE questions (
   CONSTRAINT questions_panelId_fkey FOREIGN KEY ("panelId") REFERENCES panels(id) ON DELETE SET NULL
 );
 
-CREATE TABLE question_votes (
+CREATE TABLE IF NOT EXISTS question_votes (
   "questionId" text NOT NULL,
   "userId" text NOT NULL,
   type "VoteType" NOT NULL,
@@ -74,7 +85,7 @@ CREATE TABLE question_votes (
   CONSTRAINT question_votes_userId_fkey FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE polls (
+CREATE TABLE IF NOT EXISTS polls (
   id text PRIMARY KEY,
   question text NOT NULL,
   description text,
@@ -87,7 +98,7 @@ CREATE TABLE polls (
   CONSTRAINT polls_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
 
-CREATE TABLE poll_options (
+CREATE TABLE IF NOT EXISTS poll_options (
   id text PRIMARY KEY,
   text text NOT NULL,
   "order" integer NOT NULL DEFAULT 0,
@@ -95,7 +106,7 @@ CREATE TABLE poll_options (
   CONSTRAINT poll_options_pollId_fkey FOREIGN KEY ("pollId") REFERENCES polls(id) ON DELETE CASCADE
 );
 
-CREATE TABLE poll_responses (
+CREATE TABLE IF NOT EXISTS poll_responses (
   id text PRIMARY KEY,
   "createdAt" timestamptz NOT NULL DEFAULT now(),
   "userId" text NOT NULL,
@@ -107,7 +118,7 @@ CREATE TABLE poll_responses (
   CONSTRAINT poll_responses_optionId_fkey FOREIGN KEY ("optionId") REFERENCES poll_options(id) ON DELETE CASCADE
 );
 -- Association table linking users and events with dedicated RLS policies
-CREATE TABLE event_registrations (
+CREATE TABLE IF NOT EXISTS event_registrations (
   id text PRIMARY KEY,
   email text,
   "firstName" text,
@@ -144,7 +155,7 @@ CREATE POLICY "Organizers manage event registrations" ON event_registrations
     )
   );
 
-CREATE TABLE certificate_templates (
+CREATE TABLE IF NOT EXISTS certificate_templates (
   id text PRIMARY KEY,
   title text NOT NULL,
   description text,
@@ -158,7 +169,7 @@ CREATE TABLE certificate_templates (
   CONSTRAINT certificate_templates_userId_fkey FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE TABLE certificates (
+CREATE TABLE IF NOT EXISTS certificates (
   id text PRIMARY KEY,
   content text NOT NULL,
   "issuedAt" timestamptz NOT NULL DEFAULT now(),
@@ -174,7 +185,7 @@ CREATE TABLE certificates (
   CONSTRAINT certificates_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
 
-CREATE TABLE feedbacks (
+CREATE TABLE IF NOT EXISTS feedbacks (
   id text PRIMARY KEY,
   rating integer NOT NULL,
   comment text,
@@ -188,7 +199,7 @@ CREATE TABLE feedbacks (
   CONSTRAINT feedbacks_eventId_fkey FOREIGN KEY ("eventId") REFERENCES events(id) ON DELETE CASCADE
 );
 
-CREATE TABLE helpful_votes (
+CREATE TABLE IF NOT EXISTS helpful_votes (
   "feedbackId" text NOT NULL,
   "userId" text NOT NULL,
   "createdAt" timestamptz NOT NULL DEFAULT now(),
@@ -197,7 +208,7 @@ CREATE TABLE helpful_votes (
   CONSTRAINT helpful_votes_userId_fkey FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE "RegistrationToken" (
+CREATE TABLE IF NOT EXISTS "RegistrationToken" (
   id text PRIMARY KEY,
   token text NOT NULL,
   "eventId" text NOT NULL,
@@ -210,6 +221,6 @@ CREATE TABLE "RegistrationToken" (
 );
 
 -- Indexes for frequently filtered columns
-CREATE INDEX idx_events_slug ON events(slug);
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_feedbacks_eventId ON feedbacks("eventId");
+CREATE INDEX IF NOT EXISTS idx_events_slug ON events(slug);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_eventId ON feedbacks("eventId");

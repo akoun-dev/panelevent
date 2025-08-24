@@ -1,9 +1,11 @@
 "use client"
 
 import { useSession, signIn, signOut } from 'next-auth/react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Calendar, Users, Clock, User, LogOut } from 'lucide-react'
+import { Calendar, Users, Clock, User, LogOut, QrCode } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
+import QRCodeComponent from '@/components/qr-code'
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -16,6 +18,30 @@ export default function Home() {
     }
   }
 
+  const [currentEvent, setCurrentEvent] = useState<any>(null)
+  const [eventType, setEventType] = useState<'current' | 'next' | 'none'>('none')
+  const [loadingEvent, setLoadingEvent] = useState(true)
+
+  useEffect(() => {
+    const fetchCurrentEvent = async () => {
+      try {
+        setLoadingEvent(true)
+        const response = await fetch('/api/events/current')
+        if (response.ok) {
+          const data = await response.json()
+          setCurrentEvent(data.event)
+          setEventType(data.type)
+        }
+      } catch (error) {
+        console.error('Error fetching current event:', error)
+      } finally {
+        setLoadingEvent(false)
+      }
+    }
+
+    fetchCurrentEvent()
+  }, [])
+
   const handleSignOut = async () => {
     try {
       await signOut({ callbackUrl: '/' })
@@ -27,6 +53,16 @@ export default function Home() {
         variant: 'destructive'
       })
     }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   if (status === 'loading') {
@@ -95,15 +131,57 @@ export default function Home() {
             La plateforme unifiée pour la gestion d'événements, sessions interactives, 
             questions en direct, sondages et attestations.
           </p>
-          <div className="flex justify-center">
-            {session?.user?.role === 'ORGANIZER' && (
-              <Button size="lg" className="text-lg px-8" asChild>
-                <a href="/dashboard">Créer un événement</a>
-              </Button>
-            )}
-          </div>
         </div>
       </section>
+
+      {/* Current/Next Event QR Code Section */}
+      {!loadingEvent && (
+        <section className="py-16 px-4 bg-white">
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h3 className="text-3xl font-bold mb-4">
+                {eventType === 'current' ? 'Événement en cours' :
+                 eventType === 'next' ? 'Prochain événement' :
+                 'Aucun événement programmé'}
+              </h3>
+              
+              {currentEvent && (
+                <div className="mt-8">
+                  <div className="bg-muted rounded-lg shadow-lg p-6 max-w-md mx-auto">
+                    <h4 className="text-xl font-semibold text-foreground mb-2">
+                      {currentEvent.title}
+                    </h4>
+                    <p className="text-muted-foreground mb-4">
+                      {formatDate(currentEvent.startDate)}
+                      {currentEvent.endDate && ` - ${formatDate(currentEvent.endDate)}`}
+                    </p>
+                    {currentEvent.description && (
+                      <p className="text-foreground mb-4">{currentEvent.description}</p>
+                    )}
+                    
+                    <div className="flex justify-center mb-4">
+                      <QRCodeComponent
+                        eventId={currentEvent.id}
+                        size={200}
+                      />
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground">
+                      Scannez le QR code pour accéder à l'événement
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {eventType === 'none' && (
+                <p className="text-muted-foreground">
+                  Aucun événement n'est actuellement programmé.
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-16 px-4 bg-muted/50">

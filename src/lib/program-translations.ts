@@ -8,6 +8,7 @@ export interface TranslatedProgramItem {
   speaker?: Record<Language, string | undefined>
   location?: Record<Language, string | undefined>
   type?: 'conference' | 'workshop' | 'networking' | 'break' | 'ceremony'
+  isSession?: boolean
 }
 
 export interface ProgramData {

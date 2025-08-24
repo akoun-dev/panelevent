@@ -162,6 +162,7 @@ export default function OrganizerEventProgramPage({ params }: { params: Promise<
         initialData={programData || undefined}
         onSave={handleSaveProgram}
         loading={saving}
+        eventId={event?.id}
       />
     </div>
   )

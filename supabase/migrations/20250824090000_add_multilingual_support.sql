@@ -90,7 +90,7 @@ $$ LANGUAGE plpgsql;
 
 -- Vue pour faciliter l'accès aux événements avec les traductions
 CREATE OR REPLACE VIEW events_with_translations AS
-SELECT 
+SELECT
   id,
   title,
   description,
@@ -99,17 +99,17 @@ SELECT
   description_translations,
   location_translations,
   slug,
-  startDate,
-  endDate,
-  isPublic,
-  isActive,
-  maxAttendees,
-  organizerId,
+  "startDate",
+  "endDate",
+  "isPublic",
+  "isActive",
+  "maxAttendees",
+  "organizerId",
   program,
-  qrCode,
+  "qrCode",
   branding,
-  createdAt,
-  updatedAt,
+  "createdAt",
+  "updatedAt",
   -- Fonctions pour obtenir les traductions
   get_event_title(id, 'fr') as title_fr,
   get_event_title(id, 'en') as title_en,

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,17 +10,19 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { 
-  Clock, 
-  MapPin, 
-  Plus, 
-  Trash2, 
-  Edit, 
+import {
+  Clock,
+  MapPin,
+  Plus,
+  Trash2,
+  Edit,
   Save,
-  Languages
+  Languages,
+  QrCode
 } from 'lucide-react'
 import { Language, getLanguageName } from '@/lib/translations'
 import { TranslatedProgramItem } from '@/lib/program-translations'
+import { QRCodeGenerator } from '@/components/QRCodeGenerator'
 
 interface ProgramFormData {
   hasProgram: boolean
@@ -30,6 +33,7 @@ interface ProgramFormProps {
   initialData?: Partial<ProgramFormData>
   onSave: (data: ProgramFormData) => Promise<void>
   loading?: boolean
+  eventId?: string
 }
 
 // Fonction utilitaire pour créer un objet Record<Language, string> vide
@@ -41,7 +45,7 @@ const createEmptyLanguageRecord = (): Record<Language, string> => ({
   ar: ''
 })
 
-export function MultilingualProgramForm({ initialData, onSave, loading = false }: ProgramFormProps) {
+export function MultilingualProgramForm({ initialData, onSave, loading = false, eventId }: ProgramFormProps) {
   const [formData, setFormData] = useState<ProgramFormData>({
     hasProgram: initialData?.hasProgram ?? false,
     programItems: initialData?.programItems || []
@@ -52,7 +56,8 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
     title: createEmptyLanguageRecord(),
     description: undefined,
     speaker: undefined,
-    location: undefined
+    location: undefined,
+    isSession: false
   })
   const [editingItem, setEditingItem] = useState<TranslatedProgramItem | null>(null)
   const [currentLanguage, setCurrentLanguage] = useState<Language>('fr')
@@ -65,7 +70,7 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
     if (!newItem.time || !newItem.title.fr) return
     
     const item: TranslatedProgramItem = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       ...newItem
     }
     
@@ -79,7 +84,8 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
       title: createEmptyLanguageRecord(),
       description: undefined,
       speaker: undefined,
-      location: undefined
+      location: undefined,
+      isSession: false
     })
   }
 
@@ -218,7 +224,7 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
             {/* Formulaire d'ajout d'élément */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Ajouter une activité</CardTitle>
+                <CardTitle className="text-lg">Ajouter une activité / Session</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <LanguageSelector onLanguageChange={() => {}} />
@@ -277,6 +283,21 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
                   </div>
                 </div>
 
+                {/* Switch pour isSession */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="isSession">Session nécessitant inscription</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Activer pour générer un QR code d'inscription spécifique à cette session
+                    </p>
+                  </div>
+                  <Switch
+                    id="isSession"
+                    checked={newItem.isSession || false}
+                    onCheckedChange={(checked) => setNewItem(prev => ({ ...prev, isSession: checked }))}
+                  />
+                </div>
+
                 <Button onClick={addProgramItem} disabled={!newItem.time || !newItem.title.fr}>
                   <Plus className="w-4 h-4 mr-2" />
                   Ajouter l'activité
@@ -304,6 +325,11 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
                                   {formatTime(item.time)}
                                 </Badge>
                                 <h4 className="font-semibold">{item.title.fr}</h4>
+                                {item.isSession && (
+                                  <Badge variant="secondary" className="ml-2">
+                                    Session
+                                  </Badge>
+                                )}
                               </div>
                               
                               {item.description?.fr && (
@@ -329,6 +355,48 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false }
                             </div>
                             
                             <div className="flex gap-2">
+                              {item.isSession && (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-blue-600 hover:text-blue-700"
+                                    >
+                                      <QrCode className="w-4 h-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-sm">
+                                    <DialogHeader>
+                                      <DialogTitle>QR Code d'Inscription</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex flex-col items-center space-y-4">
+                                      <QRCodeGenerator
+                                        url={`/session/${eventId}/${item.id}/register`}
+                                        eventName={item.title.fr}
+                                      />
+                                      <p className="text-sm text-muted-foreground text-center">
+                                        Scannez ce QR code pour accéder au formulaire d'inscription
+                                      </p>
+                                      <p className="text-xs text-muted-foreground text-center">
+                                        Session: {item.title.fr}
+                                      </p>
+                                      <div className="text-center">
+                                        <p className="text-xs text-muted-foreground mb-1">Lien d'inscription:</p>
+                                        <a
+                                          href={`/session/${eventId}/${item.id}/register`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-blue-600 hover:text-blue-700 break-all"
+                                        >
+                                          {`/session/${eventId}/${item.id}/register`}
+                                        </a>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              )}
+                              
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button
@@ -518,6 +586,21 @@ function ProgramItemForm({ item, onSave, onCancel }: ProgramItemFormProps) {
         </div>
       </div>
       
+      {/* Switch pour isSession dans le formulaire d'édition */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label htmlFor="editIsSession">Session nécessitant inscription</Label>
+          <p className="text-sm text-muted-foreground">
+            Activer pour générer un QR code d'inscription spécifique à cette session
+          </p>
+        </div>
+        <Switch
+          id="editIsSession"
+          checked={formData.isSession || false}
+          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isSession: checked }))}
+        />
+      </div>
+
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={onCancel}>
           Annuler

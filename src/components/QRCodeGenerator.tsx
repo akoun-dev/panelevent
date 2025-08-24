@@ -30,10 +30,20 @@ export function QRCodeGenerator({ url, eventName }: QRCodeGeneratorProps) {
         // Si nous sommes dans le navigateur, essayer d'ajouter le favicon
         if (typeof window !== 'undefined') {
           try {
+            console.log('QRCodeGenerator: Tentative de chargement du favicon...')
             // Charger le favicon
             const faviconResponse = await fetch('/favicon.png')
+            console.log('QRCodeGenerator: Réponse favicon:', faviconResponse.status, faviconResponse.statusText)
+            
+            if (!faviconResponse.ok) {
+              throw new Error(`HTTP error! status: ${faviconResponse.status}`)
+            }
+            
             const faviconBlob = await faviconResponse.blob()
+            console.log('QRCodeGenerator: Favicon blob chargé:', faviconBlob.type, faviconBlob.size)
+            
             const faviconUrl = URL.createObjectURL(faviconBlob)
+            console.log('QRCodeGenerator: URL temporaire créée:', faviconUrl)
             
             // Créer un canvas pour dessiner le QR code avec le favicon
             const canvas = document.createElement('canvas')
@@ -61,7 +71,10 @@ export function QRCodeGenerator({ url, eventName }: QRCodeGeneratorProps) {
             faviconImage.src = faviconUrl
             
             await new Promise<void>((resolve) => {
-              faviconImage.onload = () => resolve()
+              faviconImage.onload = () => {
+                console.log('QRCodeGenerator: Favicon image chargée:', faviconImage.width, 'x', faviconImage.height)
+                resolve()
+              }
             })
             
             // Calculer la position et la taille du favicon (20% du QR code)
@@ -78,18 +91,21 @@ export function QRCodeGenerator({ url, eventName }: QRCodeGeneratorProps) {
             
             // Convertir le canvas en data URL
             const finalDataUrl = canvas.toDataURL('image/png')
+            console.log('QRCodeGenerator: QR code final généré avec favicon')
             setQrCodeDataUrl(finalDataUrl)
             
             // Nettoyer l'URL temporaire
             URL.revokeObjectURL(faviconUrl)
             
           } catch (faviconErr) {
-            console.error('Failed to add favicon to QR code:', faviconErr)
+            console.error('QRCodeGenerator: Failed to add favicon to QR code:', faviconErr)
+            console.log('QRCodeGenerator: Utilisation du QR code sans favicon comme fallback')
             // Fallback: utiliser le QR code sans favicon
             setQrCodeDataUrl(dataUrl)
           }
         } else {
           // Environnement serveur, utiliser le QR code normal
+          console.log('QRCodeGenerator: Environnement serveur - QR code normal')
           setQrCodeDataUrl(dataUrl)
         }
       } catch (err) {

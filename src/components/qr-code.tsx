@@ -53,10 +53,20 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
         // Si nous sommes dans le navigateur, essayer d'ajouter le favicon
         if (typeof window !== 'undefined') {
           try {
+            console.log('Tentative de chargement du favicon...')
             // Charger le favicon
             const faviconResponse = await fetch('/favicon.png')
+            console.log('Réponse favicon:', faviconResponse.status, faviconResponse.statusText)
+            
+            if (!faviconResponse.ok) {
+              throw new Error(`HTTP error! status: ${faviconResponse.status}`)
+            }
+            
             const faviconBlob = await faviconResponse.blob()
+            console.log('Favicon blob chargé:', faviconBlob.type, faviconBlob.size)
+            
             const faviconUrl = URL.createObjectURL(faviconBlob)
+            console.log('URL temporaire créée:', faviconUrl)
             
             // Créer un canvas pour dessiner le QR code avec le favicon
             const canvas = document.createElement('canvas')
@@ -84,7 +94,10 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
             faviconImage.src = faviconUrl
             
             await new Promise<void>((resolve) => {
-              faviconImage.onload = () => resolve()
+              faviconImage.onload = () => {
+                console.log('Favicon image chargée:', faviconImage.width, 'x', faviconImage.height)
+                resolve()
+              }
             })
             
             // Calculer la position et la taille du favicon (20% du QR code)
@@ -101,6 +114,7 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
             
             // Convertir le canvas en data URL
             const finalDataUrl = canvas.toDataURL('image/png')
+            console.log('QR code final généré avec favicon')
             setQrDataUrl(finalDataUrl)
             
             // Nettoyer l'URL temporaire
@@ -108,11 +122,13 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
             
           } catch (faviconErr) {
             console.error('Failed to add favicon to QR code:', faviconErr)
+            console.log('Utilisation du QR code sans favicon comme fallback')
             // Fallback: utiliser le QR code sans favicon
             setQrDataUrl(dataUrl)
           }
         } else {
           // Environnement serveur, utiliser le QR code normal
+          console.log('Environnement serveur - QR code normal')
           setQrDataUrl(dataUrl)
         }
       } catch {
