@@ -25,6 +25,21 @@ interface EventSettings {
   maxAttendees: number
   createdAt: string
   updatedAt: string
+  title_translations?: Record<string, string>
+  description_translations?: Record<string, string>
+  location_translations?: Record<string, string>
+  branding?: {
+    primaryColor?: string
+    secondaryColor?: string
+    accentColor?: string
+  }
+  program?: string
+  qrCode?: string
+  _count?: {
+    registrations: number
+    questions: number
+    polls: number
+  }
 }
 
 export default function EventSettingsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -41,7 +56,18 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
     location: '',
     isPublic: false,
     maxAttendees: 0,
-    isActive: false
+    isActive: false,
+    title_translations: {} as Record<string, string>,
+    description_translations: {} as Record<string, string>,
+    location_translations: {} as Record<string, string>,
+    branding: {
+      primaryColor: '#3b82f6',
+      secondaryColor: '#64748b',
+      accentColor: '#f59e0b'
+    },
+    hasCertificates: false,
+    hasQa: false,
+    hasPolls: false
   })
 
   useEffect(() => {
@@ -60,7 +86,18 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
             location: eventData.location || '',
             isPublic: eventData.isPublic || false,
             maxAttendees: eventData.maxAttendees || 0,
-            isActive: eventData.isActive || false
+            isActive: eventData.isActive || false,
+            title_translations: eventData.title_translations || {},
+            description_translations: eventData.description_translations || {},
+            location_translations: eventData.location_translations || {},
+            branding: eventData.branding || {
+              primaryColor: '#3b82f6',
+              secondaryColor: '#64748b',
+              accentColor: '#f59e0b'
+            },
+            hasCertificates: eventData.hasCertificates || false,
+            hasQa: eventData.hasQa || false,
+            hasPolls: eventData.hasPolls || false
           })
         }
       } catch (error) {
@@ -195,10 +232,10 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
         {/* Dates et capacité */}
         <Card>
           <CardHeader>
-            <CardTitle>Dates et capacité</CardTitle>
-            <CardDescription>Configurez les dates et la capacité de votre événement</CardDescription>
+            <CardTitle>Dates, capacité et couleurs</CardTitle>
+            <CardDescription>Configurez les dates, la capacité et les couleurs de votre événement</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="startDate">Date de début</Label>
@@ -230,66 +267,315 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
                 placeholder="0 pour illimité"
               />
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Paramètres de visibilité */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Visibilité</CardTitle>
-            <CardDescription>Configurez la visibilité de votre événement</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Événement public</Label>
-                <p className="text-sm text-muted-foreground">
-                  Rendre cet événement visible par tous
-                </p>
+            {/* Couleurs de l'événement */}
+            <div className="pt-4 border-t space-y-4">
+              <h4 className="text-sm font-medium">Couleurs de l'événement</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="primaryColor" className="block mb-2">Couleur principale</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="primaryColor"
+                      type="color"
+                      value={formData.branding?.primaryColor || '#3b82f6'}
+                      onChange={(e) => {
+                        const newBranding = {
+                          ...formData.branding,
+                          primaryColor: e.target.value
+                        }
+                        handleInputChange('branding', newBranding)
+                      }}
+                      className="w-10 h-10 rounded border cursor-pointer"
+                    />
+                    <Input
+                      value={formData.branding?.primaryColor || '#3b82f6'}
+                      onChange={(e) => {
+                        const newBranding = {
+                          ...formData.branding,
+                          primaryColor: e.target.value
+                        }
+                        handleInputChange('branding', newBranding)
+                      }}
+                      placeholder="#3b82f6"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="secondaryColor" className="block mb-2">Couleur secondaire</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="secondaryColor"
+                      type="color"
+                      value={formData.branding?.secondaryColor || '#64748b'}
+                      onChange={(e) => {
+                        const newBranding = {
+                          ...formData.branding,
+                          secondaryColor: e.target.value
+                        }
+                        handleInputChange('branding', newBranding)
+                      }}
+                      className="w-10 h-10 rounded border cursor-pointer"
+                    />
+                    <Input
+                      value={formData.branding?.secondaryColor || '#64748b'}
+                      onChange={(e) => {
+                        const newBranding = {
+                          ...formData.branding,
+                          secondaryColor: e.target.value
+                        }
+                        handleInputChange('branding', newBranding)
+                      }}
+                      placeholder="#64748b"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="accentColor" className="block mb-2">Couleur d'accent</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="accentColor"
+                      type="color"
+                      value={formData.branding?.accentColor || '#f59e0b'}
+                      onChange={(e) => {
+                        const newBranding = {
+                          ...formData.branding,
+                          accentColor: e.target.value
+                        }
+                        handleInputChange('branding', newBranding)
+                      }}
+                      className="w-10 h-10 rounded border cursor-pointer"
+                    />
+                    <Input
+                      value={formData.branding?.accentColor || '#f59e0b'}
+                      onChange={(e) => {
+                        const newBranding = {
+                          ...formData.branding,
+                          accentColor: e.target.value
+                        }
+                        handleInputChange('branding', newBranding)
+                      }}
+                      placeholder="#f59e0b"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
               </div>
-              <Switch
-                checked={formData.isPublic}
-                onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
-              />
+
+              <div className="flex items-center gap-4 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <div
+                    className="w-4 h-4 rounded border"
+                    style={{ backgroundColor: formData.branding?.primaryColor || '#3b82f6' }}
+                  ></div>
+                  <span>Primaire</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div
+                    className="w-4 h-4 rounded border"
+                    style={{ backgroundColor: formData.branding?.secondaryColor || '#64748b' }}
+                  ></div>
+                  <span>Secondaire</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div
+                    className="w-4 h-4 rounded border"
+                    style={{ backgroundColor: formData.branding?.accentColor || '#f59e0b' }}
+                  ></div>
+                  <span>Accent</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Informations de l'événement */}
+        {/* Paramètres multilingues */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Traductions</CardTitle>
+            <CardDescription>Gérez les traductions multilingues de votre événement</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="mb-2 block">Titre multilingue</Label>
+              <div className="space-y-2">
+                {['fr', 'en', 'pt', 'es', 'ar'].map((lang) => (
+                  <div key={lang} className="flex items-center gap-2">
+                    <span className="text-sm font-medium w-8">{lang.toUpperCase()}</span>
+                    <Input
+                      placeholder={`Titre en ${lang}`}
+                      value={formData.title_translations?.[lang] || ''}
+                      onChange={(e) => {
+                        const newTranslations = {
+                          ...formData.title_translations,
+                          [lang]: e.target.value
+                        }
+                        handleInputChange('title_translations', newTranslations)
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Description multilingue</Label>
+              <div className="space-y-2">
+                {['fr', 'en', 'pt', 'es', 'ar'].map((lang) => (
+                  <div key={lang} className="flex items-center gap-2">
+                    <span className="text-sm font-medium w-8">{lang.toUpperCase()}</span>
+                    <Textarea
+                      placeholder={`Description en ${lang}`}
+                      value={formData.description_translations?.[lang] || ''}
+                      onChange={(e) => {
+                        const newTranslations = {
+                          ...formData.description_translations,
+                          [lang]: e.target.value
+                        }
+                        handleInputChange('description_translations', newTranslations)
+                      }}
+                      rows={2}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Lieu multilingue</Label>
+              <div className="space-y-2">
+                {['fr', 'en', 'pt', 'es', 'ar'].map((lang) => (
+                  <div key={lang} className="flex items-center gap-2">
+                    <span className="text-sm font-medium w-8">{lang.toUpperCase()}</span>
+                    <Input
+                      placeholder={`Lieu en ${lang}`}
+                      value={formData.location_translations?.[lang] || ''}
+                      onChange={(e) => {
+                        const newTranslations = {
+                          ...formData.location_translations,
+                          [lang]: e.target.value
+                        }
+                        handleInputChange('location_translations', newTranslations)
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Visibilité et Informations de l'événement */}
         {settings && (
           <Card>
             <CardHeader>
-              <CardTitle>Informations de l'événement</CardTitle>
-              <CardDescription>Détails techniques de votre événement</CardDescription>
+              <CardTitle>Visibilité et Informations</CardTitle>
+              <CardDescription>Configurez la visibilité et consultez les informations de votre événement</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">ID de l'événement</span>
-                <Badge variant="outline">{settings.id}</Badge>
+            <CardContent className="space-y-6">
+              {/* Section Visibilité */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Paramètres de visibilité</h4>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Événement public</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Rendre cet événement visible par tous
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.isPublic}
+                    onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Événement actif</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Activer ou désactiver l'événement
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Statut</span>
-                <Badge variant={settings.isPublic ? "default" : "secondary"}>
-                  {settings.isPublic ? 'Public' : 'Privé'}
-                </Badge>
-              </div>
+              {/* Section Informations */}
+              <div className="pt-4 border-t space-y-4">
+                <h4 className="text-sm font-medium">Informations de l'événement</h4>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">ID de l'événement</span>
+                  <Badge variant="outline">{settings.id}</Badge>
+                </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Créé le</span>
-                <span>{format(new Date(settings.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}</span>
-              </div>
+                {settings.createdAt && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Créé le</span>
+                    <span>{format(new Date(settings.createdAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}</span>
+                  </div>
+                )}
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Modifié le</span>
-                <span>{format(new Date(settings.updatedAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}</span>
-              </div>
+                {settings.updatedAt && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Modifié le</span>
+                    <span>{format(new Date(settings.updatedAt), 'dd/MM/yyyy à HH:mm', { locale: fr })}</span>
+                  </div>
+                )}
 
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Statut</span>
-                <Badge variant={settings.isActive ? "default" : "secondary"}>
-                  {settings.isActive ? 'Actif' : 'Inactif'}
-                </Badge>
+                {/* Fonctionnalités avec switches */}
+                {settings._count && (
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-medium mb-3">Fonctionnalités activées</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Certificats</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Activer les certificats de participation
+                          </p>
+                        </div>
+                        <Switch
+                          checked={formData.hasCertificates}
+                          onCheckedChange={(checked) => handleInputChange('hasCertificates', checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Questions/Réponses</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Activer les questions et réponses
+                          </p>
+                        </div>
+                        <Switch
+                          checked={formData.hasQa}
+                          onCheckedChange={(checked) => handleInputChange('hasQa', checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label>Sondages</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Activer les sondages interactifs
+                          </p>
+                        </div>
+                        <Switch
+                          checked={formData.hasPolls}
+                          onCheckedChange={(checked) => handleInputChange('hasPolls', checked)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

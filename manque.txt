@@ -1,0 +1,6 @@
+1 - Mettre tous le participants comme present au niveau de la BD
+
+2 - dans les parametres de l'evenement, prciser si:
+    on des certificats qui seront delivrés
+    si il a des Q/R
+    si il y a des sondages

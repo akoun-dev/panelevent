@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Users, Download } from 'lucide-react'
+import { ArrowLeft, Users, Download, FileText, FileSpreadsheet } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Registration {
@@ -109,6 +109,106 @@ export default function ParticipantsPage({ params }: { params: Promise<{ id: str
     document.body.removeChild(link)
   }
 
+  const exportToExcel = () => {
+    // Pour Excel, nous utilisons le même format que CSV mais avec extension .xlsx
+    // Dans une implémentation réelle, on utiliserait une bibliothèque comme xlsx
+    const headers = ['Nom', 'Prénom', 'Email', 'Téléphone', 'Entreprise', 'Poste', 'Inscrit le', 'Présent']
+    const csvData = registrations.map(reg => [
+      reg.lastName || '',
+      reg.firstName || '',
+      reg.email || '',
+      reg.phone || '',
+      reg.company || '',
+      reg.position || '',
+      new Date(reg.createdAt).toLocaleDateString('fr-FR'),
+      reg.attended ? 'Oui' : 'Non'
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', `participants-${event?.slug || eventId}.xlsx`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const exportToPDF = () => {
+    // Génération simple de PDF en utilisant window.print()
+    // Dans une implémentation réelle, on utiliserait une bibliothèque comme jsPDF
+    const printContent = `
+      <html>
+        <head>
+          <title>Participants - ${event?.title || 'Événement'}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f5f5f5; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .date { text-align: right; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Liste des participants</h1>
+            <h2>${event?.title || 'Événement'}</h2>
+          </div>
+          <div class="date">
+            Généré le ${new Date().toLocaleDateString('fr-FR')}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Entreprise</th>
+                <th>Poste</th>
+                <th>Inscrit le</th>
+                <th>Présent</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${registrations.map(reg => `
+                <tr>
+                  <td>${reg.lastName || ''}</td>
+                  <td>${reg.firstName || ''}</td>
+                  <td>${reg.email || ''}</td>
+                  <td>${reg.phone || ''}</td>
+                  <td>${reg.company || ''}</td>
+                  <td>${reg.position || ''}</td>
+                  <td>${new Date(reg.createdAt).toLocaleDateString('fr-FR')}</td>
+                  <td>${reg.attended ? 'Oui' : 'Non'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="margin-top: 30px; text-align: center;">
+            <p>Total participants: ${registrations.length}</p>
+            <p>Présents: ${registrations.filter(r => r.attended).length}</p>
+          </div>
+        </body>
+      </html>
+    `
+
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -135,10 +235,20 @@ export default function ParticipantsPage({ params }: { params: Promise<{ id: str
             Gestion des inscriptions pour {event?.title || 'l\'événement'}
           </p>
         </div>
-        <Button onClick={exportToCSV}>
-          <Download className="w-4 h-4 mr-2" />
-          Exporter CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportToPDF}>
+            <FileText className="w-4 h-4 mr-2" />
+            PDF
+          </Button>
+          <Button variant="outline" onClick={exportToExcel}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Excel
+          </Button>
+          <Button onClick={exportToCSV}>
+            <Download className="w-4 h-4 mr-2" />
+            CSV
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

@@ -24,12 +24,23 @@ const eventSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   slug: z.string().optional(),
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime().optional().nullable(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   location: z.string().optional(),
   isPublic: z.boolean(),
   isActive: z.boolean(),
-  maxAttendees: z.number().optional()
+  maxAttendees: z.number().optional(),
+  title_translations: z.any().optional(),
+  description_translations: z.any().optional(),
+  location_translations: z.any().optional(),
+  branding: z.object({
+    primaryColor: z.string().optional(),
+    secondaryColor: z.string().optional(),
+    accentColor: z.string().optional()
+  }).optional(),
+  hasCertificates: z.boolean().optional(),
+  hasQa: z.boolean().optional(),
+  hasPolls: z.boolean().optional()
 })
 
 export async function GET(
@@ -40,21 +51,57 @@ export async function GET(
     const { id } = await params
     const session = await getServerSession(authOptions)
     
+    console.log('GET /api/organizer/events/[id] - Event ID:', id)
+    console.log('Session user ID:', session?.user?.id)
+    
     if (!session || !session.user) {
+      console.log('Unauthorized: No session or user')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
+    // D'abord vérifier si l'événement existe (sans vérifier l'organisateur)
+    const { data: eventExists } = await supabase
+      .from('events')
+      .select('id, "organizerId"')
+      .eq('id', id)
+      .single()
+
+    console.log('Event existence check:', eventExists)
+
+    if (!eventExists) {
+      console.log('Event does not exist in database')
+      return NextResponse.json(
+        { error: 'Event not found' },
+        { status: 404 }
+      )
+    }
+
+    // Vérifier si l'utilisateur est l'organisateur de cet événement
+    if (eventExists.organizerId !== session.user.id) {
+      console.log('User is not the organizer of this event')
+      console.log('Event organizer ID:', eventExists.organizerId)
+      console.log('Session user ID:', session.user.id)
+      return NextResponse.json(
+        { error: 'Unauthorized - Not the event organizer' },
+        { status: 403 }
+      )
+    }
+
     const { data, error } = await supabase
       .from('events')
-      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive",program,"organizerId", event_registrations(count), questions(count), polls(count)')
+      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive",program,"organizerId",title_translations,description_translations,location_translations,branding,hascertificates,hasqa,haspolls, event_registrations(count), questions(count), polls(count)')
       .eq('id', id)
       .eq('"organizerId"', session.user.id)
       .single()
 
+    console.log('Supabase query result - Error:', error)
+    console.log('Supabase query result - Data:', data)
+
     if (error || !data) {
+      console.log('Event not found or unauthorized - Error details:', error)
       return NextResponse.json(
         { error: 'Event not found' },
         { status: 404 }
@@ -90,6 +137,13 @@ export async function GET(
       location: data.location,
       isPublic: data.isPublic,
       isActive: data.isActive,
+      title_translations: data.title_translations,
+      description_translations: data.description_translations,
+      location_translations: data.location_translations,
+      branding: data.branding,
+      hasCertificates: data.hascertificates,
+      hasQa: data.hasqa,
+      hasPolls: data.haspolls,
       program: parsedProgram,
       organizerId: data.organizerId,
       _count: counts
@@ -136,7 +190,14 @@ export async function PUT(
       location: body.location,
       "isPublic": body.isPublic,
       "isActive": body.isActive,
-      "maxAttendees": body.maxAttendees
+      "maxAttendees": body.maxAttendees,
+      title_translations: body.title_translations,
+      description_translations: body.description_translations,
+      location_translations: body.location_translations,
+      branding: body.branding,
+      hascertificates: body.hasCertificates,
+      hasqa: body.hasQa,
+      haspolls: body.hasPolls
     }
 
     const { data, error } = await supabase
@@ -144,7 +205,7 @@ export async function PUT(
       .update(updateData)
       .eq('id', id)
       .eq('"organizerId"', session.user.id)
-      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive","maxAttendees","organizerId"')
+      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive","maxAttendees","organizerId",branding,hascertificates,hasqa,haspolls')
       .single()
 
     if (error || !data) {
@@ -161,7 +222,11 @@ export async function PUT(
       isPublic: data.isPublic,
       isActive: data.isActive,
       maxAttendees: data.maxAttendees,
-      organizerId: data.organizerId
+      organizerId: data.organizerId,
+      branding: data.branding,
+      hasCertificates: data.hascertificates,
+      hasQa: data.hasqa,
+      hasPolls: data.haspolls
     })
   } catch (error) {
     console.error('Failed to update event:', error)
@@ -188,8 +253,11 @@ export async function PATCH(
     }
 
     const body = await request.json()
+    console.log('PATCH request body:', JSON.stringify(body, null, 2))
+    
     const parsed = eventSchema.partial().safeParse(body)
     if (!parsed.success) {
+      console.log('Validation error:', parsed.error)
       return NextResponse.json(
         { error: 'Invalid request data', details: parsed.error },
         { status: 400 }
@@ -206,13 +274,20 @@ export async function PATCH(
     if (body.isPublic !== undefined) updateData["isPublic"] = body.isPublic
     if (body.isActive !== undefined) updateData["isActive"] = body.isActive
     if (body.maxAttendees !== undefined) updateData["maxAttendees"] = body.maxAttendees
+    if (body.title_translations !== undefined) updateData.title_translations = body.title_translations
+    if (body.description_translations !== undefined) updateData.description_translations = body.description_translations
+    if (body.location_translations !== undefined) updateData.location_translations = body.location_translations
+    if (body.branding !== undefined) updateData.branding = body.branding
+    if (body.hasCertificates !== undefined) updateData.hascertificates = body.hasCertificates
+    if (body.hasQa !== undefined) updateData.hasqa = body.hasQa
+    if (body.hasPolls !== undefined) updateData.haspolls = body.hasPolls
 
     const { data, error } = await supabase
       .from('events')
       .update(updateData)
       .eq('id', id)
       .eq('"organizerId"', session.user.id)
-      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive","maxAttendees","organizerId","createdAt","updatedAt", event_registrations(count), questions(count), polls(count)')
+      .select('id,title,description,slug,"startDate","endDate",location,"isPublic","isActive","maxAttendees","organizerId","createdAt","updatedAt",title_translations,description_translations,location_translations,branding,hascertificates,hasqa,haspolls, event_registrations(count), questions(count), polls(count)')
       .single()
 
     if (error || !data) {
@@ -233,6 +308,13 @@ export async function PATCH(
       isPublic: data.isPublic,
       isActive: data.isActive,
       maxAttendees: data.maxAttendees,
+      title_translations: data.title_translations,
+      description_translations: data.description_translations,
+      location_translations: data.location_translations,
+      branding: data.branding,
+      hasCertificates: data.hascertificates,
+      hasQa: data.hasqa,
+      hasPolls: data.haspolls,
       organizerId: data.organizerId,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
