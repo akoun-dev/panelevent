@@ -36,7 +36,8 @@ const eventSchema = z.object({
   branding: z.object({
     primaryColor: z.string().optional(),
     secondaryColor: z.string().optional(),
-    accentColor: z.string().optional()
+    accentColor: z.string().optional(),
+    favicon: z.string().optional()
   }).optional(),
   hasCertificates: z.boolean().optional(),
   hasQa: z.boolean().optional(),

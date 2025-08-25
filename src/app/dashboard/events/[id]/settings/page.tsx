@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Save, Loader2 } from 'lucide-react'
+import { Save, Loader2, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -32,6 +33,7 @@ interface EventSettings {
     primaryColor?: string
     secondaryColor?: string
     accentColor?: string
+    favicon?: string
   }
   program?: string
   qrCode?: string
@@ -43,6 +45,7 @@ interface EventSettings {
 }
 
 export default function EventSettingsPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter()
   const [eventId, setEventId] = useState<string>('')
   const [settings, setSettings] = useState<EventSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -63,7 +66,8 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
     branding: {
       primaryColor: '#3b82f6',
       secondaryColor: '#64748b',
-      accentColor: '#f59e0b'
+      accentColor: '#f59e0b',
+      favicon: ''
     },
     hasCertificates: false,
     hasQa: false,
@@ -164,9 +168,19 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Paramètres de l'événement</h1>
-          <p className="text-muted-foreground">Configurez les paramètres de votre événement</p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => router.back()}
+            className="h-10 w-10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Paramètres de l'événement</h1>
+            <p className="text-muted-foreground">Configurez les paramètres de votre événement</p>
+          </div>
         </div>
         <Button onClick={handleSave} disabled={isSaving}>
           {isSaving ? (
@@ -389,6 +403,78 @@ export default function EventSettingsPage({ params }: { params: Promise<{ id: st
                   ></div>
                   <span>Accent</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Favicon */}
+            <div className="pt-4 border-t space-y-4">
+              <h4 className="text-sm font-medium">Favicon</h4>
+              
+              {formData.branding?.favicon && (
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="text-sm text-muted-foreground">Favicon actuel:</div>
+                  <img
+                    src={formData.branding.favicon}
+                    alt="Favicon"
+                    className="w-8 h-8 object-contain border rounded"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newBranding = {
+                        ...formData.branding,
+                        favicon: ''
+                      }
+                      handleInputChange('branding', newBranding)
+                    }}
+                  >
+                    Supprimer
+                  </Button>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="favicon" className="block mb-2">
+                  {formData.branding?.favicon ? 'Changer le favicon' : 'Uploader un favicon'}
+                </Label>
+                <Input
+                  id="favicon"
+                  type="file"
+                  accept=".png"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      // Vérifier que c'est bien un PNG
+                      if (file.type !== 'image/png') {
+                        alert('Veuillez sélectionner un fichier PNG')
+                        return
+                      }
+
+                      // Vérifier la taille (max 100KB)
+                      if (file.size > 100 * 1024) {
+                        alert('Le fichier doit faire moins de 100KB')
+                        return
+                      }
+
+                      // Convertir en base64
+                      const reader = new FileReader()
+                      reader.onload = (event) => {
+                        const base64 = event.target?.result as string
+                        const newBranding = {
+                          ...formData.branding,
+                          favicon: base64
+                        }
+                        handleInputChange('branding', newBranding)
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Format PNG uniquement, taille max: 100KB
+                </p>
               </div>
             </div>
           </CardContent>
