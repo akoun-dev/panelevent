@@ -25,6 +25,12 @@ interface Event {
   id: string
   title: string
   slug: string
+  branding?: {
+    primaryColor?: string
+    secondaryColor?: string
+    accentColor?: string
+    favicon?: string
+  }
 }
 
 export default function ParticipantsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -141,61 +147,317 @@ export default function ParticipantsPage({ params }: { params: Promise<{ id: str
   }
 
   const exportToPDF = () => {
-    // Génération simple de PDF en utilisant window.print()
-    // Dans une implémentation réelle, on utiliserait une bibliothèque comme jsPDF
+    // Récupérer les couleurs de l'événement ou utiliser des valeurs par défaut
+    const primaryColor = event?.branding?.primaryColor || '#1c5320'
+    const secondaryColor = event?.branding?.secondaryColor || '#a0b474'
+    const accentColor = event?.branding?.accentColor || '#517324'
+    
     const printContent = `
       <html>
         <head>
-          <title>Participants - ${event?.title || 'Événement'}</title>
+          <title>Liste des participants - ${event?.title || 'Événement'}</title>
           <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { text-align: center; margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f5f5f5; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .date { text-align: right; margin-bottom: 20px; }
+            @page {
+              margin: 20mm;
+              size: A4 landscape;
+              orientation: landscape;
+            }
+            
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              margin: 0;
+              padding: 0;
+              color: #2d3748;
+              line-height: 1.6;
+              background: #ffffff;
+            }
+            
+            .container {
+              max-width: 100%;
+              margin: 0 auto;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              padding: 25px 0;
+              background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%);
+              color: white;
+              border-radius: 12px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            
+            .header h1 {
+              margin: 0 0 8px 0;
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.5px;
+            }
+            
+            .header h2 {
+              margin: 0;
+              font-size: 18px;
+              font-weight: 400;
+              opacity: 0.95;
+            }
+            
+            .event-info {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 25px;
+              padding: 20px;
+              background: #f8fafc;
+              border-radius: 8px;
+              border-left: 4px solid ${accentColor};
+            }
+            
+            .event-detail {
+              flex: 1;
+              text-align: center;
+            }
+            
+            .event-detail strong {
+              display: block;
+              color: ${primaryColor};
+              font-weight: 600;
+              margin-bottom: 4px;
+            }
+            
+            .event-detail span {
+              color: #64748b;
+              font-size: 14px;
+            }
+            
+            .date-info {
+              text-align: right;
+              margin-bottom: 20px;
+              color: ${secondaryColor};
+              font-size: 13px;
+              font-style: italic;
+            }
+            
+            .table-container {
+              overflow-x: auto;
+              margin-bottom: 30px;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+              font-size: 12px;
+            }
+            
+            th {
+              background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%);
+              color: white;
+              font-weight: 600;
+              padding: 12px 8px;
+              text-align: left;
+              border: none;
+              font-size: 11px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            
+            td {
+              padding: 10px 8px;
+              border-bottom: 1px solid #e2e8f0;
+              vertical-align: middle;
+            }
+            
+            tr:nth-child(even) {
+              background-color: #f8fafc;
+            }
+            
+            tr:hover {
+              background-color: #f1f5f9;
+            }
+            
+            .status-present {
+              color: ${accentColor};
+              font-weight: 600;
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+            }
+            
+            .status-absent {
+              color: #dc2626;
+              font-weight: 600;
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+            }
+            
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 16px;
+              margin-top: 30px;
+            }
+            
+            .stat-card {
+              background: white;
+              padding: 20px;
+              border-radius: 12px;
+              text-align: center;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+              border: 1px solid #e2e8f0;
+            }
+            
+            .stat-number {
+              font-size: 32px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              color: ${primaryColor};
+            }
+            
+            .stat-label {
+              color: #64748b;
+              font-size: 14px;
+              font-weight: 500;
+            }
+            
+            .stat-present .stat-number {
+              color: ${accentColor};
+            }
+            
+            .stat-absent .stat-number {
+              color: #dc2626;
+            }
+            
+            .footer {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 2px solid ${secondaryColor}40;
+              text-align: center;
+              color: #64748b;
+              font-size: 12px;
+            }
+            
+            .logo {
+              margin-bottom: 10px;
+              font-size: 18px;
+              font-weight: 700;
+              color: ${primaryColor};
+            }
+            
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              
+              .header {
+                background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%) !important;
+                -webkit-print-color-adjust: exact;
+              }
+              
+              th {
+                background: linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%) !important;
+                -webkit-print-color-adjust: exact;
+              }
+              
+              .stat-card {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+              }
+            }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>Liste des participants</h1>
-            <h2>${event?.title || 'Événement'}</h2>
-          </div>
-          <div class="date">
-            Généré le ${new Date().toLocaleDateString('fr-FR')}
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Prénom</th>
-                <th>Email</th>
-                <th>Téléphone</th>
-                <th>Entreprise</th>
-                <th>Poste</th>
-                <th>Inscrit le</th>
-                <th>Présent</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${registrations.map(reg => `
-                <tr>
-                  <td>${reg.lastName || ''}</td>
-                  <td>${reg.firstName || ''}</td>
-                  <td>${reg.email || ''}</td>
-                  <td>${reg.phone || ''}</td>
-                  <td>${reg.company || ''}</td>
-                  <td>${reg.position || ''}</td>
-                  <td>${new Date(reg.createdAt).toLocaleDateString('fr-FR')}</td>
-                  <td>${reg.attended ? 'Oui' : 'Non'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div style="margin-top: 30px; text-align: center;">
-            <p>Total participants: ${registrations.length}</p>
-            <p>Présents: ${registrations.filter(r => r.attended).length}</p>
+          <div class="container">
+            <!-- Header avec branding -->
+            <div class="header">
+              <h1> Liste des participants</h1>
+              <h2>${event?.title || 'Événement'}</h2>
+            </div>
+            
+            <!-- Informations événement -->
+            <div class="event-info">
+              <div class="event-detail">
+                <strong>${registrations.length}</strong>
+                <span>Total participants</span>
+              </div>
+              <div class="event-detail">
+                <strong>${registrations.filter(r => r.attended).length}</strong>
+                <span>Présents</span>
+              </div>
+              <div class="event-detail">
+                <strong>${registrations.length > 0
+                  ? Math.round((registrations.filter(r => r.attended).length / registrations.length) * 100)
+                  : 0
+                }%</strong>
+                <span>Taux de présence</span>
+              </div>
+            </div>
+            
+            <!-- Date de génération -->
+            <div class="date-info">
+                Document généré le ${new Date().toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })} à ${new Date().toLocaleTimeString('fr-FR')}
+            </div>
+            
+            <!-- Tableau des participants -->
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nom complet</th>
+                    <th>Email</th>
+                    <th>Entreprise</th>
+                    <th>Poste</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${registrations.map(reg => `
+                    <tr>
+                      <td><strong>${reg.firstName || ''} ${reg.lastName || ''}</strong></td>
+                      <td>${reg.email || '-'}</td>
+                      <td>${reg.company || '-'}</td>
+                      <td>${reg.position || '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Statistiques détaillées -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-number">${registrations.length}</div>
+                <div class="stat-label">Total inscrits</div>
+              </div>
+              <div class="stat-card stat-present">
+                <div class="stat-number">${registrations.filter(r => r.attended).length}</div>
+                <div class="stat-label">Participants présents</div>
+              </div>
+              <div class="stat-card stat-absent">
+                <div class="stat-number">${registrations.filter(r => !r.attended).length}</div>
+                <div class="stat-label">Participants absents</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">${registrations.length > 0
+                  ? Math.round((registrations.filter(r => r.attended).length / registrations.length) * 100)
+                  : 0
+                }%</div>
+                <div class="stat-label">Taux de présence</div>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+              <div class="logo">PanelEvent</div>
+              <div>Système de gestion d'événements professionnels</div>
+              <div>© ${new Date().getFullYear()} - Document confidentiel</div>
+            </div>
           </div>
         </body>
       </html>
