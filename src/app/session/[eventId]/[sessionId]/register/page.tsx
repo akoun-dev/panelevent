@@ -7,10 +7,35 @@ interface PageProps {
   params: Promise<{ eventId: string; sessionId: string }>;
 }
 
-export default async function SessionRegistrationPage({ params }: PageProps) {
+interface SearchParams {
+  [key: string]: string | string[] | undefined;
+}
+
+interface PageProps {
+  params: Promise<{ eventId: string; sessionId: string }>;
+  searchParams: Promise<SearchParams>;
+}
+
+export default async function SessionRegistrationPage({ params, searchParams }: PageProps) {
   const { eventId, sessionId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const email = resolvedSearchParams.email as string | undefined;
+  const firstName = resolvedSearchParams.firstName as string | undefined;
+  const lastName = resolvedSearchParams.lastName as string | undefined;
+  const userFunction = resolvedSearchParams.function as string | undefined;
+  const organization = resolvedSearchParams.organization as string | undefined;
+  const language = resolvedSearchParams.language as string | undefined;
   
-  console.log('Session registration page called with:', { eventId, sessionId });
+  console.log('Session registration page called with:', {
+    eventId,
+    sessionId,
+    email,
+    firstName,
+    lastName,
+    userFunction,
+    organization,
+    language
+  });
 
   // Récupérer tous les événements pour trouver celui qui contient la session
   console.log('Fetching events from Supabase...');
@@ -79,6 +104,14 @@ export default async function SessionRegistrationPage({ params }: PageProps) {
               sessionId={sessionId}
               eventId={eventId}
               sessionTitle={session.title?.fr || session.title?.en || 'Session'}
+              prefillData={{
+                email: email || '',
+                firstName: firstName || '',
+                lastName: lastName || '',
+                function: userFunction || '',
+                organization: organization || '',
+                language: language || 'fr'
+              }}
             />
           </CardContent>
         </Card>

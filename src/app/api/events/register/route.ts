@@ -5,10 +5,16 @@ import { v4 as uuidv4 } from 'uuid'
 
 // Simple in-memory rate limiting
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
-const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_MAX = 600 // Augmenté pour le développement
 const rateLimitStore = new Map<string, { count: number; firstRequest: number }>()
 
 function isRateLimited(ip: string) {
+  // Désactiver le rate limiting en mode développement
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Rate limiting désactivé en mode développement pour IP:', ip)
+    return false
+  }
+
   const now = Date.now()
   const entry = rateLimitStore.get(ip)
 
@@ -23,10 +29,12 @@ function isRateLimited(ip: string) {
   }
 
   if (entry.count >= RATE_LIMIT_MAX) {
+    console.log('Rate limit atteint pour IP:', ip, 'Count:', entry.count)
     return true
   }
 
   entry.count++
+  console.log('Rate limit count pour IP:', ip, 'Count:', entry.count)
   return false
 }
 
@@ -68,7 +76,8 @@ export async function POST(request: NextRequest) {
       experience,
       expectations,
       dietaryRestrictions,
-      consent
+      consent,
+      language
     } = body
 
     // Validation des champs obligatoires
@@ -168,7 +177,8 @@ export async function POST(request: NextRequest) {
         expectations,
         dietaryRestrictions: dietaryRestrictions,
         "isPublic": true,
-        consent
+        consent,
+        language: language || 'fr' // Utiliser la langue fournie ou 'fr' par défaut
       })
       .select('id')
       .single()

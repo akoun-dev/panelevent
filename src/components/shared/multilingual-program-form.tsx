@@ -372,7 +372,7 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false, 
                                     </DialogHeader>
                                     <div className="flex flex-col items-center space-y-4">
                                       <QRCodeGenerator
-                                        url={`/session/${eventId}/${item.id}/register`}
+                                        url={`/session/${eventId}/${item.id}/check-email`}
                                         eventName={item.title.fr}
                                       />
                                       <p className="text-sm text-muted-foreground text-center">
@@ -384,12 +384,12 @@ export function MultilingualProgramForm({ initialData, onSave, loading = false, 
                                       <div className="text-center">
                                         <p className="text-xs text-muted-foreground mb-1">Lien d'inscription:</p>
                                         <a
-                                          href={`/session/${eventId}/${item.id}/register`}
+                                          href={`/session/${eventId}/${item.id}/check-email`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs text-blue-600 hover:text-blue-700 break-all"
                                         >
-                                          {`/session/${eventId}/${item.id}/register`}
+                                          {`/session/${eventId}/${item.id}/check-email`}
                                         </a>
                                       </div>
                                     </div>

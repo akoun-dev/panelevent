@@ -67,7 +67,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { email, consent } = body
+    const { email, consent, language = 'fr' } = body
 
     if (!email || consent !== true) {
       return NextResponse.json(
@@ -143,7 +143,8 @@ export async function POST(
       .insert({
         "userId": user.id,
         "eventId": id,
-        consent
+        consent,
+        language
       })
       .select('id, consent, "createdAt", user:users(id, name, email)')
       .single()

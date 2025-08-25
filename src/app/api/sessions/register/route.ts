@@ -16,23 +16,75 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { sessionId, eventId, firstName, lastName, email, function: userFunction, organization } = body;
+    const { sessionId, eventId, firstName, lastName, email, function: userFunction, organization, language, checkOnly = false } = body;
 
-    // Validation des données requises
-    if (!sessionId || !eventId || !firstName || !lastName || !email || !userFunction || !organization) {
+    // Validation des données requises pour l'inscription complète
+    if (!checkOnly && (!sessionId || !eventId || !firstName || !lastName || !email || !userFunction || !organization)) {
       return NextResponse.json(
         { message: 'Tous les champs sont requis' },
         { status: 400 }
       );
     }
 
-    // Validation de l'email
+    // Validation de l'email (toujours requis)
+    if (!email) {
+      return NextResponse.json(
+        { message: 'Email requis' },
+        { status: 400 }
+      );
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { message: 'Email invalide' },
         { status: 400 }
       );
+    }
+
+    // Si c'est juste une vérification, retourner les informations de l'utilisateur s'il existe
+    if (checkOnly) {
+      const supabase = createClient(supabaseUrl, serviceRoleKey || supabaseAnonKey, {
+        auth: { persistSession: false }
+      });
+
+      // Vérifier si l'utilisateur est déjà inscrit à l'événement
+      console.log('Checking event registration for:', { eventId, email });
+      
+      const { data: eventRegistration, error: queryError } = await supabase
+        .from('event_registrations')
+        .select('*')
+        .eq('eventId', eventId)
+        .eq('email', email)
+        .maybeSingle();
+
+      if (queryError) {
+        console.error('Error querying event_registrations:', queryError);
+        return NextResponse.json(
+          { error: 'Erreur lors de la vérification de l\'inscription' },
+          { status: 500 }
+        );
+      }
+
+      console.log('Event registration result:', eventRegistration);
+
+      if (eventRegistration) {
+        return NextResponse.json({
+          exists: true,
+          userData: {
+            first_name: eventRegistration.firstName,
+            last_name: eventRegistration.lastName,
+            function: eventRegistration.function,
+            organization: eventRegistration.organization,
+            language: eventRegistration.language
+          }
+        });
+      } else {
+        return NextResponse.json({
+          exists: false,
+          message: 'Utilisateur non inscrit à l\'événement'
+        });
+      }
     }
 
     // Créer un client avec le service role pour bypasser les politiques RLS
@@ -63,7 +115,8 @@ export async function POST(request: NextRequest) {
       email: email,
       function: userFunction,
       organization: organization,
-      registered_at: new Date().toISOString()
+      registered_at: new Date().toISOString(),
+      language: language || 'fr' // Utiliser la langue fournie ou 'fr' par défaut
     };
 
     // Ajouter event_id seulement si la colonne existe (pour éviter les erreurs pendant la transition)

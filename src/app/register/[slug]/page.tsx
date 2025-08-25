@@ -67,7 +67,11 @@ export default function RegisterPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ eventId: event.id, ...data })
+        body: JSON.stringify({
+          eventId: event.id,
+          ...data,
+          language: selectedLanguage // Ajouter la langue sélectionnée
+        })
       })
 
       if (response.ok) {

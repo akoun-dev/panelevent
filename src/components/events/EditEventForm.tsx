@@ -67,8 +67,17 @@ export default function EditEventForm({ event, onSuccess, onCancel }: EditEventF
       if (response.ok) {
         onSuccess?.()
       } else {
-        const error = await response.json()
-        console.error('Failed to update event:', error)
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            const error = JSON.parse(errorText);
+            console.error('Failed to update event:', error);
+          } else {
+            console.error('Failed to update event: Empty response');
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
         alert('Erreur lors de la mise à jour de l\'événement')
       }
     } catch (error) {

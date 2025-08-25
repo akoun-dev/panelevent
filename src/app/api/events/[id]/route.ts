@@ -64,6 +64,50 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const resolvedParams = await params
+    const { id } = resolvedParams
+    const body = await request.json()
+
+    // Mettre à jour l'événement
+    const { data: event, error } = await supabase
+      .from('events')
+      .update({
+        title: body.title,
+        description: body.description,
+        slug: body.slug,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        location: body.location,
+        isActive: body.isActive,
+        isPublic: body.isPublic,
+        program: body.program,
+        maxAttendees: body.maxAttendees,
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json(event)
+
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'événement:', error)
+    return NextResponse.json(
+      { error: 'Une erreur est survenue lors de la mise à jour de l\'événement' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,10 +28,21 @@ const sessionRegistrationSchema = z.object({
 
 type SessionRegistrationFormValues = z.infer<typeof sessionRegistrationSchema>;
 
+interface PrefillData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  function: string;
+  organization: string;
+  language: string;
+}
+
 interface SessionRegistrationFormProps {
   sessionId: string;
   eventId: string;
   sessionTitle: string;
+  prefillEmail?: string;
+  prefillData?: PrefillData;
   onSuccess?: () => void;
 }
 
@@ -39,21 +50,68 @@ export function SessionRegistrationForm({
   sessionId,
   eventId,
   sessionTitle,
+  prefillEmail,
+  prefillData,
   onSuccess,
 }: SessionRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(!!prefillEmail && !prefillData);
 
   const form = useForm<SessionRegistrationFormValues>({
     resolver: zodResolver(sessionRegistrationSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      function: '',
-      organization: '',
+      firstName: prefillData?.firstName || '',
+      lastName: prefillData?.lastName || '',
+      email: prefillData?.email || prefillEmail || '',
+      function: prefillData?.function || '',
+      organization: prefillData?.organization || '',
     },
   });
+
+  // Charger les données utilisateur si un email est fourni mais pas de données pré-remplies
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (prefillEmail && !prefillData) {
+        try {
+          const response = await fetch('/api/sessions/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              sessionId,
+              eventId,
+              email: prefillEmail,
+              checkOnly: true,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.exists && result.userData) {
+              form.reset({
+                firstName: result.userData.first_name || '',
+                lastName: result.userData.last_name || '',
+                email: prefillEmail,
+                function: result.userData.function || '',
+                organization: result.userData.organization || '',
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des données utilisateur:', error);
+        } finally {
+          setIsLoadingUserData(false);
+        }
+      } else if (prefillData) {
+        // Si des données pré-remplies sont fournies, pas besoin de charger
+        setIsLoadingUserData(false);
+      }
+    };
+
+    loadUserData();
+  }, [prefillEmail, prefillData, sessionId, eventId, form]);
 
   const onSubmit = async (data: SessionRegistrationFormValues) => {
     setIsSubmitting(true);
@@ -95,6 +153,22 @@ export function SessionRegistrationForm({
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <p className="text-muted-foreground">
             Votre inscription à la session "{sessionTitle}" a été enregistrée avec succès.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isLoadingUserData) {
+    return (
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-center">Chargement...</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            Chargement de vos informations...
           </p>
         </CardContent>
       </Card>

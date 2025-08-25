@@ -156,7 +156,7 @@ export const translations: Record<Language, Translations> = {
       ceremony: 'Cérémonie',
       other: 'Autre',
       logout: 'Se déconnecter',
-      copyright: '© 2024 ANSUT. Tous droits réservés.'
+      copyright: '© 2025 ANSUT. Tous droits réservés.'
     }
   },
   en: {
@@ -226,7 +226,7 @@ export const translations: Record<Language, Translations> = {
       ceremony: 'Ceremony',
       other: 'Other',
       logout: 'Logout',
-      copyright: '© 2024 ANSUT. All rights reserved.'
+      copyright: '© 2025 ANSUT. All rights reserved.'
     }
   },
   pt: {
@@ -296,7 +296,7 @@ export const translations: Record<Language, Translations> = {
       ceremony: 'Cerimônia',
       other: 'Outro',
       logout: 'Sair',
-      copyright: '© 2024 ANSUT. Todos os direitos reservados.'
+      copyright: '© 2025 ANSUT. Todos os direitos reservados.'
     }
   },
   es: {
@@ -366,7 +366,7 @@ export const translations: Record<Language, Translations> = {
       ceremony: 'Ceremonia',
       other: 'Otro',
       logout: 'Cerrar sesión',
-      copyright: '© 2024 ANSUT. Todos los derechos reservados.'
+      copyright: '© 2025 ANSUT. Todos los derechos reservados.'
     }
   },
   ar: {
@@ -436,7 +436,7 @@ export const translations: Record<Language, Translations> = {
       ceremony: 'حفل',
       other: 'أخرى',
       logout: 'تسجيل الخروج',
-      copyright: '© 2024 ANSUT. جميع الحقوق محفوظة.'
+      copyright: '© 2025 ANSUT. جميع الحقوق محفوظة.'
     }
   }
 };
