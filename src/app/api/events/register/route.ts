@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
     console.log('Registration request body:', body)
 
     const {
-      eventId,
       email,
       firstName,
       lastName,
@@ -77,16 +76,38 @@ export async function POST(request: NextRequest) {
       expectations,
       dietaryRestrictions,
       consent,
-      language
+      language,
+      checkOnly = false
     } = body
+    
+    // eventId est optionnel pour les vérifications (checkOnly)
+    const eventId = body.eventId
 
-    // Validation des champs obligatoires
-    if (!eventId || !email || !firstName || !lastName || consent !== true) {
+    // Validation des champs obligatoires pour l'inscription complète
+    if (!checkOnly) {
+      // Pour l'inscription complète, eventId est requis
+      if (!eventId) {
+        return NextResponse.json(
+          { error: 'ID d\'événement requis pour l\'inscription' },
+          { status: 400 }
+        )
+      }
+      
+      if (!email || !firstName || !lastName || consent !== true) {
+        return NextResponse.json(
+          {
+            error:
+              'Les champs email, prénom, nom et consentement sont obligatoires'
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validation de l'email (toujours requis)
+    if (!email) {
       return NextResponse.json(
-        {
-          error:
-            'Les champs email, prénom, nom et consentement sont obligatoires'
-        },
+        { error: 'Email requis' },
         { status: 400 }
       )
     }
@@ -99,66 +120,162 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Vérifier si l'événement existe
-    const { data: event, error: eventError } = await serviceRoleSupabase
-      .from('events')
-      .select('*')
-      .eq('id', eventId)
-      .maybeSingle()
+    // Si c'est juste une vérification, retourner les informations de l'utilisateur s'il existe
+    if (checkOnly) {
+      // Vérifier si l'email est déjà inscrit à N'IMPORTE QUEL événement
+      console.log('CheckOnly - Searching for email:', email)
+      
+      console.log('CheckOnly - Searching for email:', email, '(exact match)')
+      
+      const { data: existingRegistrations, error: searchError } = await serviceRoleSupabase
+        .from('event_registrations')
+        .select('*')
+        .eq('email', email)
+        .order('createdAt', { ascending: false }) // Prendre la plus récente
+        .limit(1)
 
-    if (eventError) {
-      console.error('Event lookup error:', eventError)
-      throw eventError
+      if (searchError) {
+        console.error('CheckOnly - Search error:', searchError)
+      }
+      
+      console.log('CheckOnly - Existing registrations:', existingRegistrations)
+      console.log('CheckOnly - Number of results:', existingRegistrations?.length || 0)
+      
+      // Debug: Vérifier manuellement avec une requête directe
+      console.log('=== DEBUG: Vérification manuelle ===');
+      const { data: debugRegistrations, error: debugError } = await serviceRoleSupabase
+        .from('event_registrations')
+        .select('*')
+        .eq('email', email)
+        .limit(5);
+      
+      console.log('Debug - Manual query results:', debugRegistrations);
+      console.log('Debug - Manual query error:', debugError);
+
+      // Test de recherche insensible à la casse
+      console.log('=== DEBUG: Recherche insensible à la casse ===');
+      const { data: caseInsensitiveResults, error: caseError } = await serviceRoleSupabase
+        .from('event_registrations')
+        .select('*')
+        .ilike('email', email.toLowerCase())
+        .limit(5);
+      
+      console.log('Debug - Case insensitive results:', caseInsensitiveResults);
+      console.log('Debug - Case insensitive error:', caseError);
+
+      // Test avec toutes les variations de casse possibles
+      console.log('=== DEBUG: Test avec variations de casse ===');
+      const emailVariations = [
+        email,
+        email.toLowerCase(),
+        email.toUpperCase(),
+        email.charAt(0).toUpperCase() + email.slice(1).toLowerCase()
+      ];
+      
+      for (const variation of emailVariations) {
+        console.log('Testing variation:', variation);
+        const { data: variationResults } = await serviceRoleSupabase
+          .from('event_registrations')
+          .select('*')
+          .eq('email', variation)
+          .limit(1);
+        console.log('Variation results for', variation, ':', variationResults);
+      }
+
+      if (existingRegistrations && existingRegistrations.length > 0) {
+        const latestRegistration = existingRegistrations[0];
+        return NextResponse.json({
+          exists: true,
+          registrationId: latestRegistration.id,
+          userData: {
+            firstName: latestRegistration.firstName,
+            lastName: latestRegistration.lastName,
+            position: latestRegistration.position,
+            company: latestRegistration.company,
+            language: latestRegistration.language
+          }
+        })
+      } else {
+        return NextResponse.json({
+          exists: false,
+          message: 'Utilisateur non inscrit à cet événement'
+        })
+      }
     }
 
-    if (!event) {
-      console.log('Event not found:', eventId)
-      return NextResponse.json(
-        { error: 'Événement non trouvé' },
-        { status: 404 }
-      )
+    // Pour l'inscription complète, vérifier l'événement
+    if (!checkOnly) {
+      // Vérifier si l'événement existe
+      const { data: event, error: eventError } = await serviceRoleSupabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .maybeSingle()
+
+      if (eventError) {
+        console.error('Event lookup error:', eventError)
+        throw eventError
+      }
+
+      if (!event) {
+        console.log('Event not found:', eventId)
+        return NextResponse.json(
+          { error: 'Événement non trouvé' },
+          { status: 404 }
+        )
+      }
+
+      // Vérifier si l'événement est public
+      if (!event.isPublic) {
+        return NextResponse.json(
+          { error: 'Cet événement n\'accepte pas les inscriptions publiques' },
+          { status: 403 }
+        )
+      }
     }
 
-    // Vérifier si l'événement est public
-    if (!event.isPublic) {
-      return NextResponse.json(
-        { error: 'Cet événement n\'accepte pas les inscriptions publiques' },
-        { status: 403 }
-      )
-    }
-
-    // Vérifier si l'email est déjà inscrit
+    // Vérifier si l'email est déjà inscrit (sans condition isPublic pour la vérification d'existence)
     const { data: existingRegistration } = await serviceRoleSupabase
       .from('event_registrations')
-      .select('id')
-      .eq('"eventId"', eventId)
+      .select('*')
       .eq('email', email)
-      .eq('"isPublic"', true)
       .maybeSingle()
+
+    console.log('Registration - Existing registration:', existingRegistration)
 
     if (existingRegistration) {
       console.log('Email already registered:', email)
-      return NextResponse.json(
-        { error: 'Cet email est déjà inscrit à cet événement' },
-        { status: 409 }
-      )
+      // Si l'utilisateur existe déjà, retourner la même structure que checkOnly
+      // pour maintenir la cohérence entre les deux modes
+      return NextResponse.json({
+        exists: true,
+        registrationId: existingRegistration.id,
+        userData: {
+          firstName: existingRegistration.firstName,
+          lastName: existingRegistration.lastName,
+          position: existingRegistration.position,
+          company: existingRegistration.company,
+          language: existingRegistration.language
+        }
+      })
     }
 
-    // Vérifier le nombre maximum de participants
-    if (event.maxAttendees) {
+    // Pour l'inscription complète, vérifier le nombre maximum de participants
+    if (!checkOnly && event && (event as any).maxAttendees) {
       const { count: registrationCount } = await serviceRoleSupabase
         .from('event_registrations')
         .select('*', { count: 'exact', head: true })
         .eq('"eventId"', eventId)
         .eq('"isPublic"', true)
 
-      if ((registrationCount || 0) >= event.maxAttendees) {
+      if ((registrationCount || 0) >= (event as any).maxAttendees) {
         return NextResponse.json(
           { error: "L'événement est complet" },
           { status: 409 }
         )
       }
     }
+
 
     // Créer l'inscription avec un ID généré
     const registrationId = uuidv4()
@@ -195,11 +312,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Inscription réussie',
       registrationId: registration.id,
-      event: {
-        id: event.id,
-        title: event.title,
-        slug: event.slug
-      }
+      event: event ? {
+        id: (event as any).id,
+        title: (event as any).title,
+        slug: (event as any).slug
+      } : null
     })
 
   } catch (error) {

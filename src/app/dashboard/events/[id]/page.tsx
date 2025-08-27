@@ -354,7 +354,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 <CardDescription>Accès rapide aux pages publiques</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Link href={`/register/${event.slug}`}>
+                <Link href={`/register/${event.slug}/check-email`}>
                   <Button variant="outline" className="w-full justify-start">
                     <Users className="w-4 h-4 mr-2" />
                     Page d'inscription
@@ -367,134 +367,78 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
         <TabsContent value="settings">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Paramètres de visibilité */}
+            {/* Paramètres configurables */}
             <Card>
               <CardHeader>
-                <CardTitle>Visibilité</CardTitle>
-                <CardDescription>Contrôlez la visibilité de votre événement</CardDescription>
+                <CardTitle>Configuration</CardTitle>
+                <CardDescription>Paramètres principaux de votre événement</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="isActive">Événement actif</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Activer ou désactiver l'événement
-                    </p>
-                  </div>
-                  <Switch
-                    id="isActive"
-                    checked={eventSettings.isActive}
-                    onCheckedChange={(checked) => handleSettingChange('isActive', checked)}
-                    disabled={isSaving}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="isPublic">Événement public</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Rendre cet événement visible par tous
-                    </p>
-                  </div>
-                  <Switch
-                    id="isPublic"
-                    checked={eventSettings.isPublic}
-                    onCheckedChange={(checked) => handleSettingChange('isPublic', checked)}
-                    disabled={isSaving}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Capacité */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Capacité</CardTitle>
-                <CardDescription>Gérez la capacité de votre événement</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="maxAttendees">Nombre maximum de participants</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <input
-                      id="maxAttendees"
-                      type="number"
-                      value={eventSettings.maxAttendees}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value) || 0
-                        setEventSettings(prev => ({ ...prev, maxAttendees: value }))
-                      }}
-                      onBlur={() => handleSettingChange('maxAttendees', eventSettings.maxAttendees)}
-                      className="flex h-10 w-20 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      placeholder="0"
+              <CardContent className="space-y-6">
+                {/* Visibilité */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Visibilité</h4>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="isActive">Événement actif</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Activer ou désactiver l'événement
+                      </p>
+                    </div>
+                    <Switch
+                      id="isActive"
+                      checked={eventSettings.isActive}
+                      onCheckedChange={(checked) => handleSettingChange('isActive', checked)}
                       disabled={isSaving}
                     />
-                    <span className="text-sm text-muted-foreground">
-                      {eventSettings.maxAttendees === 0 ? 'Illimité' : 'places'}
-                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    0 pour capacité illimitée
-                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="isPublic">Événement public</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Rendre cet événement visible par tous
+                      </p>
+                    </div>
+                    <Switch
+                      id="isPublic"
+                      checked={eventSettings.isPublic}
+                      onCheckedChange={(checked) => handleSettingChange('isPublic', checked)}
+                      disabled={isSaving}
+                    />
+                  </div>
                 </div>
-
-                {eventSettings.maxAttendees > 0 && event._count && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Places restantes</span>
-                    <span className="font-medium">
-                      {eventSettings.maxAttendees - (event._count.registrations || 0)}
-                    </span>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
-            {/* Actions rapides */}
+            {/* Statut actuel */}
             <Card>
               <CardHeader>
-                <CardTitle>Actions rapides</CardTitle>
-                <CardDescription>Actions de gestion rapide</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Link href={`/dashboard/events/${eventId}/settings`}>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Paramètres complets
-                  </Button>
-                </Link>
-                
-                {event && (
-                  <div className="flex items-center justify-between text-sm pt-2 border-t">
-                    <span className="text-muted-foreground">Participants inscrits</span>
-                    <span className="font-medium">{event._count?.registrations || 0}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Statut de l'événement */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Statut</CardTitle>
-                <CardDescription>État actuel de votre événement</CardDescription>
+                <CardTitle>Statut actuel</CardTitle>
+                <CardDescription>État et statistiques de votre événement</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Visibilité</span>
-                  <Badge variant={eventSettings.isPublic ? "default" : "secondary"}>
-                    {eventSettings.isPublic ? 'Public' : 'Privé'}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Statut</span>
-                  <Badge variant={eventSettings.isActive ? "default" : "secondary"}>
-                    {eventSettings.isActive ? 'Actif' : 'Inactif'}
-                  </Badge>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Visibilité</span>
+                    <Badge variant={eventSettings.isPublic ? "default" : "secondary"}>
+                      {eventSettings.isPublic ? 'Public' : 'Privé'}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Statut</span>
+                    <Badge variant={eventSettings.isActive ? "default" : "secondary"}>
+                      {eventSettings.isActive ? 'Actif' : 'Inactif'}
+                    </Badge>
+                  </div>
                 </div>
 
                 {event && (
-                  <>
+                  <div className="pt-4 border-t space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Participants inscrits</span>
+                      <span className="font-medium">{event._count?.registrations || 0}</span>
+                    </div>
+
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Capacité</span>
                       <span>
@@ -505,6 +449,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                       </span>
                     </div>
 
+                    {eventSettings.maxAttendees > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Places restantes</span>
+                        <span className="font-medium">
+                          {eventSettings.maxAttendees - (event._count?.registrations || 0)}
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Taux d'occupation</span>
                       <span className="font-medium">
@@ -514,47 +467,46 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                         }
                       </span>
                     </div>
-                  </>
+                  </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Fonctionnalités activées */}
+            {/* Fonctionnalités */}
             <Card>
               <CardHeader>
                 <CardTitle>Fonctionnalités</CardTitle>
-                <CardDescription>Fonctionnalités activées pour cet événement</CardDescription>
+                <CardDescription>Modules activés pour cet événement</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Certificats</span>
-                  <Badge variant="outline">
-                    {event._count?.registrations ? 'Disponible' : 'Non configuré'}
-                  </Badge>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Certificats</span>
+                    <Badge variant={event._count?.registrations ? "default" : "outline"}>
+                      {event._count?.registrations ? 'Disponible' : 'Non configuré'}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Q&A</span>
+                    <Badge variant={event._count?.questions ? "default" : "outline"}>
+                      {event._count?.questions ? `${event._count.questions} questions` : 'Aucune'}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Sondages</span>
+                    <Badge variant={event._count?.polls ? "default" : "outline"}>
+                      {event._count?.polls ? `${event._count.polls} sondages` : 'Aucun'}
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">Programme</span>
+                    <Badge variant={event.program?.hasProgram ? "default" : "outline"}>
+                      {event.program?.hasProgram ? 'Configuré' : 'Non configuré'}
+                    </Badge>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Questions/Réponses</span>
-                  <Badge variant={event._count?.questions ? "default" : "outline"}>
-                    {event._count?.questions ? `${event._count.questions} questions` : 'Aucune'}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Sondages</span>
-                  <Badge variant={event._count?.polls ? "default" : "outline"}>
-                    {event._count?.polls ? `${event._count.polls} sondages` : 'Aucun'}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Programme</span>
-                  <Badge variant={event.program?.hasProgram ? "default" : "outline"}>
-                    {event.program?.hasProgram ? 'Configuré' : 'Non configuré'}
-                  </Badge>
-                </div>
-
-                <div className="pt-2 border-t">
+                <div className="pt-4 border-t">
                   <Link href={`/dashboard/events/${eventId}/settings`}>
                     <Button variant="outline" size="sm" className="w-full">
                       <Settings className="w-3 h-3 mr-1" />
@@ -564,6 +516,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               </CardContent>
             </Card>
+
+            {/* Actions rapides */}
           </div>
         </TabsContent>
       </Tabs>

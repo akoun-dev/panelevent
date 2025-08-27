@@ -347,7 +347,7 @@ export default function Dashboard() {
                                   </DialogDescription>
                                 </DialogHeader>
                                 <QRCodeGenerator
-                                  url={`${process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
+                                  url={`${process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL}/register/${event.id}/check-email`}
                                   eventName={event.title}
                                 />
                               </DialogContent>

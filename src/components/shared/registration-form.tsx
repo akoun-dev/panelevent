@@ -37,14 +37,22 @@ interface RegistrationFormProps {
   isRegistered?: boolean
   error?: string | null
   selectedLanguage?: Language | null
+  prefillData?: {
+    email?: string
+    firstName?: string
+    lastName?: string
+    position?: string
+    company?: string
+    language?: string
+  }
 }
 
-export function RegistrationForm({ event, onSubmit, loading = false, isRegistered = false, error = null, selectedLanguage = null }: RegistrationFormProps) {
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [position, setPosition] = useState('')
-  const [company, setCompany] = useState('')
+export function RegistrationForm({ event, onSubmit, loading = false, isRegistered = false, error = null, selectedLanguage = null, prefillData }: RegistrationFormProps) {
+  const [firstName, setFirstName] = useState(prefillData?.firstName || '')
+  const [lastName, setLastName] = useState(prefillData?.lastName || '')
+  const [email, setEmail] = useState(prefillData?.email || '')
+  const [position, setPosition] = useState(prefillData?.position || '')
+  const [company, setCompany] = useState(prefillData?.company || '')
   const [consent, setConsent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {

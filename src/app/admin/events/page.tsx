@@ -568,7 +568,7 @@ export default function AdminEventsPage() {
                             </DialogDescription>
                           </DialogHeader>
                           <QRCodeGenerator
-                            url={`${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL}/register/${event.id}`}
+                            url={`${process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL}/register/${event.id}/check-email`}
                             eventName={event.title}
                           />
                         </DialogContent>

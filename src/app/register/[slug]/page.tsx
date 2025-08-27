@@ -17,7 +17,15 @@ type Event = Database['public']['Tables']['events']['Row'] & {
   registeredCount?: number
 }
 
-export default function RegisterPage() {
+interface SearchParams {
+  [key: string]: string | string[] | undefined;
+}
+
+interface RegisterPageProps {
+  searchParams?: Promise<SearchParams>;
+}
+
+export default function RegisterPage({ searchParams }: RegisterPageProps) {
   const { slug } = useParams<{ slug: string }>()
   const router = useRouter()
   const [event, setEvent] = useState<Event | null>(null)
@@ -29,6 +37,14 @@ export default function RegisterPage() {
   const [consentAccepted, setConsentAccepted] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null)
   const [showLanguageSelector, setShowLanguageSelector] = useState(true)
+  const [prefillData, setPrefillData] = useState<{
+    email?: string
+    firstName?: string
+    lastName?: string
+    position?: string
+    company?: string
+    language?: string
+  }>({})
 
 
   const fetchEvent = useCallback(async () => {
@@ -95,16 +111,12 @@ export default function RegisterPage() {
       } else {
         // Gérer les erreurs spécifiques
         const errorData = await response.json()
-        if (response.status === 409 && errorData.error?.includes('déjà inscrit')) {
+        if (response.status === 409 && errorData.exists) {
           // L'utilisateur est déjà inscrit, on affiche le message approprié
           setIsRegistered(true)
-          // Vérifier si l'utilisateur a déjà une inscription enregistrée
-          const checkResponse = await fetch(`/api/events/${event.id}/registrations/check?email=${encodeURIComponent(data.email)}`)
-          if (checkResponse.ok) {
-            const checkData = await checkResponse.json()
-            if (checkData.registrationId) {
-              localStorage.setItem('registrationId', checkData.registrationId)
-            }
+          // Utiliser les données retournées par l'API principale
+          if (errorData.registrationId) {
+            localStorage.setItem('registrationId', errorData.registrationId)
           }
           // Stocker la langue sélectionnée dans localStorage pour la page programme
           if (selectedLanguage) {
@@ -127,8 +139,54 @@ export default function RegisterPage() {
   }
 
   useEffect(() => {
-    fetchEvent()
-  }, [fetchEvent])
+    const loadPrefillData = async () => {
+      if (searchParams) {
+        const params = await searchParams;
+        const prefill = params.prefill === 'true';
+        const isRegistered = params.isRegistered === 'true';
+        
+        if (prefill) {
+          setPrefillData({
+            email: params.email ? decodeURIComponent(params.email as string) : undefined,
+            firstName: params.firstName ? decodeURIComponent(params.firstName as string) : undefined,
+            lastName: params.lastName ? decodeURIComponent(params.lastName as string) : undefined,
+            position: params.position ? decodeURIComponent(params.position as string) : undefined,
+            company: params.company ? decodeURIComponent(params.company as string) : undefined,
+            language: params.language ? decodeURIComponent(params.language as string) : undefined
+          });
+          
+          // Si on a des données pré-remplies, on peut sauter le sélecteur de langue
+          if (params.language) {
+            setSelectedLanguage(params.language as Language);
+            setShowLanguageSelector(false);
+          }
+        } else if (params.email) {
+          // Email fourni mais pas de pré-remplissage complet
+          setPrefillData({
+            email: decodeURIComponent(params.email as string)
+          });
+        }
+
+        // Si l'utilisateur est déjà inscrit, on définit le statut
+        if (isRegistered) {
+          setIsRegistered(true);
+          // Stocker l'ID d'inscription s'il est fourni
+          if (params.registrationId) {
+            localStorage.setItem('registrationId', decodeURIComponent(params.registrationId as string));
+          }
+          // Stocker la langue si elle est fournie
+          if (params.language) {
+            const language = decodeURIComponent(params.language as string) as Language;
+            setSelectedLanguage(language);
+            localStorage.setItem('selectedLanguage', language);
+          }
+        }
+      }
+    };
+
+    loadPrefillData();
+    fetchEvent();
+  }, [fetchEvent, searchParams])
 
 
   if (loading) {
@@ -178,10 +236,10 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <div className="bg-white border border-fern-frond/20 rounded-lg p-6 mb-6 max-h-96 overflow-y-auto shadow-sm">
-            <h2 className="text-lg font-semibold mb-4 text-fern-frond">{t.policyTitle}</h2>
+          <div className="bg-card border border-border rounded-lg p-6 mb-6 max-h-96 overflow-y-auto shadow-sm">
+            <h2 className="text-lg font-semibold mb-4 text-card-foreground">{t.policyTitle}</h2>
 
-            <div className="space-y-4 text-sm text-fern-frond">
+            <div className="space-y-4 text-sm text-card-foreground">
               <p>{t.dataCollection}</p>
               <p>{t.dataUsage}</p>
               <p>{t.dataStorage}</p>
@@ -189,7 +247,7 @@ export default function RegisterPage() {
               <h3 className="font-semibold text-fern-frond">{t.detailsTitle}</h3>
 
               <p>
-                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Collecte des Données' :
+                <strong className="text-card-foreground">{selectedLanguage === 'fr' ? 'Collecte des Données' :
                          selectedLanguage === 'en' ? 'Data Collection' :
                          selectedLanguage === 'pt' ? 'Coleta de Dados' :
                          selectedLanguage === 'es' ? 'Recopilación de Datos' :
@@ -198,7 +256,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Utilisation des Données' :
+                <strong className="text-card-foreground">{selectedLanguage === 'fr' ? 'Utilisation des Données' :
                          selectedLanguage === 'en' ? 'Data Usage' :
                          selectedLanguage === 'pt' ? 'Uso de Dados' :
                          selectedLanguage === 'es' ? 'Uso de Datos' :
@@ -207,7 +265,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Conservation et Sécurité' :
+                <strong className="text-card-foreground">{selectedLanguage === 'fr' ? 'Conservation et Sécurité' :
                          selectedLanguage === 'en' ? 'Storage and Security' :
                          selectedLanguage === 'pt' ? 'Armazenamento e Segurança' :
                          selectedLanguage === 'es' ? 'Almacenamiento y Seguridad' :
@@ -216,7 +274,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Vos Droits' :
+                <strong className="text-card-foreground">{selectedLanguage === 'fr' ? 'Vos Droits' :
                          selectedLanguage === 'en' ? 'Your Rights' :
                          selectedLanguage === 'pt' ? 'Seus Direitos' :
                          selectedLanguage === 'es' ? 'Sus Derechos' :
@@ -225,7 +283,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Transferts de Données' :
+                <strong className="text-card-foreground">{selectedLanguage === 'fr' ? 'Transferts de Données' :
                          selectedLanguage === 'en' ? 'Data Transfers' :
                          selectedLanguage === 'pt' ? 'Transferências de Dados' :
                          selectedLanguage === 'es' ? 'Transferencias de Datos' :
@@ -234,7 +292,7 @@ export default function RegisterPage() {
               </p>
 
               <p>
-                <strong className="text-fern-frond">{selectedLanguage === 'fr' ? 'Retrait du Consentement' :
+                <strong className="text-card-foreground">{selectedLanguage === 'fr' ? 'Retrait du Consentement' :
                          selectedLanguage === 'en' ? 'Withdrawal of Consent' :
                          selectedLanguage === 'pt' ? 'Retirada do Consentimento' :
                          selectedLanguage === 'es' ? 'Retiro del Consentimiento' :
@@ -319,6 +377,7 @@ export default function RegisterPage() {
           isRegistered={isRegistered}
           error={error}
           selectedLanguage={selectedLanguage}
+          prefillData={prefillData}
         />
       </div>
     </div>

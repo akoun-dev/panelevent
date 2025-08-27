@@ -33,11 +33,11 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
           const event = await response.json()
           setEventSlug(event.slug || '')
           const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-          checkinUrl = `${baseUrl}/register/${event.slug}`
+          checkinUrl = `${baseUrl}/register/${event.slug}/check-email`
         } else {
           // Fallback vers l'URL par ID si le slug n'est pas disponible
           const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-          checkinUrl = `${baseUrl}/register/${eventId}`
+          checkinUrl = `${baseUrl}/register/${eventId}/check-email`
         }
         
         // Générer le QR code normal d'abord
@@ -145,7 +145,7 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
   const handleCopy = async () => {
     try {
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-      const checkinUrl = eventSlug ? `${baseUrl}/register/${eventSlug}` : `${baseUrl}/register/${eventId}`
+      const checkinUrl = eventSlug ? `${baseUrl}/register/${eventSlug}/check-email` : `${baseUrl}/register/${eventId}/check-email`
       
       await navigator.clipboard.writeText(checkinUrl)
       setCopied(true)
@@ -229,10 +229,10 @@ export default function QRCodeComponent({ eventId, className = '', size = 200 }:
       </div>
       
       <div className="text-xs text-muted-foreground text-center max-w-xs">
-        <p>Scannez ce QR code pour vous inscrire à l'événement</p>
+        <p>Scannez ce QR code pour vérifier votre email et vous inscrire à l'événement</p>
         <p className="text-[10px] opacity-70 mt-1 break-all">
           {typeof window !== 'undefined' ?
-            (eventSlug ? `${window.location.origin}/register/${eventSlug}` : `${window.location.origin}/register/${eventId}`)
+            (eventSlug ? `${window.location.origin}/register/${eventSlug}/check-email` : `${window.location.origin}/register/${eventId}/check-email`)
             : ''}
         </p>
       </div>
