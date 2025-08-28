@@ -5,3 +5,5 @@ npm run db:push --force-reset && npm run db:seed
 rm -rf node_modules .next
 npm i
 npm i -D tailwindcss postcss autoprefixer @tailwindcss/postcss
+
+192.168.1.4

@@ -99,7 +99,7 @@ export default function RegisterPage({ searchParams }: RegisterPageProps) {
           localStorage.setItem('registrationId', result.registrationId)
         }
         
-        console.log('Registration successful, redirecting to /program')
+        console.log('Registration successful, redirecting to event program')
         // Stocker la langue sélectionnée dans localStorage pour la page programme
         if (selectedLanguage) {
           localStorage.setItem('selectedLanguage', selectedLanguage)
@@ -107,6 +107,7 @@ export default function RegisterPage({ searchParams }: RegisterPageProps) {
         } else {
           console.log('Aucune langue sélectionnée à stocker')
         }
+        // Rediriger vers la page programme qui affichera le programme de cet événement
         router.push('/program')
       } else {
         // Gérer les erreurs spécifiques
@@ -125,6 +126,10 @@ export default function RegisterPage({ searchParams }: RegisterPageProps) {
           } else {
             console.log('Aucune langue sélectionnée à stocker (utilisateur déjà inscrit)')
           }
+          
+          // Rediriger vers la page programme qui affichera le programme de cet événement
+          console.log('Utilisateur déjà inscrit, redirection vers le programme de l\'événement')
+          router.push('/program')
         } else {
           // Afficher un message d'erreur spécifique
           setError(errorData.error || 'Une erreur est survenue lors de l\'inscription')

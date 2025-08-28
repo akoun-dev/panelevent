@@ -184,6 +184,10 @@ export async function POST(request: NextRequest) {
 
       if (existingRegistrations && existingRegistrations.length > 0) {
         const latestRegistration = existingRegistrations[0];
+        
+        // Pour le test: simuler un utilisateur anglais
+        const testLanguage = email.includes('aboa.akoun40@gmail.com') ? 'en' : latestRegistration.language;
+        
         return NextResponse.json({
           exists: true,
           registrationId: latestRegistration.id,
@@ -192,7 +196,7 @@ export async function POST(request: NextRequest) {
             lastName: latestRegistration.lastName,
             position: latestRegistration.position,
             company: latestRegistration.company,
-            language: latestRegistration.language
+            language: testLanguage
           }
         })
       } else {
@@ -234,19 +238,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Vérifier si l'email est déjà inscrit (sans condition isPublic pour la vérification d'existence)
+    // Vérifier si l'email est déjà inscrit à CET événement spécifique
     const { data: existingRegistration } = await serviceRoleSupabase
       .from('event_registrations')
       .select('*')
       .eq('email', email)
+      .eq('"eventId"', eventId)
       .maybeSingle()
 
     console.log('Registration - Existing registration:', existingRegistration)
 
     if (existingRegistration) {
       console.log('Email already registered:', email)
-      // Si l'utilisateur existe déjà, retourner la même structure que checkOnly
-      // pour maintenir la cohérence entre les deux modes
+      // Si l'utilisateur existe déjà, retourner un statut 409 (conflit)
+      // pour indiquer que l'utilisateur est déjà inscrit
       return NextResponse.json({
         exists: true,
         registrationId: existingRegistration.id,
@@ -257,22 +262,36 @@ export async function POST(request: NextRequest) {
           company: existingRegistration.company,
           language: existingRegistration.language
         }
-      })
+      }, { status: 409 })
     }
 
     // Pour l'inscription complète, vérifier le nombre maximum de participants
-    if (!checkOnly && event && (event as any).maxAttendees) {
-      const { count: registrationCount } = await serviceRoleSupabase
-        .from('event_registrations')
-        .select('*', { count: 'exact', head: true })
-        .eq('"eventId"', eventId)
-        .eq('"isPublic"', true)
+    if (!checkOnly && eventId) {
+      // Récupérer l'événement pour vérifier maxAttendees
+      const { data: eventData, error: eventError } = await serviceRoleSupabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .maybeSingle()
 
-      if ((registrationCount || 0) >= (event as any).maxAttendees) {
-        return NextResponse.json(
-          { error: "L'événement est complet" },
-          { status: 409 }
-        )
+      if (eventError) {
+        console.error('Event lookup error for maxAttendees:', eventError)
+        throw eventError
+      }
+
+      if (eventData && (eventData as any).maxAttendees) {
+        const { count: registrationCount } = await serviceRoleSupabase
+          .from('event_registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('"eventId"', eventId)
+          .eq('"isPublic"', true)
+
+        if ((registrationCount || 0) >= (eventData as any).maxAttendees) {
+          return NextResponse.json(
+            { error: "L'événement est complet" },
+            { status: 409 }
+          )
+        }
       }
     }
 
@@ -311,12 +330,7 @@ export async function POST(request: NextRequest) {
     // Retourner une réponse de succès
     return NextResponse.json({
       message: 'Inscription réussie',
-      registrationId: registration.id,
-      event: event ? {
-        id: (event as any).id,
-        title: (event as any).title,
-        slug: (event as any).slug
-      } : null
+      registrationId: registration.id
     })
 
   } catch (error) {

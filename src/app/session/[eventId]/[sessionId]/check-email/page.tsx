@@ -78,7 +78,8 @@ export default function CheckEmailPage({ params }: CheckEmailPageProps) {
           <CardHeader>
             <CardTitle className="text-center">Vérification d'email</CardTitle>
             <p className="text-sm text-muted-foreground text-center">
-              Entrez votre email pour vérifier votre inscription à l'événement
+              Entrez votre email / 
+
             </p>
           </CardHeader>
           <CardContent>
